@@ -47,6 +47,7 @@ class GNavBar extends StatelessWidget {
           _buildNavItem(context, 3, "Tracking", Icons.map),
           _buildNavItem(context, 4, "Maintenance", Icons.build),
           _buildNavItem(context, 5, "Reports", Icons.bar_chart),
+          _buildNavItem(context, 6, "Payrolls", Icons.payment),
           const Spacer(),
           // Bottom Settings
           _buildNavItem(context, 6, "Settings", Icons.settings),

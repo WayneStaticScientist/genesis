@@ -14,4 +14,8 @@ class GTheme {
         ? const Color.fromARGB(255, 20, 20, 20)
         : Colors.white;
   }
+
+  static Color reverse() {
+    return Get.isDarkMode ? Colors.white : Colors.black;
+  }
 }
