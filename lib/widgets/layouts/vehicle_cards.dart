@@ -1,5 +1,8 @@
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/screens/vehicles/vehicle_edit.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:get/get.dart';
 
 class GVehicleCard extends StatelessWidget {
   final dynamic vehicle;
@@ -166,7 +169,7 @@ class GVehicleCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).onTap(() => Get.to(() => AdminEditVehicle(vehicle: vehicle)));
   }
 
   Widget _buildInfoColumn(String label, String value) {

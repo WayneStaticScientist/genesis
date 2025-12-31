@@ -1,5 +1,6 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
@@ -36,18 +37,21 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Row(
               children: [
-                _buildIconButton(
-                  LineIcons.angleLeft,
-                  () => Navigator.pop(context),
+                DrawerButton().decoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(25),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.white.withAlpha(25)),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withAlpha(25),
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withAlpha(25)),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: const Row(
@@ -91,19 +95,12 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
             height: MediaQuery.of(context).size.height * 0.45,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: GTheme.color(),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(40),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 40,
-                  offset: const Offset(0, -10),
-                ),
-              ],
             ),
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,7 +160,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  const Divider(),
+                  Divider(color: Colors.grey.withAlpha(50)),
                   const SizedBox(height: 24),
 
                   // Live Telemetry Grid
@@ -220,8 +217,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                     ),
                   ),
 
-                  const Spacer(),
-
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -252,32 +247,16 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
     ).expanded1;
   }
 
-  Widget _buildIconButton(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        width: 50,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
-        ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
-    );
-  }
-
   Widget _buildActiveAssetTile(String model, String id, bool isSelected) {
     return Container(
       width: 140,
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.blue : Colors.white.withOpacity(0.1),
+        color: isSelected ? Colors.blue : Colors.white.withAlpha(25),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSelected ? Colors.blue : Colors.white.withOpacity(0.1),
+          color: isSelected ? Colors.blue : Colors.white.withAlpha(25),
         ),
       ),
       child: Column(
@@ -295,10 +274,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
           ),
           Text(
             id,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
-              fontSize: 11,
-            ),
+            style: TextStyle(color: Colors.white.withAlpha(135), fontSize: 11),
           ),
         ],
       ),

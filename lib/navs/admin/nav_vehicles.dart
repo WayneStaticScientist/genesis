@@ -1,8 +1,10 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/screens/vehicles/vehicles_add.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/layouts/main_stat_card.dart';
 import 'package:genesis/widgets/layouts/vehicle_cards.dart';
+import 'package:get/get.dart';
 
 class AdminNavVehicles extends StatefulWidget {
   const AdminNavVehicles({super.key});
@@ -69,9 +71,12 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                 backgroundColor: Theme.of(
                   context,
                 ).colorScheme.primary.withAlpha(25),
-                child: Icon(
-                  Icons.add,
-                  color: Theme.of(context).colorScheme.primary,
+                child: IconButton(
+                  onPressed: () => Get.to(() => AdminAddVehicle()),
+                  icon: Icon(
+                    Icons.add,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),

@@ -3,17 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 
 class GNavBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int index)? ontap;
+  final String selectedIndex;
+  final Function(String index)? ontap;
   const GNavBar({super.key, required this.selectedIndex, this.ontap});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 250,
+      height: double.infinity,
       color: GTheme.color(),
-      child: Column(
-        children: [
+      child: SingleChildScrollView(
+        child: [
           32.gapHeight,
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -41,25 +42,24 @@ class GNavBar extends StatelessWidget {
           Divider(color: Colors.grey.withAlpha(100)),
           32.gapHeight,
           // Navigation Items
-          _buildNavItem(context, 0, "Dashboard", Icons.dashboard),
-          _buildNavItem(context, 1, "Vehicles", Icons.directions_car),
-          _buildNavItem(context, 2, "Drivers", Icons.people),
-          _buildNavItem(context, 3, "Tracking", Icons.map),
-          _buildNavItem(context, 4, "Maintenance", Icons.build),
-          _buildNavItem(context, 5, "Reports", Icons.bar_chart),
-          _buildNavItem(context, 6, "Payrolls", Icons.payment),
-          const Spacer(),
+          _buildNavItem(context, 'dashboard', "Dashboard", Icons.dashboard),
+          _buildNavItem(context, 'vehicles', "Vehicles", Icons.directions_car),
+          _buildNavItem(context, 'drivers', "Drivers", Icons.people),
+          _buildNavItem(context, 'tracking', "Tracking", Icons.map),
+          _buildNavItem(context, 'maintanance', "Maintenance", Icons.build),
+          _buildNavItem(context, 'reports', "Reports", Icons.bar_chart),
+          _buildNavItem(context, 'payrolls', "Payrolls", Icons.payment),
           // Bottom Settings
-          _buildNavItem(context, 6, "Settings", Icons.settings),
+          _buildNavItem(context, 'settings', "Settings", Icons.settings),
           const SizedBox(height: 24),
-        ],
+        ].column(),
       ),
     );
   }
 
   Widget _buildNavItem(
     BuildContext context,
-    int index,
+    String index,
     String title,
     IconData icon,
   ) {
