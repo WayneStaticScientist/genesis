@@ -44,6 +44,9 @@ dependencies:
   figma_squircle: ^0.6.3
   flutter_launcher_icons: ^0.14.4
   line_icons: ^2.0.3
+  get_storage: ^2.1.1
+  dio: ^5.9.0
+  mobile_device_identifier: ^0.0.3
 
 dev_dependencies:
   flutter_test:
