@@ -1,6 +1,12 @@
 import 'package:get_storage/get_storage.dart';
 
 class User {
+  final String? id;
+  final int? trips;
+  final String? status;
+  final String? experience;
+  final double? rating;
+  final int? safety;
   final String role;
   final String email;
   final String country;
@@ -9,8 +15,14 @@ class User {
   final String? password;
   final String? companyId;
   User({
+    this.id,
     this.password,
+    this.status,
+    this.experience,
+    this.rating,
+    this.safety,
     this.companyId,
+    this.trips,
     required this.email,
     this.role = 'default',
     required this.country,
@@ -20,23 +32,36 @@ class User {
 
   Map<String, dynamic> toJSON() {
     return {
+      '_id': id,
       'role': role,
+      'trips': trips,
       'email': email,
+      'rating': rating,
+      'status': status,
+      'safety': safety,
       'country': country,
       'password': password,
       'lastName': lastName,
       'firstName': firstName,
       'companyId': companyId,
+      'experience': experience,
     };
   }
 
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
+      id: data['_id'],
       email: data['email'],
       role: data['firstName'],
       country: data['country'],
       lastName: data['lastName'],
       firstName: data['firstName'],
+      status: data['status'],
+      experience: data['experience'],
+      rating: (data['rating'] as num?)?.toDouble(),
+      safety: data['safety'],
+      companyId: data['companyId'],
+      trips: data['trips'],
     );
   }
   void saveUser() {

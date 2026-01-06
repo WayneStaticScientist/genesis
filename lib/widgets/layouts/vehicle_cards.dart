@@ -2,16 +2,17 @@ import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/screens/vehicles/vehicle_edit.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/models/vehicle_model.dart';
 import 'package:get/get.dart';
 
 class GVehicleCard extends StatelessWidget {
-  final dynamic vehicle;
-  const GVehicleCard({super.key, this.vehicle});
+  final VehicleModel vehicle;
+  const GVehicleCard({super.key, required this.vehicle});
 
   @override
   Widget build(BuildContext context) {
     Color statusColor;
-    switch (vehicle['status']) {
+    switch (vehicle.status) {
       case 'Active':
         statusColor = Colors.green;
         break;
@@ -57,7 +58,7 @@ class GVehicleCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          vehicle['model'],
+                          vehicle.carModel,
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -74,7 +75,7 @@ class GVehicleCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            vehicle['status'].toUpperCase(),
+                            vehicle.status.toUpperCase(),
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 10,
@@ -86,7 +87,7 @@ class GVehicleCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      vehicle['plate'],
+                      vehicle.licencePlate,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontWeight: FontWeight.w600,
@@ -105,9 +106,12 @@ class GVehicleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildInfoColumn("Driver", vehicle['driver']),
-              _buildInfoColumn("Fuel Type", vehicle['type']),
-              _buildInfoColumn("Travel Cost", "\$${vehicle['cost']}/km"),
+              _buildInfoColumn("Driver", ""),
+              _buildInfoColumn("Engine Type", vehicle.engineType),
+              _buildInfoColumn(
+                "Travel Cost",
+                vehicle.fuelRatio.toStringAsFixed(2),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -118,7 +122,7 @@ class GVehicleCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    value: vehicle['usage'] / 100,
+                    value: vehicle.usage / 100,
                     backgroundColor: Colors.grey.shade100,
                     valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                     minHeight: 6,
@@ -127,7 +131,7 @@ class GVehicleCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                "${vehicle['usage']}%",
+                "${vehicle.usage}%",
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,

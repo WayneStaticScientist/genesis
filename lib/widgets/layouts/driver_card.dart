@@ -1,20 +1,17 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/models/user_model.dart';
 import 'package:genesis/screens/pilots/drivers_edit.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 
 class GDriverCard extends StatelessWidget {
-  final Map<String, dynamic> driver;
+  final User driver;
   const GDriverCard({super.key, required this.driver});
 
   @override
   Widget build(BuildContext context) {
-    bool isOnTrip = driver['status'] == 'On Trip';
-    bool isAvailable = driver['status'] == 'Available';
-    Color statusColor = isOnTrip
-        ? Colors.blue
-        : (isAvailable ? Colors.green : Colors.grey);
+    Color statusColor = Colors.blue;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -33,11 +30,11 @@ class GDriverCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundColor: driver['color'].withOpacity(0.1),
+                      backgroundColor: Colors.blue,
                       child: Text(
-                        driver['avatar'],
+                        driver.firstName[0],
                         style: TextStyle(
-                          color: driver['color'],
+                          color: Colors.blue.withAlpha(30),
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -70,7 +67,7 @@ class GDriverCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        driver['name'],
+                        driver.firstName + " " + driver.lastName,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -86,12 +83,12 @@ class GDriverCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            "${driver['rating']}",
+                            driver.rating?.toString() ?? '0',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            driver['experience'],
+                            driver.experience ?? 'no experiencwe',
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 13,
@@ -106,7 +103,7 @@ class GDriverCard extends StatelessWidget {
                   onPressed: () {},
                   icon: const Icon(Icons.send, color: Colors.blueAccent),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.blue.withOpacity(0.05),
+                    backgroundColor: Colors.blue.withAlpha(25),
                   ),
                 ),
               ],
@@ -128,17 +125,17 @@ class GDriverCard extends StatelessWidget {
                 _buildDriverMetric(
                   Icons.directions_car,
                   "Trips",
-                  "${driver['trips']}",
+                  "${driver.trips ?? 0}",
                 ),
                 _buildDriverMetric(
                   Icons.shield,
                   "Safety",
-                  "${driver['safety']}%",
+                  "${driver.safety ?? 0}%",
                 ),
                 _buildDriverMetric(
                   Icons.timer_outlined,
                   "Status",
-                  driver['status'],
+                  driver.status ?? 'idle',
                   color: statusColor,
                 ),
               ],

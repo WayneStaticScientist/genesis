@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:genesis/models/user_model.dart';
 
 class AvatarIcon extends StatelessWidget {
   final String name;
@@ -13,16 +14,22 @@ class AvatarIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = User.fromStorage();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.indigo, width: 2),
       ),
-      child: const CircleAvatar(
+      child: CircleAvatar(
         backgroundColor: Colors.indigoAccent,
         radius: 18,
-        child: Text("W", style: TextStyle(color: Colors.white)),
+        child: Text(
+          user != null && user.firstName.isNotEmpty
+              ? user.firstName[0].toUpperCase()
+              : 'x',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }

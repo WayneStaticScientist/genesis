@@ -1,6 +1,11 @@
+import 'package:genesis/utils/toast.dart';
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
+import 'package:pinput/pinput.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/controllers/user_controller.dart';
 
 class AdminAddDriver extends StatefulWidget {
   const AdminAddDriver({super.key});
@@ -10,32 +15,40 @@ class AdminAddDriver extends StatefulWidget {
 }
 
 class _AdminAddDriverState extends State<AdminAddDriver> {
+  final _userController = Get.find<UserController>();
   final _formKey = GlobalKey<FormState>();
-
-  // Form State for new driver
-  String _name = "";
+  final _name = TextEditingController();
+  final _safety = TextEditingController(text: '100'); // Default safety score
+  final _email = TextEditingController();
+  String password = '';
+  final _rating = TextEditingController(text: 5.0.toString());
+  final _experience = TextEditingController();
   String _status = "Available";
-  String _experience = "";
-  double _rating = 5.0; // Default starting rating
-  int _safety = 100; // Default safety score
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
-      final newDriver = {
-        "name": _name,
-        "status": _status,
-        "experience": _experience,
-        "rating": _rating,
-        "safety": _safety,
-        "trips": 0,
-        "avatar": _name.isNotEmpty ? _name.substring(0, 1).toUpperCase() : "D",
-        "color": Colors.blueGrey, // Default theme color for new drivers
-      };
-
-      Navigator.pop(context, newDriver);
+  void _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final filteredName = _name.text.replaceAll(RegExp('\\s{2,}'), ' ');
+    final firstName = filteredName.trim().split(" ")[0];
+    final lastName = filteredName.trim().split(" ")[1];
+    _formKey.currentState!.save();
+    final response = await _userController.registerDriver(
+      User(
+        trips: 0,
+        email: _email.text,
+        safety: int.tryParse(_safety.text) ?? 0,
+        rating: double.tryParse(_rating.text),
+        lastName: lastName,
+        password: password,
+        firstName: firstName,
+        experience: _experience.text,
+        country: _userController.user.value!.country,
+      ),
+    );
+    if (response && mounted) {
+      Get.back();
+      Toaster.showSuccess('driver added success');
     }
+    ;
   }
 
   @override
@@ -60,18 +73,22 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            child: Obx(
+              () => ElevatedButton(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-              ),
-              child: "Register".text(
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                child: _userController.registeringDriver.value
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : "Register".text(
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
           ),
@@ -118,15 +135,42 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
               _buildField(
                 label: "Full Name",
                 hint: "Enter legal name",
+                controller: _name,
                 icon: Icons.person_add_alt_1_rounded,
-                onSaved: (val) => _name = val ?? "",
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                validator: (String? input) {
+                  if (input == null) return "This field should not be empty";
+                  String filteredName = input.replaceAll(
+                    RegExp('\\s{2,}'),
+                    ' ',
+                  );
+                  if (filteredName.trim().split(" ").length < 2)
+                    return "please enter full name e.g like John Doe";
+                  return null;
+                },
               ),
               _buildField(
+                label: "Eamil",
+                hint: "Enter legal name",
+                icon: Icons.email,
+                controller: _email,
+                validator: (String? input) {
+                  if (input == null || input.trim().length < 3)
+                    return "invalid email";
+                  return null;
+                },
+              ),
+              _buildField(
+                controller: _experience,
                 label: "Experience Level",
                 hint: "e.g. 2 Years, Senior, Junior",
                 icon: Icons.workspace_premium_rounded,
-                onSaved: (val) => _experience = val ?? "",
+              ),
+              _sectionHeader("Driver Pin"),
+
+              Pinput(
+                onCompleted: (pin) => setState(() {
+                  password = pin;
+                }),
               ),
 
               const SizedBox(height: 24),
@@ -136,24 +180,20 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
                   Expanded(
                     child: _buildField(
                       label: "Initial Rating",
-                      initialValue: "5.0",
                       hint: "5.0",
                       icon: Icons.star_rounded,
                       keyboardType: TextInputType.number,
-                      onSaved: (val) =>
-                          _rating = double.tryParse(val ?? "5.0") ?? 5.0,
+                      controller: _rating,
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildField(
                       label: "Safety Score",
-                      initialValue: "100",
                       hint: "100",
                       icon: Icons.verified_user_rounded,
                       keyboardType: TextInputType.number,
-                      onSaved: (val) =>
-                          _safety = int.tryParse(val ?? "100") ?? 100,
+                      controller: _safety,
                     ),
                   ),
                 ],
@@ -222,9 +262,8 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
     required String label,
     required String hint,
     required IconData icon,
-    String? initialValue,
     TextInputType? keyboardType,
-    FormFieldSetter<String>? onSaved,
+    TextEditingController? controller,
     FormFieldValidator<String>? validator,
   }) {
     return Container(
@@ -234,9 +273,8 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextFormField(
-        initialValue: initialValue,
-        onSaved: onSaved,
         validator: validator,
+        controller: controller,
         keyboardType: keyboardType,
         style: TextStyle(color: GTheme.reverse()),
         decoration: InputDecoration(

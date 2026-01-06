@@ -47,6 +47,7 @@ dependencies:
   get_storage: ^2.1.1
   dio: ^5.9.0
   mobile_device_identifier: ^0.0.3
+  pinput: ^6.0.1
 
 dev_dependencies:
   flutter_test:

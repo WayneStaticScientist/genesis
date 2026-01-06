@@ -1,9 +1,12 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/screens/vehicles/vehicles_add.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/widgets/displays/error_widget.dart';
 import 'package:genesis/widgets/layouts/main_stat_card.dart';
 import 'package:genesis/widgets/layouts/vehicle_cards.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 
 class AdminNavVehicles extends StatefulWidget {
@@ -14,36 +17,13 @@ class AdminNavVehicles extends StatefulWidget {
 }
 
 class _AdminNavVehiclesState extends State<AdminNavVehicles> {
+  final _vehicleController = Get.find<VehicleControler>();
   // Mock Data for the "Wow" factor
-  final List<Map<String, dynamic>> vehicles = [
-    {
-      "model": "Tesla Model 3",
-      "plate": "AE-9021-X",
-      "status": "Active",
-      "cost": 0.15,
-      "usage": 85,
-      "driver": "Alex Johnson",
-      "type": "Electric",
-    },
-    {
-      "model": "Toyota Hilux",
-      "plate": "BD-4412-Z",
-      "status": "In Service",
-      "cost": 0.45,
-      "usage": 40,
-      "driver": "Sarah Smith",
-      "type": "Diesel",
-    },
-    {
-      "model": "Mercedes Sprinter",
-      "plate": "GH-1102-M",
-      "status": "Idle",
-      "cost": 0.65,
-      "usage": 10,
-      "driver": "Unassigned",
-      "type": "Petrol",
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _vehicleController.fetchAllVehicles();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,19 +141,39 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
             ),
           ),
         ),
-
-        // === VEHICLE LIST ===
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => GVehicleCard(vehicle: vehicles[index]),
-              childCount: vehicles.length,
+        Obx(() {
+          if (_vehicleController.loadingVehicles.value &&
+              _vehicleController.vehicles.isEmpty) {
+            return SliverFillRemaining(child: MaterialLoader().center());
+          }
+          if (_vehicleController.vehicleFetchingStatus.value.isNotEmpty) {
+            return SliverFillRemaining(
+              child: MaterialErrorWidget(
+                label: _vehicleController.vehicleFetchingStatus.value,
+              ).center(),
+            );
+          }
+          if (_vehicleController.vehicles.isEmpty &&
+              !_vehicleController.loadingVehicles.value) {
+            return SliverFillRemaining(
+              child: "No results found for vehicles".text(),
+            );
+          }
+          return SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    GVehicleCard(vehicle: _vehicleController.vehicles[index]),
+                childCount: _vehicleController.vehicles.length,
+              ),
             ),
-          ),
-        ),
+          );
+        }),
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
+
+      // === VEHICLE LIST ===
     ).expanded1;
   }
 }

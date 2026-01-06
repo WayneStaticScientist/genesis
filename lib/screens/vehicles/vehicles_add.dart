@@ -1,6 +1,10 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:get/get.dart';
 
 class AdminAddVehicle extends StatefulWidget {
   const AdminAddVehicle({super.key});
@@ -11,29 +15,31 @@ class AdminAddVehicle extends StatefulWidget {
 
 class _AdminAddVehicleState extends State<AdminAddVehicle> {
   final _formKey = GlobalKey<FormState>();
-
+  final _vehicleController = Get.find<VehicleControler>();
   // Form State
   String _model = "";
   String _plate = "";
   String _status = "Active";
   String _type = "Electric";
-  double _cost = 0.0;
+  double _fuelRatio = 0.0;
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
       final newVehicle = {
-        "model": _model,
-        "plate": _plate,
-        "status": _status,
-        "type": _type,
-        "cost": _cost,
         "usage": 0, // Initial usage
-        "driver": "Unassigned",
+        "type": _type,
+        "status": _status,
+        "carModel": _model,
+        "engineType": _type,
+        "licencePlate": _plate,
+        "fuelRatio": _fuelRatio,
       };
-
-      Navigator.pop(context, newVehicle);
+      final response = await _vehicleController.registerVehicle(newVehicle);
+      if (mounted && response) {
+        Get.back();
+        Toaster.showSuccess("vehicle registered success");
+      }
     }
   }
 
@@ -69,8 +75,12 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: "Create".text(
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Obx(
+                () => _vehicleController.registeringVehicle.value
+                    ? WhiteLoader()
+                    : "Create".text(
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
           ),
@@ -129,28 +139,29 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
 
               const SizedBox(height: 24),
               _sectionHeader("Configuration"),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdown(
-                      label: "Engine Type",
-                      value: _type,
-                      items: ["Electric", "Diesel", "Petrol", "Hybrid"],
-                      onChanged: (val) => setState(() => _type = val!),
-                    ),
+              [
+                Expanded(
+                  child: _buildDropdown(
+                    label: "Engine Type",
+                    value: _type,
+                    items: ["Electric", "Diesel", "Petrol", "Hybrid"],
+                    onChanged: (val) => setState(() => _type = val!),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildField(
-                      label: "Cost per KM",
-                      hint: "0.00",
-                      icon: Icons.monetization_on_rounded,
-                      keyboardType: TextInputType.number,
-                      onSaved: (val) =>
-                          _cost = double.tryParse(val ?? "0") ?? 0.0,
-                    ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildField(
+                    label: "FuelRatio per KM",
+                    hint: "0.00",
+                    icon: Icons.gas_meter,
+                    keyboardType: TextInputType.number,
+                    onSaved: (val) =>
+                        _fuelRatio = double.tryParse(val ?? "0") ?? 0.0,
                   ),
-                ],
+                ),
+              ].row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
               ),
 
               const SizedBox(height: 16),

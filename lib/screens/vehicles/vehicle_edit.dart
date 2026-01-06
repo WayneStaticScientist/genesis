@@ -1,9 +1,15 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/vehicle_utlis.dart';
+import 'package:genesis/models/vehicle_model.dart';
+import 'package:genesis/controllers/vehicle_controller.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 
 class AdminEditVehicle extends StatefulWidget {
-  final Map<String, dynamic> vehicle;
+  final VehicleModel vehicle;
 
   const AdminEditVehicle({super.key, required this.vehicle});
 
@@ -12,20 +18,23 @@ class AdminEditVehicle extends StatefulWidget {
 }
 
 class _AdminEditVehicleState extends State<AdminEditVehicle> {
+  final _vehicleController = Get.find<VehicleControler>();
   late TextEditingController _modelController;
   late TextEditingController _plateController;
   late String _selectedStatus;
-  late String _selectedType;
-  late double _cost;
+  late String? _selectedType;
+  late double _fuelRation;
 
   @override
   void initState() {
     super.initState();
-    _modelController = TextEditingController(text: widget.vehicle['model']);
-    _plateController = TextEditingController(text: widget.vehicle['plate']);
-    _selectedStatus = widget.vehicle['status'];
-    _selectedType = widget.vehicle['type'];
-    _cost = widget.vehicle['cost'];
+    _modelController = TextEditingController(text: widget.vehicle.carModel);
+    _plateController = TextEditingController(text: widget.vehicle.licencePlate);
+    _selectedStatus = widget.vehicle.status;
+    _selectedType = widget.vehicle.engineType.isEmpty
+        ? VehicleUtlis.engineTypes[0]
+        : widget.vehicle.engineType;
+    _fuelRation = widget.vehicle.fuelRatio;
   }
 
   @override
@@ -35,19 +44,23 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     super.dispose();
   }
 
-  void _saveVehicle() {
+  void _saveVehicle() async {
     // Logic to update the vehicle object or send to API
     final updatedVehicle = {
-      ...widget.vehicle,
-      "model": _modelController.text,
-      "plate": _plateController.text,
+      "carModel": _modelController.text,
+      "licencePlate": _plateController.text,
       "status": _selectedStatus,
-      "type": _selectedType,
-      "cost": _cost,
+      "engineType": _selectedType,
+      "fuelRatio": _fuelRation,
     };
-
+    final data = await _vehicleController.updateVehicle(
+      updatedVehicle,
+      widget.vehicle.id ?? '',
+    );
+    if (data) {
+      Toaster.showSuccess("vehicle updated succefully");
+    }
     // In a real app, you'd use a Provider/Bloc here
-    Navigator.pop(context, updatedVehicle);
   }
 
   @override
@@ -70,10 +83,14 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         actions: [
           TextButton(
             onPressed: _saveVehicle,
-            child: "Save".text(
-              style: const TextStyle(fontWeight: FontWeight.w700),
+            child: Obx(
+              () => _vehicleController.registeringVehicle.value
+                  ? MaterialLoader()
+                  : "Save".text(
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
             ),
-          ).paddingOnly(right: 12),
+          ).padding(EdgeInsets.only(right: 12)),
         ],
       ),
       body: SingleChildScrollView(
@@ -99,7 +116,6 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
               ),
             ),
             const SizedBox(height: 32),
-
             // Form Fields
             _buildLabel("Vehicle Details"),
             _buildTextField(
@@ -117,7 +133,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
             _buildLabel("Fleet Status"),
             _buildDropdown(
               value: _selectedStatus,
-              items: ["Active", "In Service", "Idle", "Out of Action"],
+              items: VehicleUtlis.vehicleStatuses,
               onChanged: (val) => setState(() => _selectedStatus = val!),
             ),
 
@@ -129,7 +145,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                   child: _buildDropdown(
                     label: "Engine Type",
                     value: _selectedType,
-                    items: ["Electric", "Diesel", "Petrol", "Hybrid"],
+                    items: VehicleUtlis.engineTypes,
                     onChanged: (val) => setState(() => _selectedType = val!),
                   ),
                 ),
@@ -137,9 +153,10 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                 Expanded(
                   child: _buildTextField(
                     label: "Cost/KM (\$)",
-                    initialValue: _cost.toString(),
+                    initialValue: _fuelRation.toString(),
                     keyboardType: TextInputType.number,
-                    onChanged: (val) => _cost = double.tryParse(val) ?? 0.0,
+                    onChanged: (val) =>
+                        _fuelRation = double.tryParse(val) ?? 0.0,
                     icon: Icons.attach_money,
                   ),
                 ),
@@ -223,7 +240,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   }
 
   Widget _buildDropdown({
-    required String value,
+    required String? value,
     required List<String> items,
     required Function(String?) onChanged,
     String? label,

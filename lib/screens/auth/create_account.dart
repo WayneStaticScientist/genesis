@@ -1,8 +1,12 @@
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/widgets/actions/form_button.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/screens/main/main_screen.dart';
 import 'package:genesis/widgets/actions/form_input.dart';
+import 'package:genesis/widgets/actions/form_button.dart';
+import 'package:genesis/controllers/user_controller.dart';
 
 class CreateAccount extends StatefulWidget {
   const CreateAccount({super.key});
@@ -12,6 +16,7 @@ class CreateAccount extends StatefulWidget {
 }
 
 class _CreateAccountState extends State<CreateAccount> {
+  final _userController = Get.find<UserController>();
   final _formKey = GlobalKey<FormState>();
 
   // Controllers for the input fields
@@ -158,17 +163,39 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                     34.gapHeight,
                     // Name Field
-                    GFormInput(label: "Full Name", controller: _nameController),
+                    GFormInput(
+                      label: "Full Name",
+                      controller: _nameController,
+                      validator: (String? input) {
+                        if (input == null)
+                          return "This field should not be empty";
+                        String filteredName = _nameController.text.replaceAll(
+                          RegExp('\\s{2,}'),
+                          ' ',
+                        );
+                        if (filteredName.trim().split(" ").length < 2)
+                          return "please enter full name e.g like John Doe";
+                        return null;
+                      },
+                    ),
                     20.gapHeight,
 
                     GFormInput(
                       label: "Company",
                       controller: _companyController,
+                      validator: (String? input) =>
+                          input == null || input.trim().isEmpty
+                          ? "Company Name should not be empty"
+                          : null,
                     ),
                     20.gapHeight,
                     GFormInput(
                       label: "Country",
                       controller: _countryController,
+                      validator: (String? input) =>
+                          input == null || input.trim().isEmpty
+                          ? "Country should not be empty"
+                          : null,
                     ),
                     20.gapHeight,
                     // Email Field
@@ -176,6 +203,10 @@ class _CreateAccountState extends State<CreateAccount> {
                       label: "Email Address",
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      validator: (String? input) =>
+                          input == null || input.trim().isEmpty
+                          ? "Invalid email address"
+                          : null,
                     ),
                     20.gapHeight,
                     // Password Field
@@ -183,12 +214,18 @@ class _CreateAccountState extends State<CreateAccount> {
                       label: "Password",
                       controller: _passwordController,
                       isPasswordField: true,
+                      validator: (String? input) =>
+                          input == null || input.trim().length < 4
+                          ? "Password should have at least 4 characters"
+                          : null,
                     ),
                     32.gapHeight,
-                    GFormButton(
-                      label: 'Create Account',
-                      onPress: _createAccount,
-                      isLoading: false,
+                    Obx(
+                      () => GFormButton(
+                        label: 'Create Account',
+                        onPress: _createAccount,
+                        isLoading: _userController.loading.value,
+                      ),
                     ),
                     24.gapHeight,
                     Center(
@@ -221,5 +258,29 @@ class _CreateAccountState extends State<CreateAccount> {
     );
   }
 
-  void _createAccount() {}
+  void _createAccount() async {
+    if (_formKey.currentState?.validate() != true) {
+      return;
+    }
+    final filteredName = _nameController.text.replaceAll(
+      RegExp('\\s{2,}'),
+      ' ',
+    );
+    final firstName = filteredName.trim().split(" ")[0];
+    final lastName = filteredName.trim().split(" ")[1];
+    final response = await _userController.registerUser(
+      User(
+        email: _emailController.text,
+        country: _countryController.text,
+        lastName: lastName,
+        firstName: firstName,
+        password: _passwordController.text,
+      ),
+      _companyController.text,
+    );
+    if (response && mounted) {
+      Toaster.showSuccess("Create Account success");
+      Get.offAll(() => MainScreen());
+    }
+  }
 }

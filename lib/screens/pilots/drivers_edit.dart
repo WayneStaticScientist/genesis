@@ -1,9 +1,16 @@
+import 'dart:developer';
+
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/models/user_model.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:get/get.dart';
 
 class AdminEditDriver extends StatefulWidget {
-  final Map<String, dynamic> driver;
+  final User driver;
   const AdminEditDriver({super.key, required this.driver});
 
   @override
@@ -12,38 +19,48 @@ class AdminEditDriver extends StatefulWidget {
 
 class _AdminEditDriverState extends State<AdminEditDriver> {
   final _formKey = GlobalKey<FormState>();
-
+  final _userController = Get.find<UserController>();
   // Form State initialized with current driver data
-  late String _name;
-  late String _status;
-  late String _experience;
-  late double _rating;
-  late int _safety;
+  late TextEditingController _name = TextEditingController(
+    text: widget.driver.firstName + ' ' + widget.driver.lastName,
+  );
+  late String _status = widget.driver.status ?? 'Offline';
+  late TextEditingController _safety = TextEditingController(
+    text: widget.driver.safety.toString(),
+  );
+  late TextEditingController _rating = TextEditingController(
+    text: widget.driver.rating.toString(),
+  );
+  late TextEditingController _experience = TextEditingController(
+    text: widget.driver.experience,
+  );
 
   @override
   void initState() {
     super.initState();
-    _name = widget.driver['name'];
-    _status = widget.driver['status'];
-    _experience = widget.driver['experience'];
-    _rating = widget.driver['rating'];
-    _safety = widget.driver['safety'];
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
+      final filteredName = _name.text.replaceAll(RegExp('\\s{2,}'), ' ');
+      final firstName = filteredName.trim().split(" ")[0];
+      final lastName = filteredName.trim().split(" ")[1];
       final updatedDriver = {
-        ...widget.driver,
-        "name": _name,
+        "firstName": firstName,
+        "lastName": lastName,
         "status": _status,
-        "experience": _experience,
-        "rating": _rating,
-        "safety": _safety,
+        "experience": _experience.text,
+        "rating": double.tryParse(_rating.text) ?? 0,
+        "safety": _safety.text,
       };
-
-      Navigator.pop(context, updatedDriver);
+      log("The data is $updatedDriver");
+      final result = await _userController.updateDriver(
+        data: updatedDriver,
+        id: widget.driver.id ?? '',
+      );
+      if (result) {
+        Toaster.showSuccess("driver updated succesfully");
+      }
     }
   }
 
@@ -79,8 +96,12 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: "Update".text(
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Obx(
+                () => _userController.registeringDriver.value
+                    ? WhiteLoader()
+                    : "Update".text(
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
           ),
@@ -101,25 +122,22 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                       height: 90,
                       width: 90,
                       decoration: BoxDecoration(
-                        color: widget.driver['color'].withOpacity(0.2),
+                        color: Colors.blue.withAlpha(70),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: widget.driver['color'],
-                          width: 2,
-                        ),
+                        border: Border.all(color: Colors.blue, width: 2),
                       ),
                       child: Center(
-                        child: widget.driver['avatar'].toString().text(
+                        child: widget.driver.firstName[0].toString().text(
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: widget.driver['color'],
+                            color: Colors.blue,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    "ID: PRT-${widget.driver['trips']}".text(
+                    "ID: PRT-${widget.driver.trips ?? 0}".text(
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
@@ -130,18 +148,25 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
               _sectionHeader("Personal Details"),
               _buildField(
                 label: "Full Name",
-                initialValue: _name,
                 hint: "Driver Name",
+                controller: _name,
                 icon: Icons.person_outline_rounded,
-                onSaved: (val) => _name = val ?? "",
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                validator: (String? input) {
+                  if (input == null) return "This field should not be empty";
+                  String filteredName = input.replaceAll(
+                    RegExp('\\s{2,}'),
+                    ' ',
+                  );
+                  if (filteredName.trim().split(" ").length < 2)
+                    return "please enter full name e.g like John Doe";
+                  return null;
+                },
               ),
               _buildField(
                 label: "Years of Experience",
-                initialValue: _experience,
                 hint: "e.g. 5 Years",
+                controller: _experience,
                 icon: Icons.history_edu_rounded,
-                onSaved: (val) => _experience = val ?? "",
               ),
 
               const SizedBox(height: 24),
@@ -155,8 +180,7 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                       hint: "0.0",
                       icon: Icons.star_outline_rounded,
                       keyboardType: TextInputType.number,
-                      onSaved: (val) =>
-                          _rating = double.tryParse(val ?? "0") ?? 0.0,
+                      controller: _rating,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -167,7 +191,7 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                       hint: "100",
                       icon: Icons.security_rounded,
                       keyboardType: TextInputType.number,
-                      onSaved: (val) => _safety = int.tryParse(val ?? "0") ?? 0,
+                      controller: _safety,
                     ),
                   ),
                 ],
@@ -238,7 +262,7 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
     required IconData icon,
     String? initialValue,
     TextInputType? keyboardType,
-    FormFieldSetter<String>? onSaved,
+    TextEditingController? controller,
     FormFieldValidator<String>? validator,
   }) {
     return Container(
@@ -248,8 +272,7 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextFormField(
-        initialValue: initialValue,
-        onSaved: onSaved,
+        controller: controller,
         validator: validator,
         keyboardType: keyboardType,
         style: TextStyle(color: GTheme.reverse()),

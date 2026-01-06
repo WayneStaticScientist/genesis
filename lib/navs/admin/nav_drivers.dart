@@ -1,53 +1,29 @@
+import 'package:genesis/widgets/displays/error_widget.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/icons/bx.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:genesis/screens/pilots/drivers_add.dart';
 import 'package:genesis/widgets/layouts/driver_card.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/widgets/layouts/quick_stats.dart';
-import 'package:get/get.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/bx.dart';
 
 class AdminNavDrivers extends StatefulWidget {
   const AdminNavDrivers({super.key});
-
   @override
   State<AdminNavDrivers> createState() => _AdminNavDriversState();
 }
 
 class _AdminNavDriversState extends State<AdminNavDrivers> {
-  // Mock Data for the "Wow" factor
-  final List<Map<String, dynamic>> drivers = [
-    {
-      "name": "Marcus Wright",
-      "rating": 4.9,
-      "status": "On Trip",
-      "trips": 1240,
-      "safety": 98,
-      "experience": "5 Years",
-      "avatar": "MW",
-      "color": Colors.indigo,
-    },
-    {
-      "name": "Elena Rodriguez",
-      "rating": 4.7,
-      "status": "Available",
-      "trips": 850,
-      "safety": 94,
-      "experience": "3 Years",
-      "avatar": "ER",
-      "color": Colors.pink,
-    },
-    {
-      "name": "Samuel L. Jackson",
-      "rating": 4.5,
-      "status": "Offline",
-      "trips": 3200,
-      "safety": 91,
-      "experience": "12 Years",
-      "avatar": "SJ",
-      "color": Colors.amber,
-    },
-  ];
+  final _userController = Get.find<UserController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _userController.fetchDrivers();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,15 +89,35 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
         ),
 
         // === DRIVERS LIST ===
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => GDriverCard(driver: drivers[index]),
-              childCount: drivers.length,
+        Obx(() {
+          if (_userController.loadingDrivers.value &&
+              _userController.drivers.isEmpty) {
+            return SliverFillRemaining(child: MaterialLoader().center());
+          }
+          if (_userController.driversResponse.value.isNotEmpty) {
+            return SliverFillRemaining(
+              child: MaterialErrorWidget(
+                label: _userController.driversResponse.value,
+              ).center(),
+            );
+          }
+          if (_userController.drivers.isEmpty &&
+              !_userController.loadingDrivers.value) {
+            return SliverFillRemaining(
+              child: "No results found for drivers".text(),
+            );
+          }
+          return SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    GDriverCard(driver: _userController.drivers[index]),
+                childCount: _userController.drivers.length,
+              ),
             ),
-          ),
-        ),
+          );
+        }),
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     ).expanded1;

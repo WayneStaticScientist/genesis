@@ -1,7 +1,9 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/create_account.dart';
 import 'package:genesis/screens/main/main_screen.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:genesis/widgets/actions/form_button.dart';
 import 'package:genesis/widgets/actions/form_input.dart';
 import 'package:get/get.dart';
@@ -15,7 +17,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-
+  final _userController = Get.find<UserController>();
   // Controllers for the input fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -151,24 +153,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(color: Colors.grey, fontSize: 10),
                     ),
                     34.gapHeight,
-                    // Email Field
+                    // Email Fieldadmin
                     GFormInput(
                       label: "Email Address",
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      validator: (String? value) =>
+                          value == null || value.trim().isEmpty
+                          ? "Email address is required"
+                          : null,
                     ),
                     20.gapHeight,
                     // Password Field
                     GFormInput(
                       label: "Password",
                       controller: _passwordController,
+                      validator: (String? value) =>
+                          value == null || value.trim().length < 4
+                          ? "Password should be at least 4 characters"
+                          : null,
                       isPasswordField: true,
                     ),
                     32.gapHeight,
                     GFormButton(
                       label: 'Sign In',
                       onPress: _login,
-                      isLoading: false,
+                      isLoading: _userController.loading.value,
                     ),
                     24.gapHeight,
                     Center(
@@ -201,7 +211,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _login() {
-    Get.to(() => MainScreen());
+  void _login() async {
+    if (_formKey.currentState?.validate() != true) {
+      return;
+    }
+    final response = await _userController.loginUser(
+      _emailController.text,
+      _passwordController.text,
+    );
+    if (response && mounted) {
+      Toaster.showSuccess("Login Success");
+      Get.offAll(() => MainScreen());
+    }
   }
 }
