@@ -1,8 +1,13 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/models/maintainance_model.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:get/get.dart';
 
 class AdminEditMaintenance extends StatefulWidget {
-  final Map<String, dynamic> task;
+  final MaintainanceModel task;
   const AdminEditMaintenance({super.key, required this.task});
 
   @override
@@ -11,52 +16,41 @@ class AdminEditMaintenance extends StatefulWidget {
 
 class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
   final _formKey = GlobalKey<FormState>();
-
+  final _maintainanceController = Get.find<MaintainanceController>();
   late String _issue;
   late String _urgency;
   late double _cost;
   late double _health;
   late int _daysLeft;
   // Read-only fields
-  late String _model;
-  late String _id;
 
   @override
   void initState() {
     super.initState();
-    _issue = widget.task['issue'];
-    _urgency = widget.task['urgency'];
-    _cost = (widget.task['cost'] is int)
-        ? (widget.task['cost'] as int).toDouble()
-        : widget.task['cost'];
-    _health = (widget.task['health'] is int)
-        ? (widget.task['health'] as int).toDouble()
-        : widget.task['health'];
-    _daysLeft = widget.task['daysLeft'];
-    _model = widget.task['model'];
-    _id = widget.task['id'];
+    _issue = widget.task.issueDetails;
+    _urgency = widget.task.urgenceLevel;
+    _cost = widget.task.estimatedCosts;
+    _health = widget.task.currentHealth;
+    _daysLeft = widget.task.dueDays;
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
       final updatedTask = {
-        ...widget.task,
-        "issue": _issue,
-        "urgency": _urgency,
-        "cost": _cost,
-        "health": _health.toInt(),
-        "daysLeft": _daysLeft,
-        // Update color based on urgency logic if needed, or keep existing
-        "color": _urgency == "Critical"
-            ? Colors.red
-            : _urgency == "Due Soon"
-            ? Colors.orange
-            : Colors.blue,
+        "issueDetails": _issue,
+        "urgenceLevel": _urgency,
+        "estimatedCosts": _cost,
+        "currentHealth": _health.toInt(),
+        "dueDays": _daysLeft,
       };
-
-      Navigator.pop(context, updatedTask);
+      final response = await _maintainanceController.updateMantainance(
+        updatedTask,
+        widget.task.id ?? '',
+      );
+      if (response) {
+        Toaster.showSuccess("mantainance updated success");
+      }
     }
   }
 
@@ -82,18 +76,24 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: ElevatedButton.icon(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Obx(
+              () => ElevatedButton.icon(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-              icon: const Icon(Icons.save_as_rounded, size: 18),
-              label: "Save".text(
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                icon: const Icon(Icons.save_as_rounded, size: 18).visibleIfNot(
+                  _maintainanceController.addingMaintainance.value,
+                ),
+                label: _maintainanceController.addingMaintainance.value
+                    ? WhiteLoader()
+                    : "Save".text(
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
           ),
@@ -131,14 +131,14 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _model.text(
+                        (widget.task.carModel ?? '').text(
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
-                        "ID: $_id".text(
+                        "LP: ${widget.task.licencePlate}".text(
                           style: TextStyle(
                             color: Colors.white.withAlpha(128),
                             fontSize: 12,

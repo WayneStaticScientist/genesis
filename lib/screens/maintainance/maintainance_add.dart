@@ -1,5 +1,9 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:get/get.dart';
 
 class AdminAddMaintenance extends StatefulWidget {
   const AdminAddMaintenance({super.key});
@@ -10,36 +14,32 @@ class AdminAddMaintenance extends StatefulWidget {
 
 class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
   final _formKey = GlobalKey<FormState>();
-
+  final _mantainanceController = Get.find<MaintainanceController>();
   // Form State
   String _issue = "";
   String _urgency = "Routine";
   double _cost = 0.0;
   double _health = 85.0; // Default health for a vehicle needing maintenance
   int _daysLeft = 14;
-  String _model = "";
-  String _id = "";
+  String _licencePlate = "";
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
       final newTask = {
-        "model": _model,
-        "id": _id,
-        "issue": _issue,
-        "urgency": _urgency,
-        "cost": _cost,
-        "health": _health.toInt(),
-        "daysLeft": _daysLeft,
-        "color": _urgency == "Critical"
-            ? Colors.red
-            : _urgency == "Due Soon"
-            ? Colors.orange
-            : Colors.blue,
+        "urgenceLevel": _urgency,
+        "dueDays": _daysLeft,
+        "issueDetails": _issue,
+        "estimatedCosts": _cost,
+        "currentHealth": _health,
+        "licencePlate": _licencePlate,
       };
-
-      Navigator.pop(context, newTask);
+      final response = await _mantainanceController.addMantainance(newTask);
+      if (response) {
+        Get.back();
+        Toaster.showSuccess("mantainance added");
+      }
     }
   }
 
@@ -74,9 +74,18 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              icon: const Icon(Icons.add_task_rounded, size: 18),
-              label: "Create".text(
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              icon: Obx(
+                () => const Icon(
+                  Icons.add_task_rounded,
+                  size: 18,
+                ).visibleIfNot(_mantainanceController.addingMaintainance.value),
+              ),
+              label: Obx(
+                () => _mantainanceController.addingMaintainance.value
+                    ? WhiteLoader()
+                    : "Create".text(
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
           ),
@@ -101,19 +110,12 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
                 child: Column(
                   children: [
                     _buildField(
-                      label: "Vehicle Model",
-                      hint: "e.g. Ford Transit",
+                      label: "Vehicle Licence Plate",
+                      hint: "e.g. Abx-4562",
                       icon: Icons.directions_car_filled_outlined,
-                      onSaved: (val) => _model = val ?? "",
-                      validator: (val) => val!.isEmpty ? "Required" : null,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildField(
-                      label: "Vehicle ID / Plate",
-                      hint: "e.g. GH-1102-M",
-                      icon: Icons.pin_outlined,
-                      onSaved: (val) => _id = val ?? "",
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+                      onSaved: (val) => _licencePlate = val ?? "",
+                      validator: (val) =>
+                          val!.isEmpty ? "licence plate is requiresd" : null,
                     ),
                   ],
                 ),

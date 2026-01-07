@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/maintainance_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
       initialBinding: BindingsBuilder(() {
         Get.put(UserController());
         Get.put(VehicleControler());
+        Get.put(MaintainanceController());
       }),
       title: 'Genesis',
       theme: ThemeData(

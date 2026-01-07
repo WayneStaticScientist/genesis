@@ -1,3 +1,6 @@
+import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/widgets/displays/error_widget.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -14,38 +17,12 @@ class AdminNavMaintenance extends StatefulWidget {
 
 class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
   // Mock Maintenance Data
-  final List<Map<String, dynamic>> maintenanceTasks = [
-    {
-      "model": "Tesla Model 3",
-      "id": "TX-902",
-      "issue": "Tire Rotation",
-      "health": 88,
-      "urgency": "Routine",
-      "daysLeft": 12,
-      "cost": 120.00,
-      "color": Colors.blue,
-    },
-    {
-      "model": "Toyota Hilux",
-      "id": "BD-441",
-      "issue": "Brake Pad Replacement",
-      "health": 24,
-      "urgency": "Critical",
-      "daysLeft": 0,
-      "cost": 450.00,
-      "color": Colors.red,
-    },
-    {
-      "model": "Mercedes Sprinter",
-      "id": "GH-110",
-      "issue": "Engine Oil Change",
-      "health": 45,
-      "urgency": "Due Soon",
-      "daysLeft": 2,
-      "cost": 85.00,
-      "color": Colors.orange,
-    },
-  ];
+  final _maintainanceController = Get.find<MaintainanceController>();
+  @override
+  void initState() {
+    super.initState();
+    _maintainanceController.fetchAllMaintainances();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,18 +96,40 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
             ),
           ),
         ),
-
-        // === MAINTENANCE LIST ===
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) =>
-                  GMaintananceCard(task: maintenanceTasks[index]),
-              childCount: maintenanceTasks.length,
+        Obx(() {
+          if (_maintainanceController.loadingMaintainances.value &&
+              _maintainanceController.maintainances.isEmpty) {
+            return SliverFillRemaining(child: MaterialLoader().center());
+          }
+          if (_maintainanceController
+              .mantainanceFetchingStatus
+              .value
+              .isNotEmpty) {
+            return SliverFillRemaining(
+              child: MaterialErrorWidget(
+                label: _maintainanceController.mantainanceFetchingStatus.value,
+              ).center(),
+            );
+          }
+          if (_maintainanceController.maintainances.isEmpty &&
+              !_maintainanceController.loadingMaintainances.value) {
+            return SliverFillRemaining(
+              child: "No results found for maintainances".text(),
+            );
+          }
+          return SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => GMaintananceCard(
+                  task: _maintainanceController.maintainances[index],
+                ),
+                childCount: _maintainanceController.maintainances.length,
+              ),
             ),
-          ),
-        ),
+          );
+        }),
+        // === MAINTENANCE LIST ===
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     ).expanded1;
