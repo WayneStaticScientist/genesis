@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/utils/toast.dart';
@@ -14,6 +16,7 @@ class VehicleControler extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
+    fetchAllVehicles();
     return true;
   }
 
@@ -24,7 +27,7 @@ class VehicleControler extends GetxController {
   RxString vehicleFetchingStatus = RxString("");
   Future<void> fetchAllVehicles({
     int page = 1,
-    int limit = 20,
+    int limit = 2,
     String search = '',
   }) async {
     if (loadingVehicles.value) {
@@ -37,7 +40,7 @@ class VehicleControler extends GetxController {
     vehicleFetchingStatus.value = "";
     loadingVehicles.value = true;
     final response = await Net.get(
-      "/vehicles?page=${page}&limit=${limit}&$search=${search}",
+      "/vehicles?page=${page}&limit=${limit}&search=${search}",
     );
     loadingVehicles.value = false;
     if (response.hasError) {
@@ -45,6 +48,9 @@ class VehicleControler extends GetxController {
       return;
     }
     totalPages.value = response.body['totalPages'];
+    this.page.value = response.body['page'] as int;
+    log("Total Pages: ${totalPages.value} | Current Page: ${this.page.value}");
+
     vehicles.addAll(
       (response.body['list'] as List<dynamic>?)
               ?.map((e) => VehicleModel.fromJSON(e))

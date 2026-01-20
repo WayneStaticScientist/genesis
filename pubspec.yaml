@@ -48,6 +48,7 @@ dependencies:
   dio: ^5.9.0
   mobile_device_identifier: ^0.0.3
   pinput: ^6.0.1
+  pull_to_refresh: ^2.0.0
 
 dev_dependencies:
   flutter_test:
