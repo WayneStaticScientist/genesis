@@ -129,6 +129,8 @@ class UserController extends GetxController {
       driversResponse.value = response.response;
       return;
     }
+    driverTotalPages.value = response.body['totalPages'] as int;
+    driverPage.value = response.body['page'] as int;
     drivers.addAll(
       (response.body['list'] as List<dynamic>?)
               ?.map((e) => User.fromJSON(e))

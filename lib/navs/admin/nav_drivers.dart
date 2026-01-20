@@ -9,6 +9,7 @@ import 'package:genesis/screens/pilots/drivers_add.dart';
 import 'package:genesis/widgets/layouts/driver_card.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/widgets/layouts/quick_stats.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class AdminNavDrivers extends StatefulWidget {
   const AdminNavDrivers({super.key});
@@ -18,6 +19,7 @@ class AdminNavDrivers extends StatefulWidget {
 
 class _AdminNavDriversState extends State<AdminNavDrivers> {
   final _userController = Get.find<UserController>();
+  final _refreshController = RefreshController();
 
   @override
   void initState() {
@@ -27,99 +29,129 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // === LUXURY HEADER ===
-        SliverAppBar(
-          expandedHeight: 140,
-          floating: true,
-          pinned: true,
-          backgroundColor: const Color(0xFF1A1D1E),
-          elevation: 0,
-          flexibleSpace: FlexibleSpaceBar(
-            centerTitle: false,
-            titlePadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            title: const Text(
-              "Fleet Pilots",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 22,
-                letterSpacing: -0.5,
+    return SmartRefresher(
+      controller: _refreshController,
+      onRefresh: () async {
+        await _userController.fetchDrivers();
+        _refreshController.refreshCompleted();
+      },
+      onLoading: () async {
+        if (_userController.driverTotalPages.value <=
+            _userController.driverPage.value) {
+          _refreshController.loadNoData();
+          return;
+        }
+        await _userController.fetchDrivers(
+          page: _userController.driverPage.value + 1,
+        );
+        _refreshController.loadComplete();
+      },
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        slivers: [
+          // === LUXURY HEADER ===
+          SliverAppBar(
+            expandedHeight: 140,
+            floating: true,
+            pinned: true,
+            backgroundColor: const Color(0xFF1A1D1E),
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: false,
+              titlePadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
               ),
-            ),
-            background: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1A1D1E), Color(0xFF2C3E50)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+              title: const Text(
+                "Fleet Pilots",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                  letterSpacing: -0.5,
                 ),
               ),
-              child: Iconify(Bx.group, color: Colors.white.withAlpha(30)),
-            ),
-          ),
-          actions: [
-            IconButton(
-              onPressed: () => Get.to(() => AdminAddDriver()),
-              icon: Icon(Icons.add),
-            ),
-          ],
-        ),
-
-        // === QUICK STATS BAR ===
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                GQuickStats(label: "Active", value: "12", color: Colors.green),
-                GQuickStats(label: "Resting", value: "05", color: Colors.blue),
-                GQuickStats(
-                  label: "Top Rated",
-                  value: "08",
-                  color: Colors.orange,
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1A1D1E), Color(0xFF2C3E50)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-              ],
-            ),
-          ),
-        ),
-
-        // === DRIVERS LIST ===
-        Obx(() {
-          if (_userController.loadingDrivers.value &&
-              _userController.drivers.isEmpty) {
-            return SliverFillRemaining(child: MaterialLoader().center());
-          }
-          if (_userController.driversResponse.value.isNotEmpty) {
-            return SliverFillRemaining(
-              child: MaterialErrorWidget(
-                label: _userController.driversResponse.value,
-              ).center(),
-            );
-          }
-          if (_userController.drivers.isEmpty &&
-              !_userController.loadingDrivers.value) {
-            return SliverFillRemaining(
-              child: "No results found for drivers".text(),
-            );
-          }
-          return SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) =>
-                    GDriverCard(driver: _userController.drivers[index]),
-                childCount: _userController.drivers.length,
+                child: Iconify(Bx.group, color: Colors.white.withAlpha(30)),
               ),
             ),
-          );
-        }),
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
-    ).expanded1;
+            actions: [
+              IconButton(
+                onPressed: () => Get.to(() => AdminAddDriver()),
+                icon: Icon(Icons.add),
+              ),
+            ],
+          ),
+
+          // === QUICK STATS BAR ===
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  GQuickStats(
+                    label: "Active",
+                    value: "12",
+                    color: Colors.green,
+                  ),
+                  GQuickStats(
+                    label: "Resting",
+                    value: "05",
+                    color: Colors.blue,
+                  ),
+                  GQuickStats(
+                    label: "Top Rated",
+                    value: "08",
+                    color: Colors.orange,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // === DRIVERS LIST ===
+          Obx(() {
+            if (_userController.loadingDrivers.value &&
+                _userController.drivers.isEmpty) {
+              return SliverFillRemaining(child: MaterialLoader().center());
+            }
+            if (_userController.driversResponse.value.isNotEmpty) {
+              return SliverFillRemaining(
+                child: MaterialErrorWidget(
+                  label: _userController.driversResponse.value,
+                ).center(),
+              );
+            }
+            if (_userController.drivers.isEmpty &&
+                !_userController.loadingDrivers.value) {
+              return SliverFillRemaining(
+                child: "No results found for drivers".text(),
+              );
+            }
+            return SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      GDriverCard(driver: _userController.drivers[index]),
+                  childCount: _userController.drivers.length,
+                ),
+              ),
+            );
+          }),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ClassicFooter(),
+        ],
+      ),
+    );
   }
 }

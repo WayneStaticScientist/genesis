@@ -27,7 +27,7 @@ class VehicleControler extends GetxController {
   RxString vehicleFetchingStatus = RxString("");
   Future<void> fetchAllVehicles({
     int page = 1,
-    int limit = 2,
+    int limit = 20,
     String search = '',
   }) async {
     if (loadingVehicles.value) {
