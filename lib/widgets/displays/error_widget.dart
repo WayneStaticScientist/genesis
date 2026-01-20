@@ -7,7 +7,13 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 class MaterialErrorWidget extends StatelessWidget {
   final String label;
   final Widget? icon;
-  const MaterialErrorWidget({super.key, required this.label, this.icon});
+  final VoidCallback? onRetry;
+  const MaterialErrorWidget({
+    super.key,
+    required this.label,
+    this.icon,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +26,17 @@ class MaterialErrorWidget extends StatelessWidget {
           ),
       14.gapHeight,
       label.text(),
+      if (onRetry != null) ...[
+        20.gapHeight,
+        IconButton(
+          onPressed: onRetry!,
+          icon: Iconify(
+            Bx.refresh,
+            color: Get.isDarkMode ? Colors.white : Colors.black,
+            size: 24,
+          ),
+        ),
+      ],
     ].column(mainAxisSize: MainAxisSize.min);
   }
 }

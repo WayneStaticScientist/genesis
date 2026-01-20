@@ -15,31 +15,34 @@ class VehicleDetails {
 
 class MainStatsModel {
   int totalMaintenanceCount;
+  int totalDriversInSystem;
   double totalMaintainanceCost;
+  int totalVehiclesInSystem;
   int numberOfVehiclesWithMaintenance;
-  int numberOfDriversInvolved;
   List<VehicleDetails> vehicleDetails;
   MainStatsModel({
     required this.totalMaintenanceCount,
+    required this.totalDriversInSystem,
+    required this.totalVehiclesInSystem,
     required this.totalMaintainanceCost,
     required this.vehicleDetails,
     required this.numberOfVehiclesWithMaintenance,
-    required this.numberOfDriversInvolved,
   });
   factory MainStatsModel.fromJson(Map<String, dynamic> json) {
     return MainStatsModel(
-      totalMaintenanceCount: json['totalMaintenanceCount'],
+      totalDriversInSystem: json['totalDriversInSystem'] ?? 0,
+      totalVehiclesInSystem: json['totalVehiclesInSystem'] ?? 0,
+      totalMaintenanceCount: json['totalMaintenanceCount'] ?? 0,
       totalMaintainanceCost: (json['totalCosts'] as num).toDouble(),
       numberOfVehiclesWithMaintenance: json['numberOfVehiclesWithMaintenance'],
-      numberOfDriversInvolved: json['numberOfDriversInvolved'],
       vehicleDetails: (json['vehicleDetails'] as List)
           .map(
             (e) => VehicleDetails(
-              vehicleId: e['vehicleId'],
-              model: e['model'],
-              status: e['status'],
-              driverId: e['driverId'],
-              driverName: e['driverName'],
+              vehicleId: e['vehicleId'] ?? '',
+              model: e['model'] ?? '',
+              status: e['status'] ?? '',
+              driverId: e['driverId'] ?? '',
+              driverName: e['driverName'] ?? '',
             ),
           )
           .toList(),

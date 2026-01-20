@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:genesis/controllers/stats_controller.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:genesis/widgets/layouts/main_header.dart';
-import 'package:genesis/widgets/layouts/stat_card.dart';
-import 'package:genesis/widgets/layouts/vehicle_list_item.dart';
+import 'package:exui/exui.dart';
+import 'package:genesis/widgets/displays/error_widget.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/widgets/layouts/stat_card.dart';
+import 'package:genesis/widgets/layouts/main_header.dart';
+import 'package:genesis/controllers/stats_controller.dart';
+import 'package:genesis/widgets/layouts/vehicle_list_item.dart';
 
 class AdminNavMain extends StatefulWidget {
   const AdminNavMain({super.key});
@@ -15,6 +18,7 @@ class AdminNavMain extends StatefulWidget {
 
 class _AdminNavMainState extends State<AdminNavMain> {
   final _statsController = Get.find<StatsController>();
+
   @override
   void initState() {
     super.initState();
@@ -23,9 +27,25 @@ class _AdminNavMainState extends State<AdminNavMain> {
 
   @override
   Widget build(BuildContext context) {
-    return
-    // 2. Main Content Area
-    Expanded(
+    return Obx(() {
+      if (_statsController.isLoading.value) {
+        return MaterialLoader().center();
+      }
+      if (_statsController.errorState.value.isNotEmpty ||
+          _statsController.stats.value == null) {
+        return MaterialErrorWidget(
+          label: 'Failed to load statistics.',
+          onRetry: () {
+            _statsController.fetchStats();
+          },
+        ).center();
+      }
+      return _buildStats(context);
+    });
+  }
+
+  Widget _buildStats(BuildContext context) {
+    return Expanded(
       child: Column(
         children: [
           GMainHeader(),
@@ -57,10 +77,16 @@ class _AdminNavMainState extends State<AdminNavMain> {
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
                         childAspectRatio: 1.6,
-                        children: const [
+                        children: [
                           ModernStatCard(
                             title: "Total Fleet",
-                            value: "142",
+                            value:
+                                _statsController
+                                    .stats
+                                    .value
+                                    ?.totalVehiclesInSystem
+                                    .toString() ??
+                                "0",
                             icon: Icons.directions_car,
                             gradientColors: [Colors.blue, Colors.blueAccent],
                             trend: "+12%",
@@ -68,7 +94,13 @@ class _AdminNavMainState extends State<AdminNavMain> {
                           ),
                           ModernStatCard(
                             title: "Active Drivers",
-                            value: "86",
+                            value:
+                                _statsController
+                                    .stats
+                                    .value
+                                    ?.totalDriversInSystem
+                                    .toString() ??
+                                "0",
                             icon: Icons.person_pin_circle,
                             gradientColors: [Colors.green, Colors.greenAccent],
                             trend: "+5%",
@@ -76,7 +108,13 @@ class _AdminNavMainState extends State<AdminNavMain> {
                           ),
                           ModernStatCard(
                             title: "Maintenance",
-                            value: "8",
+                            value:
+                                _statsController
+                                    .stats
+                                    .value
+                                    ?.totalMaintenanceCount
+                                    .toString() ??
+                                "0",
                             icon: Icons.build_circle,
                             gradientColors: [
                               Colors.orange,
