@@ -56,15 +56,17 @@ class GVehicleCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           vehicle.carModel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
-                        const Spacer(),
+                        ).constrained(maxWidth: 130),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,

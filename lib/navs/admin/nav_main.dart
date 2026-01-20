@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/layouts/main_header.dart';
 import 'package:genesis/widgets/layouts/stat_card.dart';
 import 'package:genesis/widgets/layouts/vehicle_list_item.dart';
+import 'package:get/get.dart';
 
 class AdminNavMain extends StatefulWidget {
   const AdminNavMain({super.key});
@@ -12,6 +14,13 @@ class AdminNavMain extends StatefulWidget {
 }
 
 class _AdminNavMainState extends State<AdminNavMain> {
+  final _statsController = Get.find<StatsController>();
+  @override
+  void initState() {
+    super.initState();
+    _statsController.fetchStats();
+  }
+
   @override
   Widget build(BuildContext context) {
     return
@@ -49,33 +58,32 @@ class _AdminNavMainState extends State<AdminNavMain> {
                         mainAxisSpacing: 20,
                         childAspectRatio: 1.6,
                         children: const [
-                          StatCard(
+                          ModernStatCard(
                             title: "Total Fleet",
                             value: "142",
                             icon: Icons.directions_car,
-                            color: Colors.blue,
+                            gradientColors: [Colors.blue, Colors.blueAccent],
                             trend: "+12%",
+                            subtitle: '',
                           ),
-                          StatCard(
+                          ModernStatCard(
                             title: "Active Drivers",
                             value: "86",
                             icon: Icons.person_pin_circle,
-                            color: Colors.green,
+                            gradientColors: [Colors.green, Colors.greenAccent],
                             trend: "+5%",
+                            subtitle: '',
                           ),
-                          StatCard(
+                          ModernStatCard(
                             title: "Maintenance",
                             value: "8",
                             icon: Icons.build_circle,
-                            color: Colors.orange,
+                            gradientColors: [
+                              Colors.orange,
+                              Colors.orangeAccent,
+                            ],
                             trend: "-2%",
-                          ),
-                          StatCard(
-                            title: "Fuel Costs",
-                            value: "\$12k",
-                            icon: Icons.local_gas_station,
-                            color: Colors.red,
-                            trend: "+1.2%",
+                            subtitle: '',
                           ),
                         ],
                       );
