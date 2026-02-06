@@ -1,5 +1,6 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
@@ -13,7 +14,17 @@ class FleetTrackingScreen extends StatefulWidget {
 }
 
 class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
+  // Assuming controller exists in your project setup
   final _vehicleController = Get.find<VehicleControler>();
+  final _userController = Get.find<UserController>();
+  @override
+  void initState() {
+    super.initState();
+    _vehicleController.fetchAllVehicles(
+      driverId: _userController.user.value?.role ?? "driver",
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -29,7 +40,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop',
               ),
               fit: BoxFit.cover,
-              opacity: 0.3, // Dim the map to make UI pop
+              opacity:
+                  0.6, // Increased opacity slightly for better visibility when sheet is down
             ),
           ),
         ),
@@ -48,33 +60,13 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(25),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.white.withAlpha(25)),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: const Row(
-                      children: [
-                        Icon(LineIcons.search, color: Colors.white70, size: 20),
-                        SizedBox(width: 10),
-                        Text(
-                          "Tracking Asset ID...",
-                          style: TextStyle(color: Colors.white38),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
         ),
 
         // === 3. ACTIVE ASSETS CAROUSEL (Horizontal) ===
+        // We wrap this in a Positioned to ensure it stays behind the sheet when expanded
         Positioned(
           top: 120,
           left: 0,
@@ -91,160 +83,182 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
           ),
         ),
 
-        // === 4. BOTTOM TRACKING PANEL (Glassmorphism) ===
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.45,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: GTheme.color(),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(40),
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Driver Info Header
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?u=marcus',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Marcus Wright",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "On Route: Downtown Delivery",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(LineIcons.phone, color: Colors.blue),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-                  Divider(color: Colors.grey.withAlpha(50)),
-                  const SizedBox(height: 24),
-
-                  // Live Telemetry Grid
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildTelemetryItem(
-                        LineIcons.lightningBolt,
-                        "84 km/h",
-                        "Current Speed",
-                      ),
-                      _buildTelemetryItem(
-                        LineIcons.gasPump,
-                        "62%",
-                        "Fuel Level",
-                      ),
-                      _buildTelemetryItem(
-                        LineIcons.clock,
-                        "14 min",
-                        "Est. Arrival",
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Progress Bar
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Progress",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        "75%",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: 0.75,
-                      minHeight: 8,
-                      backgroundColor: Colors.blue.shade50,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.blue,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        "View Full Itinerary",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+        // === 4. DRAGGABLE BOTTOM SHEET ===
+        DraggableScrollableSheet(
+          initialChildSize:
+              0.45, // Starts at 45% height (same as your original fixed height)
+          minChildSize: 0.15, // Can be dragged down to see more map
+          maxChildSize: 0.92, // Can be dragged up to almost full screen
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: GTheme.color(), // Your theme color
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(40),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(70),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
                   ),
                 ],
               ),
-            ),
-          ),
+              // We use the scrollController provided by DraggableScrollableSheet
+              // This connects the scroll gesture to the sheet expansion
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle Bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Driver Info Header
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 25,
+                          backgroundImage: NetworkImage(
+                            'https://i.pravatar.cc/150?u=marcus',
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Marcus Wright",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "On Route: Downtown Delivery",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            LineIcons.phone,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                    Divider(color: Colors.grey.withAlpha(50)),
+                    const SizedBox(height: 24),
+
+                    // Live Telemetry Grid
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildTelemetryItem(
+                          LineIcons.lightningBolt,
+                          "84 km/h",
+                          "Current Speed",
+                        ),
+                        _buildTelemetryItem(
+                          LineIcons.gasPump,
+                          "62%",
+                          "Fuel Level",
+                        ),
+                        _buildTelemetryItem(
+                          LineIcons.clock,
+                          "14 min",
+                          "Est. Arrival",
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Progress Bar
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Progress",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "75%",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: 0.75,
+                        minHeight: 8,
+                        backgroundColor: Colors.blue.shade50,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.blue,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          "View Full Itinerary",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Added extra space at bottom for scrolling feel when expanded
+                    const SizedBox(height: 50),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     ).expanded1;

@@ -29,6 +29,7 @@ class VehicleControler extends GetxController {
     int page = 1,
     int limit = 20,
     String search = '',
+    String driverId = '',
   }) async {
     if (loadingVehicles.value) {
       Toaster.showError("loading please wait");
@@ -40,7 +41,7 @@ class VehicleControler extends GetxController {
     vehicleFetchingStatus.value = "";
     loadingVehicles.value = true;
     final response = await Net.get(
-      "/vehicles?page=${page}&limit=${limit}&search=${search}",
+      "/vehicles?page=${page}&limit=${limit}&search=${search}&driver=$driverId",
     );
     loadingVehicles.value = false;
     if (response.hasError) {
