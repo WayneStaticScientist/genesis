@@ -1,12 +1,12 @@
-import 'package:exui/exui.dart';
-import 'package:genesis/widgets/displays/error_widget.dart';
-import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/layouts/stat_card.dart';
 import 'package:genesis/widgets/layouts/main_header.dart';
 import 'package:genesis/controllers/stats_controller.dart';
+import 'package:genesis/widgets/displays/error_widget.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/widgets/layouts/vehicle_list_item.dart';
 
 class AdminNavMain extends StatefulWidget {
@@ -145,7 +145,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
-                              "Live Vehicle Status",
+                              "List of Vehicles",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -158,30 +158,20 @@ class _AdminNavMainState extends State<AdminNavMain> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        VehicleListItem(
-                          vehicle: "Toyota Hilux - G42",
-                          driver: "Wayne (Driver)",
-                          status: "En Route",
-                          statusColor: Colors.green,
-                        ),
-                        VehicleListItem(
-                          vehicle: "Ford Ranger - X99",
-                          driver: "Sarah (Driver)",
-                          status: "Idle",
-                          statusColor: Colors.amber,
-                        ),
-                        VehicleListItem(
-                          vehicle: "Isuzu NPR - T11",
-                          driver: "Mike (Driver)",
-                          status: "Maintenance",
-                          statusColor: Colors.red,
-                        ),
-                        VehicleListItem(
-                          vehicle: "Nissan NV350 - B22",
-                          driver: "John (Driver)",
-                          status: "En Route",
-                          statusColor: Colors.green,
-                        ),
+                        ..._statsController.stats.value!.vehicleDetails
+                            .map(
+                              (vehicle) => VehicleListItem(
+                                status: vehicle.status,
+                                vehicle: vehicle.model,
+                                driver: vehicle.driverName,
+                                statusColor:
+                                    vehicle.status.toLowerCase() ==
+                                        'in maintenance'
+                                    ? Colors.orange
+                                    : Colors.green,
+                              ),
+                            )
+                            .toList(),
                       ],
                     ),
                   ),
