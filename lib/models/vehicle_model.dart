@@ -6,7 +6,7 @@ class VehicleModel {
   final String engineType;
   final double fuelRatio;
   final String status;
-
+  final String? driver;
   final double usage;
 
   VehicleModel({
@@ -17,10 +17,12 @@ class VehicleModel {
     required this.fuelRatio,
     required this.status,
     required this.usage,
+    required this.driver,
   });
 
   Map<String, dynamic> toJson() {
     return {
+      'driver': driver,
       "carModel": carModel,
       "licencePlate": licencePlate,
       'engineType': engineType,
@@ -33,6 +35,7 @@ class VehicleModel {
   factory VehicleModel.fromJSON(dynamic data) {
     return VehicleModel(
       id: data['_id'],
+      driver: data['driver'],
       status: data['status'],
       carModel: data['carModel'],
       licencePlate: data['licencePlate'],

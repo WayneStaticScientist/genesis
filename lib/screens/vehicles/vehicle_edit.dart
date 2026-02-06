@@ -1,3 +1,5 @@
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/models/user_model.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -18,12 +20,16 @@ class AdminEditVehicle extends StatefulWidget {
 }
 
 class _AdminEditVehicleState extends State<AdminEditVehicle> {
+  final _driversController = Get.find<UserController>();
   final _vehicleController = Get.find<VehicleControler>();
   late TextEditingController _modelController;
   late TextEditingController _plateController;
   late String _selectedStatus;
   late String? _selectedType;
   late double _fuelRation;
+  late bool _initialUserInitiliazed = widget.vehicle.driver == null;
+  // Added state for driver
+  User? _assignedDriver;
 
   @override
   void initState() {
@@ -35,6 +41,11 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         ? VehicleUtlis.engineTypes[0]
         : widget.vehicle.engineType;
     _fuelRation = widget.vehicle.fuelRatio;
+    WidgetsBinding.instance.addPostFrameCallback((tick) {
+      _getDriver();
+    });
+    // Initialize driver if your vehicle model has driver info
+    // if (widget.vehicle.driverId != null) { ... }
   }
 
   @override
@@ -52,7 +63,10 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
       "status": _selectedStatus,
       "engineType": _selectedType,
       "fuelRatio": _fuelRation,
+      // Add driver ID if selected
+      "driver": _assignedDriver?.id,
     };
+
     final data = await _vehicleController.updateVehicle(
       updatedVehicle,
       widget.vehicle.id ?? '',
@@ -60,7 +74,109 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     if (data) {
       Toaster.showSuccess("vehicle updated succefully");
     }
-    // In a real app, you'd use a Provider/Bloc here
+  }
+
+  // New function to show driver selection
+  void _showAssignDriverSheet() {
+    // MOCK DATA: Replace with your actual DriverController list
+    _driversController.fetchDrivers();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: GTheme.color(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  "Assign Driver".text(
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: GTheme.reverse(),
+                    ),
+                  ),
+                  TextButton.icon(
+                    icon: Icon(Icons.remove, color: GTheme.reverse()),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() {
+                        _assignedDriver = null;
+                      });
+                    },
+                    label: "remove".text(),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: GTheme.reverse()),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Obx(
+                  () => ListView.separated(
+                    itemCount: _driversController.drivers.length,
+                    separatorBuilder: (c, i) =>
+                        Divider(color: Colors.grey.withAlpha(50)),
+                    itemBuilder: (context, index) {
+                      final driver = _driversController.drivers[index];
+                      final isSelected = _assignedDriver?.id == driver.id;
+
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withAlpha(30),
+                          child: Text(
+                            driver.firstName[0],
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        title: "${driver.firstName} ${driver.lastName}"
+                            .toString()
+                            .text(
+                              style: TextStyle(
+                                color: GTheme.reverse(),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        subtitle: driver.status.toString().text(
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        trailing: isSelected
+                            ? Icon(
+                                Icons.check_circle,
+                                color: Theme.of(context).colorScheme.primary,
+                              )
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            _assignedDriver = driver;
+                          });
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -130,7 +246,57 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
             ),
 
             const SizedBox(height: 16),
-            _buildLabel("Fleet Status"),
+            _buildLabel("Fleet Management"),
+
+            // --- NEW: ASSIGN DRIVER BUTTON ---
+            GestureDetector(
+              onTap: _showAssignDriverSheet,
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: GTheme.reverse().withAlpha(10),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person_pin_circle_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child:
+                          (_assignedDriver != null
+                                  ? "${_assignedDriver!.firstName} ${_assignedDriver!.lastName}"
+                                  : "Assign Driver (Tap to select)")
+                              .toString()
+                              .text(
+                                style: TextStyle(
+                                  color: _assignedDriver != null
+                                      ? GTheme.reverse()
+                                      : GTheme.reverse().withAlpha(128),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: GTheme.reverse()),
+                  ],
+                ),
+              ),
+            ).visibleIf(_initialUserInitiliazed),
+            "Loading Assigned Driver".text().visibleIf(
+              !_initialUserInitiliazed,
+            ),
+            [MaterialLoader()]
+                .row(mainAxisAlignment: MainAxisAlignment.center)
+                .margin(EdgeInsets.symmetric(vertical: 10))
+                .visibleIf(!_initialUserInitiliazed),
+            // ---------------------------------
             _buildDropdown(
               value: _selectedStatus,
               items: VehicleUtlis.vehicleStatuses,
@@ -265,5 +431,14 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         ),
       ),
     );
+  }
+
+  void _getDriver() async {
+    if (widget.vehicle.driver == null) return;
+    final response = await _driversController.fetchUser(widget.vehicle.driver!);
+    setState(() {
+      _initialUserInitiliazed = true;
+      _assignedDriver = response;
+    });
   }
 }

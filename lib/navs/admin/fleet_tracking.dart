@@ -1,6 +1,8 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
@@ -11,6 +13,7 @@ class FleetTrackingScreen extends StatefulWidget {
 }
 
 class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
+  final _vehicleController = Get.find<VehicleControler>();
   @override
   Widget build(BuildContext context) {
     return Stack(

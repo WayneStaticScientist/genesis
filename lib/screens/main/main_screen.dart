@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/navs/admin/nav_main.dart';
 import 'package:genesis/navs/admin/nav_payroll.dart';
@@ -18,6 +21,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final _userController = Get.find<UserController>();
   String _selectedIndex = "dashboard";
   Map<String, Widget> widgetTree = {
     "dashboard": const AdminNavMain(),
@@ -28,6 +32,15 @@ class _MainScreenState extends State<MainScreen> {
     "tracking": const FleetTrackingScreen(),
     "maintanance": const AdminNavMaintenance(),
   };
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = _userController.user.value?.role == "driver"
+        ? "tracking"
+        : "dashboard";
+    log("user is ${_userController.user.value?.role}");
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDeskop = MediaQuery.of(context).size.width > 500;

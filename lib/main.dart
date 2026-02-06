@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/live_tracking_controller.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:get/get.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
         Get.put(StatsController());
         Get.put(VehicleControler());
         Get.put(MaintainanceController());
+        Get.put(LiveTrackingController());
       }),
       title: 'Genesis',
       theme: ThemeData(

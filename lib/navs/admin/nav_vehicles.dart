@@ -5,6 +5,7 @@ import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/widgets/layouts/vehicle_cards.dart';
 import 'package:genesis/screens/vehicles/vehicles_add.dart';
 import 'package:genesis/widgets/displays/error_widget.dart';
@@ -21,6 +22,7 @@ class AdminNavVehicles extends StatefulWidget {
 
 class _AdminNavVehiclesState extends State<AdminNavVehicles> {
   final _refreshController = RefreshController();
+  final _statsController = Get.find<StatsController>();
   final _vehicleController = Get.find<VehicleControler>();
   late Timer _tickerTimer;
   String searchQuery = "";
@@ -99,39 +101,55 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
           ),
 
           // === METRIC OVERVIEW CARDS ===
-          SliverToBoxAdapter(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                children: [
-                  GMainStatCard(
-                    title: "Total Fleet",
-                    value: "24",
-                    icon: Icons.car_repair,
-                    color: Colors.blue,
-                  ),
-                  GMainStatCard(
-                    title: "Active Now",
-                    value: "18",
-                    icon: Icons.location_on,
-                    color: Colors.green,
-                  ),
-                  GMainStatCard(
-                    title: "Maintenance",
-                    value: "4",
-                    icon: Icons.build_circle,
-                    color: Colors.orange,
-                  ),
-                  GMainStatCard(
-                    title: "Cost/KM",
-                    value: "\$0.32",
-                    icon: Icons.alternate_email,
-                    color: Colors.purple,
-                  ),
-                ],
-              ),
-            ),
+          Obx(
+            () => _statsController.stats.value != null
+                ? SliverToBoxAdapter(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          GMainStatCard(
+                            title: "Total Fleet",
+                            value: _statsController
+                                .stats
+                                .value!
+                                .totalVehiclesInSystem
+                                .toString(),
+                            icon: Icons.car_repair,
+                            color: Colors.blue,
+                          ),
+                          GMainStatCard(
+                            title: "Active Now",
+                            value: "0",
+                            icon: Icons.location_on,
+                            color: Colors.green,
+                          ),
+                          GMainStatCard(
+                            title: "Maintenance",
+                            value: _statsController
+                                .stats
+                                .value!
+                                .totalMaintenanceCount
+                                .toString(),
+                            icon: Icons.build_circle,
+                            color: Colors.orange,
+                          ),
+                          GMainStatCard(
+                            title: "costs",
+                            value:
+                                "\$${_statsController.stats.value!.totalMaintainanceCost}",
+                            icon: Icons.alternate_email,
+                            color: Colors.purple,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : SliverToBoxAdapter(),
           ),
 
           // === SEARCH & FILTER ===

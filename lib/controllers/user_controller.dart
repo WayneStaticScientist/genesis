@@ -78,7 +78,8 @@ class UserController extends GetxController {
       );
     }
     if (!response.hasError) {
-      user.value = User.fromStorage();
+      user.value = User.fromJSON(response.body['user']);
+      user.value!.saveUser();
     }
   }
 
@@ -158,5 +159,14 @@ class UserController extends GetxController {
     }
     fetchDrivers(page: 1);
     return true;
+  }
+
+  Future<User?> fetchUser(String id) async {
+    final response = await Net.get("/user/$id");
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return null;
+    }
+    return User.fromJSON(response.body);
   }
 }

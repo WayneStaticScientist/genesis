@@ -1,7 +1,9 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/layouts/avatar_icon.dart';
+import 'package:get/get.dart';
 
 class GMainHeader extends StatefulWidget {
   const GMainHeader({super.key});
@@ -11,6 +13,7 @@ class GMainHeader extends StatefulWidget {
 }
 
 class _GMainHeaderState extends State<GMainHeader> {
+  final _userController = Get.find<UserController>();
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -43,7 +46,10 @@ class _GMainHeaderState extends State<GMainHeader> {
             icon: const Icon(Icons.notifications_none, color: Colors.grey),
           ),
           16.gapWidth,
-          AvatarIcon(name: "wayne"),
+          Obx(
+            () =>
+                AvatarIcon(name: _userController.user.value?.firstName ?? 'U'),
+          ),
         ],
       ),
     );

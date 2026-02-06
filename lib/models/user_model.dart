@@ -52,7 +52,7 @@ class User {
     return User(
       id: data['_id'],
       email: data['email'],
-      role: data['firstName'],
+      role: data['role'],
       country: data['country'],
       lastName: data['lastName'],
       firstName: data['firstName'],
