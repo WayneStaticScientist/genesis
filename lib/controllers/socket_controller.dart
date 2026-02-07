@@ -12,10 +12,14 @@ class SocketController extends GetxController {
   late IO.Socket socket;
   Timer? _statusTimer;
   RxString listenId = "".obs;
+  String? _previousListenId;
   @override
   void onInit() {
     super.onInit();
     initConnection();
+    ever(listenId, (String newId) {
+      _updateSocketListener(newId);
+    });
   }
 
   @override
@@ -123,5 +127,23 @@ class SocketController extends GetxController {
     } catch (e) {
       print('Error getting location: $e');
     }
+  }
+
+  void _updateSocketListener(String newId) {
+    if (newId.isEmpty) return;
+
+    // 2. Remove the listener from the old channel to prevent memory leaks/duplicate logs
+    if (_previousListenId != null) {
+      socket.off(_previousListenId!);
+      log('Stopped listening to: $_previousListenId');
+    }
+
+    // 3. Register the new listener
+    socket.on(newId, (data) {
+      log('New Message location message for $newId: $data');
+    });
+
+    _previousListenId = newId;
+    log('Now listening to: $newId');
   }
 }
