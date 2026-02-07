@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:genesis/models/user_model.dart';
@@ -10,6 +11,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 class SocketController extends GetxController {
   late IO.Socket socket;
   Timer? _statusTimer;
+  RxString listenId = "".obs;
   @override
   void onInit() {
     super.onInit();
@@ -34,6 +36,10 @@ class SocketController extends GetxController {
       _startStatusCheck();
     });
     socket.on('message', (data) => print('New Message: $data'));
+    socket.on(
+      listenId.value,
+      (data) => log('New Message location message : $data'),
+    );
     socket.onDisconnect((_) {
       _statusTimer?.cancel(); // 5. Stop checking if disconnected
     });
@@ -42,6 +48,8 @@ class SocketController extends GetxController {
   void transmitMessage({required String channel, required Map data}) {
     if (socket.connected) {
       socket.emit(channel, data);
+    } else {
+      socket.connect();
     }
   }
 
@@ -57,7 +65,8 @@ class SocketController extends GetxController {
   Future<void> _checkRouteConfigurations() async {
     final user = User.fromStorage();
 
-    if (user == null || user.trip == null) return;
+    if (user == null || user.trip == null || user.currentVehicle == null)
+      return;
     try {
       // 2. Handle Permissions
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -107,7 +116,9 @@ class SocketController extends GetxController {
         "car": user.currentVehicle,
         'timestamp': DateTime.now().toIso8601String(),
       };
-
+      if (listenId.value != user.currentVehicle) {
+        listenId.value = user.currentVehicle!;
+      }
       transmitMessage(channel: 'user-location-update', data: data);
     } catch (e) {
       print('Error getting location: $e');
