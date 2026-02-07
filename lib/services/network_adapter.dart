@@ -6,7 +6,9 @@ import 'package:genesis/models/response_model.dart';
 
 class Net {
   static Dio? _dio;
-  static const String baseUrl = "http://10.0.2.2:5024/v1";
+  static const String domain = "10.0.2.2:5024";
+  static const String baseUrl = "http://$domain/v1";
+  static const String url = "http://$domain";
   // static const String baseUrl = "https://api.mistpos.co.zw/v1";
   static Future<ResponseModel> get(String url) async {
     log("going $url ");
