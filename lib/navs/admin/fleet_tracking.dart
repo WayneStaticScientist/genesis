@@ -1,11 +1,16 @@
-import 'package:get/get.dart';
-import 'package:exui/exui.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:genesis/utils/toast.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:genesis/models/vehicle_model.dart';
+import 'package:exui/exui.dart'; // Assuming exui provides .decoratedBox extension
+
+// Project specific imports
+import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
+import 'package:genesis/models/vehicle_model.dart';
+import 'package:genesis/utils/toast.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
   const FleetTrackingScreen({super.key});
@@ -15,12 +20,25 @@ class FleetTrackingScreen extends StatefulWidget {
 }
 
 class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
-  final _vehicleController = Get.find<VehicleControler>();
   final _userController = Get.find<UserController>();
+  final _socketController = Get.find<SocketController>();
+  final _vehicleController = Get.find<VehicleControler>();
+
+  // Map Controller
+  final Completer<GoogleMapController> _mapController = Completer();
+
+  // Worker to listen to location changes
+  Worker? _locationWorker;
 
   // Controllers for the Trip Dialog
   final _timeController = TextEditingController();
   final _fuelController = TextEditingController();
+
+  // Default location (e.g., if no data is available yet)
+  static const _defaultLocation = LatLng(
+    -17.824858,
+    31.053028,
+  ); // Harare, default
 
   @override
   void initState() {
@@ -28,10 +46,21 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
     _vehicleController.fetchAllVehicles(
       driverId: _userController.user.value?.id ?? "---",
     );
+
+    // Listen to live track updates to move camera
+    _locationWorker = ever(_socketController.liveTrackModel, (data) async {
+      if (data != null) {
+        final controller = await _mapController.future;
+        controller.animateCamera(
+          CameraUpdate.newLatLng(LatLng(data.lat, data.lng)),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _locationWorker?.dispose();
     _timeController.dispose();
     _fuelController.dispose();
     super.dispose();
@@ -42,21 +71,47 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // === 1. MOCK MAP LAYER ===
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              image: DecorationImage(
-                image: const NetworkImage(
-                  'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop',
-                ),
-                fit: BoxFit.cover,
-                opacity: 0.6,
+          // === 1. GOOGLE MAP LAYER ===
+          Obx(() {
+            final liveData = _socketController.liveTrackModel.value;
+            final hasData = liveData != null;
+
+            final currentPos = hasData
+                ? LatLng(liveData.lat, liveData.lng)
+                : _defaultLocation;
+
+            return GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: currentPos,
+                zoom: 15,
               ),
-            ),
-          ),
+              onMapCreated: (GoogleMapController controller) {
+                _mapController.complete(controller);
+                // If we have data on load, ensure we snap to it
+                if (hasData) {
+                  controller.moveCamera(CameraUpdate.newLatLng(currentPos));
+                }
+              },
+              zoomControlsEnabled: false,
+              myLocationButtonEnabled: false,
+              mapType: MapType.normal,
+              markers: {
+                if (hasData)
+                  Marker(
+                    markerId: const MarkerId('live_vehicle'),
+                    position: currentPos,
+                    rotation: 0, // You can add rotation if available in model
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueBlue,
+                    ),
+                    infoWindow: InfoWindow(
+                      title: liveData.car,
+                      snippet: "${liveData.speed.toStringAsFixed(1)} km/h",
+                    ),
+                  ),
+              },
+            );
+          }),
 
           // === 2. TOP NAVIGATION ===
           SafeArea(
@@ -64,11 +119,22 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 children: [
-                  DrawerButton(color: Colors.white).decoratedBox(
+                  DrawerButton(
+                    style: ButtonStyle(
+                      iconColor: WidgetStateProperty.all(Colors.black87),
+                      backgroundColor: WidgetStateProperty.all(Colors.white),
+                    ),
+                  ).decoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(25),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.white.withAlpha(25)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(30),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -202,12 +268,20 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildTelemetryItem(
-                            LineIcons.lightningBolt,
-                            "84 km/h",
-                            "Speed",
+                          Obx(
+                            () => _buildTelemetryItem(
+                              LineIcons.lightningBolt,
+                              "${_socketController.liveTrackModel.value?.speed.toStringAsFixed(0) ?? '0'} km/h",
+                              "Speed",
+                            ),
                           ),
-                          _buildTelemetryItem(LineIcons.gasPump, "62%", "Fuel"),
+                          Obx(
+                            () => _buildTelemetryItem(
+                              LineIcons.gasPump,
+                              "${_socketController.liveTrackModel.value?.fuelLevel.toString() ?? '0'}%",
+                              "Fuel",
+                            ),
+                          ),
                           _buildTelemetryItem(
                             LineIcons.clock,
                             "14 min",
@@ -352,7 +426,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.blue : Colors.white.withAlpha(25),
+        color: isSelected ? Colors.blue : Colors.black.withOpacity(0.6),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isSelected ? Colors.blue : Colors.white.withAlpha(25),
@@ -365,6 +439,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
           const SizedBox(height: 8),
           Text(
             model,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -400,6 +476,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
       middleText: "Set ${item.carModel} as vehicle for your current trip?",
       textCancel: "Close",
       textConfirm: "Yes",
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.blue,
       onConfirm: () async {
         Get.back();
         final response = await _userController.updateMyStatus(

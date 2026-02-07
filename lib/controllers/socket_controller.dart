@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:genesis/models/live_track_model.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -13,6 +14,7 @@ class SocketController extends GetxController {
   Timer? _statusTimer;
   RxString listenId = "".obs;
   String? _previousListenId;
+  Rx<LiveTrackModel?> liveTrackModel = Rx<LiveTrackModel?>(null);
   @override
   void onInit() {
     super.onInit();
@@ -39,11 +41,6 @@ class SocketController extends GetxController {
       print('Connected to Bun backend');
       _startStatusCheck();
     });
-    socket.on('message', (data) => print('New Message: $data'));
-    socket.on(
-      listenId.value,
-      (data) => log('New Message location message : $data'),
-    );
     socket.onDisconnect((_) {
       _statusTimer?.cancel(); // 5. Stop checking if disconnected
     });
@@ -140,7 +137,7 @@ class SocketController extends GetxController {
 
     // 3. Register the new listener
     socket.on(newId, (data) {
-      log('New Message location message for $newId: $data');
+      liveTrackModel.value = LiveTrackModel.fromJSON(data);
     });
 
     _previousListenId = newId;

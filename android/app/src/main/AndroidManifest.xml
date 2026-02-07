@@ -5,6 +5,9 @@
         android:label="genesis"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAhm7vhsscg3jTavveSoVoXuZjqVqsx53s"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
