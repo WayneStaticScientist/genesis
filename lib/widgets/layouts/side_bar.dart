@@ -1,60 +1,98 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/screens/auth/profile_screen.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:get/get.dart';
 
-class GNavBar extends StatelessWidget {
+class GNavBar extends StatefulWidget {
   final String selectedIndex;
   final Function(String index)? ontap;
   const GNavBar({super.key, required this.selectedIndex, this.ontap});
 
   @override
+  State<GNavBar> createState() => _GNavBarState();
+}
+
+class _GNavBarState extends State<GNavBar> {
+  final _userController = Get.find<UserController>();
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      height: double.infinity,
-      color: GTheme.color(),
-      child: SingleChildScrollView(
-        child: [
-          32.gapHeight,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.hexagon,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 32,
-                ),
-                12.gapWidth,
-                Text(
-                  "GENESIS",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
+    return Obx(() {
+      final role = _userController.user.value?.role ?? "driver";
+      final isDriver = role == "driver";
+      return Container(
+        width: 250,
+        height: double.infinity,
+        color: GTheme.color(),
+        child: SingleChildScrollView(
+          child: [
+            32.gapHeight,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.hexagon,
                     color: Theme.of(context).colorScheme.primary,
+                    size: 32,
                   ),
-                ),
-              ],
+                  12.gapWidth,
+                  Text(
+                    _userController.user.value?.firstName ?? "",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ).onTap(() => Get.to(() => ProfileScreen())),
             ),
-          ),
-          40.gapHeight,
-          Divider(color: Colors.grey.withAlpha(100)),
-          32.gapHeight,
-          // Navigation Items
-          _buildNavItem(context, 'dashboard', "Dashboard", Icons.dashboard),
-          _buildNavItem(context, 'vehicles', "Vehicles", Icons.directions_car),
-          _buildNavItem(context, 'drivers', "Drivers", Icons.people),
-          _buildNavItem(context, 'tracking', "Tracking", Icons.map),
-          _buildNavItem(context, 'maintanance', "Maintenance", Icons.build),
-          _buildNavItem(context, 'reports', "Reports", Icons.bar_chart),
-          _buildNavItem(context, 'payrolls', "Payrolls", Icons.payment),
-          // Bottom Settings
-          _buildNavItem(context, 'settings', "Settings", Icons.settings),
-          const SizedBox(height: 24),
-        ].column(),
-      ),
-    );
+            40.gapHeight,
+            Divider(color: Colors.grey.withAlpha(100)),
+            32.gapHeight,
+            // Navigation Items
+            _buildNavItem(
+              context,
+              'dashboard',
+              "Dashboard",
+              Icons.dashboard,
+            ).visibleIf(!isDriver),
+            _buildNavItem(
+              context,
+              'vehicles',
+              "Vehicles",
+              Icons.directions_car,
+            ).visibleIf(!isDriver),
+            _buildNavItem(
+              context,
+              'drivers',
+              "Drivers",
+              Icons.people,
+            ).visibleIf(!isDriver),
+            _buildNavItem(context, 'tracking', "Tracking", Icons.map),
+            _buildNavItem(context, 'maintanance', "Maintenance", Icons.build),
+            _buildNavItem(
+              context,
+              'reports',
+              "Reports",
+              Icons.bar_chart,
+            ).visibleIf(!isDriver),
+            _buildNavItem(
+              context,
+              'payrolls',
+              "Payrolls",
+              Icons.payment,
+            ).visibleIf(!isDriver),
+            // Bottom Settings
+            _buildNavItem(context, 'settings', "Settings", Icons.settings),
+            const SizedBox(height: 24),
+          ].column(),
+        ),
+      );
+    });
   }
 
   Widget _buildNavItem(
@@ -63,11 +101,11 @@ class GNavBar extends StatelessWidget {
     String title,
     IconData icon,
   ) {
-    bool isSelected = selectedIndex == index;
+    bool isSelected = widget.selectedIndex == index;
     return InkWell(
       onTap: () {
         if (isSelected) return;
-        ontap?.call(index);
+        widget.ontap?.call(index);
       },
       child: Container(
         margin: const EdgeInsets.only(left: 24, right: 16, bottom: 8),

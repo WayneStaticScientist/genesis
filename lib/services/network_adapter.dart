@@ -9,6 +9,7 @@ class Net {
   static const String baseUrl = "http://10.0.2.2:5024/v1";
   // static const String baseUrl = "https://api.mistpos.co.zw/v1";
   static Future<ResponseModel> get(String url) async {
+    log("going $url ");
     if (Net._dio == null) {
       await initDio();
     }

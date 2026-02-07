@@ -55,7 +55,7 @@ class _MainScreenState extends State<MainScreen> {
           if (isDeskop) ...[
             GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap),
           ],
-          Expanded(child: widgetTree[_selectedIndex]!),
+          Expanded(child: widgetTree[_selectedIndex] ?? SizedBox()),
         ].row().sizedBox(),
       ),
     );

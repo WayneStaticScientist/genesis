@@ -145,6 +145,7 @@ class UserController extends GetxController {
   Future<bool> updateDriver({
     required Map<String, dynamic> data,
     required String id,
+    bool updateCurrent = false,
   }) async {
     if (registeringDriver.value) {
       Toaster.showError("loading please wait");
@@ -158,6 +159,28 @@ class UserController extends GetxController {
       return false;
     }
     fetchDrivers(page: 1);
+
+    return true;
+  }
+
+  Future<bool> updateMyStatus({
+    required Map<String, dynamic> data,
+    required String id,
+    bool updateCurrent = false,
+  }) async {
+    if (registeringDriver.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    registeringDriver.value = true;
+    final response = await Net.put("/user/$id", data: data);
+    registeringDriver.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    user.value = User.fromJSON(response.body['user']);
+    user.value?.saveUser();
     return true;
   }
 
@@ -168,5 +191,33 @@ class UserController extends GetxController {
       return null;
     }
     return User.fromJSON(response.body);
+  }
+
+  Future updateUser({
+    required String firstName,
+    required String lastName,
+    String? password,
+  }) async {}
+
+  void logout() {
+    user.value = null;
+    User.clearStorage();
+  }
+
+  Future<bool> startTrip({required Map<String, dynamic> data}) async {
+    if (registeringDriver.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    registeringDriver.value = true;
+    final response = await Net.post("/trip", data: data);
+    registeringDriver.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    user.value = User.fromJSON(response.body);
+    user.value?.saveUser();
+    return true;
   }
 }

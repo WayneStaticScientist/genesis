@@ -2,6 +2,7 @@ import 'package:get_storage/get_storage.dart';
 
 class User {
   final String? id;
+  final String? trip;
   final int? trips;
   final String? status;
   final String? experience;
@@ -14,6 +15,7 @@ class User {
   final String firstName;
   final String? password;
   final String? companyId;
+  String? currentVehicle;
   User({
     this.id,
     this.password,
@@ -23,7 +25,9 @@ class User {
     this.safety,
     this.companyId,
     this.trips,
+    this.trip,
     required this.email,
+    this.currentVehicle,
     this.role = 'default',
     required this.country,
     required this.lastName,
@@ -33,6 +37,7 @@ class User {
   Map<String, dynamic> toJSON() {
     return {
       '_id': id,
+      "trip": trip,
       'role': role,
       'trips': trips,
       'email': email,
@@ -45,23 +50,26 @@ class User {
       'firstName': firstName,
       'companyId': companyId,
       'experience': experience,
+      'currentVehicle': currentVehicle,
     };
   }
 
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
       id: data['_id'],
-      email: data['email'],
+      trip: data['trip'],
       role: data['role'],
+      email: data['email'],
+      trips: data['trips'],
+      safety: data['safety'],
+      status: data['status'],
       country: data['country'],
       lastName: data['lastName'],
-      firstName: data['firstName'],
-      status: data['status'],
-      experience: data['experience'],
-      rating: (data['rating'] as num?)?.toDouble(),
-      safety: data['safety'],
       companyId: data['companyId'],
-      trips: data['trips'],
+      firstName: data['firstName'],
+      experience: data['experience'],
+      currentVehicle: data['currentVehicle'],
+      rating: (data['rating'] as num?)?.toDouble(),
     );
   }
   void saveUser() {

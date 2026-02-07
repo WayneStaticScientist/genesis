@@ -1,10 +1,11 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:line_icons/line_icons.dart';
+import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:get/get.dart';
-import 'package:line_icons/line_icons.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
   const FleetTrackingScreen({super.key});
@@ -14,254 +15,335 @@ class FleetTrackingScreen extends StatefulWidget {
 }
 
 class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
-  // Assuming controller exists in your project setup
   final _vehicleController = Get.find<VehicleControler>();
   final _userController = Get.find<UserController>();
+
+  // Controllers for the Trip Dialog
+  final _timeController = TextEditingController();
+  final _fuelController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _vehicleController.fetchAllVehicles(
-      driverId: _userController.user.value?.role ?? "driver",
+      driverId: _userController.user.value?.id ?? "---",
     );
   }
 
   @override
+  void dispose() {
+    _timeController.dispose();
+    _fuelController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // === 1. MOCK MAP LAYER ===
-        Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
-            image: DecorationImage(
-              image: NetworkImage(
-                'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop',
+    return Scaffold(
+      body: Stack(
+        children: [
+          // === 1. MOCK MAP LAYER ===
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              image: DecorationImage(
+                image: const NetworkImage(
+                  'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop',
+                ),
+                fit: BoxFit.cover,
+                opacity: 0.6,
               ),
-              fit: BoxFit.cover,
-              opacity:
-                  0.6, // Increased opacity slightly for better visibility when sheet is down
             ),
           ),
-        ),
 
-        // === 2. TOP NAVIGATION & SEARCH ===
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              children: [
-                DrawerButton().decoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(25),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.white.withAlpha(25)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-            ),
-          ),
-        ),
-
-        // === 3. ACTIVE ASSETS CAROUSEL (Horizontal) ===
-        // We wrap this in a Positioned to ensure it stays behind the sheet when expanded
-        Positioned(
-          top: 120,
-          left: 0,
-          right: 0,
-          height: 100,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            children: [
-              _buildActiveAssetTile("Tesla M3", "TX-902", true),
-              _buildActiveAssetTile("Hino Truck", "HK-112", false),
-              _buildActiveAssetTile("BMW i8", "BZ-441", false),
-            ],
-          ),
-        ),
-
-        // === 4. DRAGGABLE BOTTOM SHEET ===
-        DraggableScrollableSheet(
-          initialChildSize:
-              0.45, // Starts at 45% height (same as your original fixed height)
-          minChildSize: 0.15, // Can be dragged down to see more map
-          maxChildSize: 0.92, // Can be dragged up to almost full screen
-          builder: (BuildContext context, ScrollController scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: GTheme.color(), // Your theme color
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(40),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(70),
-                    blurRadius: 20,
-                    offset: const Offset(0, -5),
+          // === 2. TOP NAVIGATION ===
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                children: [
+                  DrawerButton(color: Colors.white).decoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(25),
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.white.withAlpha(25)),
+                    ),
                   ),
                 ],
               ),
-              // We use the scrollController provided by DraggableScrollableSheet
-              // This connects the scroll gesture to the sheet expansion
-              child: SingleChildScrollView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Handle Bar
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+            ),
+          ),
+
+          // === 3. ACTIVE ASSETS CAROUSEL ===
+          Positioned(
+            top: 80,
+            left: 0,
+            right: 0,
+            height: 100,
+            child: Obx(
+              () => ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _vehicleController.vehicles.length,
+                itemBuilder: (context, index) {
+                  final item = _vehicleController.vehicles[index];
+                  final isCurrent =
+                      item.id == _userController.user.value?.currentVehicle;
+                  return _buildActiveAssetTile(
+                    item.carModel,
+                    item.licencePlate,
+                    isCurrent,
+                  ).onTap(() {
+                    if (!isCurrent) {
+                      _openSetupCurrentVehicle(item);
+                    }
+                  });
+                },
+              ),
+            ),
+          ),
+
+          // === 4. DRAGGABLE BOTTOM SHEET ===
+          DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.2,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(40),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(70),
+                      blurRadius: 20,
+                      offset: const Offset(0, -5),
                     ),
-                    const SizedBox(height: 24),
-
-                    // Driver Info Header
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 25,
-                          backgroundImage: NetworkImage(
-                            'https://i.pravatar.cc/150?u=marcus',
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Marcus Wright",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                "On Route: Downtown Delivery",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            LineIcons.phone,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-                    Divider(color: Colors.grey.withAlpha(50)),
-                    const SizedBox(height: 24),
-
-                    // Live Telemetry Grid
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildTelemetryItem(
-                          LineIcons.lightningBolt,
-                          "84 km/h",
-                          "Current Speed",
-                        ),
-                        _buildTelemetryItem(
-                          LineIcons.gasPump,
-                          "62%",
-                          "Fuel Level",
-                        ),
-                        _buildTelemetryItem(
-                          LineIcons.clock,
-                          "14 min",
-                          "Est. Arrival",
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Progress Bar
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Progress",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          "75%",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: 0.75,
-                        minHeight: 8,
-                        backgroundColor: Colors.blue.shade50,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.blue,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          "View Full Itinerary",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Added extra space at bottom for scrolling feel when expanded
-                    const SizedBox(height: 50),
                   ],
                 ),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Driver Info
+                      Obx(() {
+                        final user = _userController.user.value;
+                        final isOnTrip = (user?.trip ?? "").isNotEmpty;
+                        return Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 25,
+                              backgroundImage: NetworkImage(
+                                'https://i.pravatar.cc/150?u=marcus',
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${user?.firstName ?? 'Driver'} ${user?.lastName ?? ''}",
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    isOnTrip ? "On Trip" : "Idle",
+                                    style: TextStyle(
+                                      color: isOnTrip
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                LineIcons.phone,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+
+                      const SizedBox(height: 24),
+                      Divider(color: Colors.grey.withAlpha(50)),
+                      const SizedBox(height: 24),
+
+                      // Telemetry
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildTelemetryItem(
+                            LineIcons.lightningBolt,
+                            "84 km/h",
+                            "Speed",
+                          ),
+                          _buildTelemetryItem(LineIcons.gasPump, "62%", "Fuel"),
+                          _buildTelemetryItem(
+                            LineIcons.clock,
+                            "14 min",
+                            "Arrival",
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Start/Stop Logic
+                      Obx(() {
+                        final user = _userController.user.value;
+                        final isOnTrip = (user?.trip ?? "").isNotEmpty;
+
+                        return Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: 55,
+                              child: ElevatedButton.icon(
+                                icon: Icon(
+                                  isOnTrip ? LineIcons.stop : LineIcons.play,
+                                  color: Colors.white,
+                                ),
+                                label: Text(
+                                  isOnTrip ? "Stop Trip" : "Start Trip",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isOnTrip
+                                      ? Colors.red
+                                      : Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (isOnTrip) {
+                                    _handleTripAction(false);
+                                  } else {
+                                    _showStartTripDialog();
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        );
+                      }),
+                      const SizedBox(height: 50),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStartTripDialog() {
+    _timeController.clear();
+    _fuelController.clear();
+
+    Get.defaultDialog(
+      title: "Start Trip",
+      titleStyle: const TextStyle(fontWeight: FontWeight.bold),
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
+          children: [
+            const Text(
+              "Enter estimates to begin tracking",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _timeController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: "Estimated Time (min)",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-            );
-          },
+            ),
+            const SizedBox(height: 15),
+            TextField(
+              controller: _fuelController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: "Current Fuel Level (%)",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
-    ).expanded1;
+      ),
+      textCancel: "Cancel",
+      textConfirm: "Start",
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.blue,
+      onConfirm: () {
+        if (_timeController.text.isEmpty || _fuelController.text.isEmpty) {
+          Toaster.showError("Please fill all fields");
+          return;
+        }
+        Get.back();
+        _handleTripAction(true);
+      },
+    );
+  }
+
+  Future<void> _handleTripAction(bool starting) async {
+    final response = await _userController.startTrip(
+      data: {
+        "startTime": (DateTime.now().toIso8601String()),
+        if (starting) "estimatedTime": _timeController.text,
+        if (starting) "startFuelLevel": _fuelController.text,
+      },
+    );
+
+    if (response) {
+      Toaster.showSuccess(
+        starting ? "Trip started successfully" : "Trip stopped",
+      );
+      setState(() {});
+      _userController.user.refresh();
+    }
   }
 
   Widget _buildActiveAssetTile(String model, String id, bool isSelected) {
@@ -279,7 +361,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LineIcons.car, color: Colors.white, size: 24),
+          const Icon(LineIcons.car, color: Colors.white, size: 24),
           const SizedBox(height: 8),
           Text(
             model,
@@ -309,6 +391,31 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
         ),
         Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
       ],
+    );
+  }
+
+  void _openSetupCurrentVehicle(VehicleModel item) {
+    Get.defaultDialog(
+      title: "Set As Current",
+      middleText: "Set ${item.carModel} as vehicle for your current trip?",
+      textCancel: "Close",
+      textConfirm: "Yes",
+      onConfirm: () async {
+        Get.back();
+        final response = await _userController.updateMyStatus(
+          data: {
+            ..._userController.user.value!.toJSON(),
+            "currentVehicle": item.id,
+          },
+          id: _userController.user.value!.id!,
+          updateCurrent: true,
+        );
+        if (response && mounted) {
+          Toaster.showSuccess("Vehicle updated");
+          _vehicleController.vehicles.refresh();
+          _userController.user.refresh();
+        }
+      },
     );
   }
 }
