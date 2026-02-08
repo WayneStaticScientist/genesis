@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'package:genesis/widgets/actions/pinging_button.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:exui/exui.dart'; // Assuming exui provides .decoratedBox extension
+import 'package:exui/exui.dart';
 
 // Project specific imports
 import 'package:genesis/controllers/socket_controller.dart';
@@ -19,35 +20,37 @@ class FleetTrackingScreen extends StatefulWidget {
   State<FleetTrackingScreen> createState() => _FleetTrackingScreenState();
 }
 
-class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
+class _FleetTrackingScreenState extends State<FleetTrackingScreen>
+    with SingleTickerProviderStateMixin {
   final _userController = Get.find<UserController>();
   final _socketController = Get.find<SocketController>();
   final _vehicleController = Get.find<VehicleControler>();
 
-  // Map Controller
   final Completer<GoogleMapController> _mapController = Completer();
-
-  // Worker to listen to location changes
   Worker? _locationWorker;
 
-  // Controllers for the Trip Dialog
   final _timeController = TextEditingController();
   final _fuelController = TextEditingController();
+  final _refuelLevelController = TextEditingController();
+  final _refuelCostController = TextEditingController();
 
-  // Default location (e.g., if no data is available yet)
-  static const _defaultLocation = LatLng(
-    -17.824858,
-    31.053028,
-  ); // Harare, default
+  // Animation Controller for the "Pinging" effect
+  late AnimationController _pingController;
+
+  static const _defaultLocation = LatLng(-17.824858, 31.053028);
 
   @override
   void initState() {
     super.initState();
+    _pingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+
     _vehicleController.fetchAllVehicles(
       driverId: _userController.user.value?.id ?? "---",
     );
 
-    // Listen to live track updates to move camera
     _locationWorker = ever(_socketController.liveTrackModel, (data) async {
       if (data != null) {
         final controller = await _mapController.future;
@@ -60,9 +63,12 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
 
   @override
   void dispose() {
+    _pingController.dispose();
     _locationWorker?.dispose();
     _timeController.dispose();
     _fuelController.dispose();
+    _refuelLevelController.dispose();
+    _refuelCostController.dispose();
     super.dispose();
   }
 
@@ -71,11 +77,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // === 1. GOOGLE MAP LAYER ===
+          // 1. GOOGLE MAP LAYER
           Obx(() {
             final liveData = _socketController.liveTrackModel.value;
             final hasData = liveData != null;
-
             final currentPos = hasData
                 ? LatLng(liveData.lat, liveData.lng)
                 : _defaultLocation;
@@ -87,40 +92,29 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
               ),
               onMapCreated: (GoogleMapController controller) {
                 _mapController.complete(controller);
-                // If we have data on load, ensure we snap to it
-                if (hasData) {
+                if (hasData)
                   controller.moveCamera(CameraUpdate.newLatLng(currentPos));
-                }
               },
               zoomControlsEnabled: false,
               myLocationButtonEnabled: false,
-              mapType: MapType.normal,
               markers: {
                 if (hasData)
                   Marker(
                     markerId: const MarkerId('live_vehicle'),
                     position: currentPos,
-                    rotation: 0, // You can add rotation if available in model
                     icon: BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueBlue,
-                    ),
-                    infoWindow: InfoWindow(
-                      title: liveData.carModel.isEmpty
-                          ? "Live Location"
-                          : liveData.carModel,
-                      snippet: "${liveData.speed.toStringAsFixed(1)} km/h",
                     ),
                   ),
               },
             );
           }),
 
-          // === 2. TOP NAVIGATION ===
+          // 2. TOP NAVIGATION
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                children: [
+              child:
                   DrawerButton(
                     style: ButtonStyle(
                       iconColor: WidgetStateProperty.all(Colors.black87),
@@ -139,12 +133,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                       ],
                     ),
                   ),
-                ],
-              ),
             ),
           ),
 
-          // === 3. ACTIVE ASSETS CAROUSEL ===
+          // 3. ACTIVE ASSETS CAROUSEL (Simplified)
           Positioned(
             top: 80,
             left: 0,
@@ -164,41 +156,30 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                     item.licencePlate,
                     isCurrent,
                   ).onTap(() {
-                    if (!isCurrent) {
-                      _openSetupCurrentVehicle(item);
-                    }
+                    if (!isCurrent) _openSetupCurrentVehicle(item);
                   });
                 },
               ),
             ),
           ),
 
-          // === 4. DRAGGABLE BOTTOM SHEET ===
+          // 4. DRAGGABLE BOTTOM SHEET
           DraggableScrollableSheet(
             initialChildSize: 0.5,
             minChildSize: 0.2,
             maxChildSize: 0.95,
             builder: (context, scrollController) {
               return Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(40),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(70),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
                 child: SingleChildScrollView(
                   controller: scrollController,
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Handle
                       Center(
                         child: Container(
                           width: 40,
@@ -247,13 +228,9 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                                 ],
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(
                                 LineIcons.phone,
                                 color: Colors.blue,
                               ),
@@ -263,25 +240,23 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                       }),
 
                       const SizedBox(height: 24),
-                      Divider(color: Colors.grey.withAlpha(50)),
-                      const SizedBox(height: 24),
-
-                      // Telemetry
+                      // Telemetry Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Obx(
                             () => _buildTelemetryItem(
                               LineIcons.lightningBolt,
-                              "${_socketController.liveTrackModel.value?.speed.toStringAsFixed(0) ?? '0'} km/h",
+                              "${_socketController.liveTrackModel.value?.speed.toStringAsFixed(2) ?? '0'}km/h",
                               "Speed",
                             ),
                           ),
-                          Obx(
-                            () => _buildTelemetryItem(
+                          GestureDetector(
+                            onTap: _showFuelManagementOptions,
+                            child: _buildTelemetryItem(
                               LineIcons.gasPump,
-                              "${_socketController.liveTrackModel.value?.fuelLevel.toString() ?? '0'}%",
-                              "Fuel",
+                              "${_socketController.liveTrackModel.value?.fuelLevel ?? 0}%",
+                              "Fuel (Tap)",
                             ),
                           ),
                           _buildTelemetryItem(
@@ -292,49 +267,19 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 40),
 
-                      // Start/Stop Logic
+                      // === ANIMATED TRIP BUTTON ===
                       Obx(() {
                         final user = _userController.user.value;
                         final isOnTrip = (user?.trip ?? "").isNotEmpty;
 
-                        return Column(
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              height: 55,
-                              child: ElevatedButton.icon(
-                                icon: Icon(
-                                  isOnTrip ? LineIcons.stop : LineIcons.play,
-                                  color: Colors.white,
-                                ),
-                                label: Text(
-                                  isOnTrip ? "Stop Trip" : "Start Trip",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isOnTrip
-                                      ? Colors.red
-                                      : Colors.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  if (isOnTrip) {
-                                    _handleTripAction(false);
-                                  } else {
-                                    _showStartTripDialog();
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                          ],
+                        return PingingStopButton(
+                          isOnTrip: isOnTrip,
+                          pingAnimation: _pingController,
+                          onPressed: () => isOnTrip
+                              ? _showEndTripDialog()
+                              : _showStartTripDialog(),
                         );
                       }),
                       const SizedBox(height: 50),
@@ -349,114 +294,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
     );
   }
 
-  void _showStartTripDialog() {
-    _timeController.clear();
-    _fuelController.clear();
-
-    Get.defaultDialog(
-      title: "Start Trip",
-      titleStyle: const TextStyle(fontWeight: FontWeight.bold),
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Column(
-          children: [
-            const Text(
-              "Enter estimates to begin tracking",
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _timeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Estimated Time (min)",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: _fuelController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Current Fuel Level (%)",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      textCancel: "Cancel",
-      textConfirm: "Start",
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.blue,
-      onConfirm: () {
-        if (_timeController.text.isEmpty || _fuelController.text.isEmpty) {
-          Toaster.showError("Please fill all fields");
-          return;
-        }
-        Get.back();
-        _handleTripAction(true);
-      },
-    );
-  }
-
-  Future<void> _handleTripAction(bool starting) async {
-    final response = await _userController.startTrip(
-      data: {
-        "startTime": (DateTime.now().toIso8601String()),
-        if (starting) "estimatedTime": _timeController.text,
-        if (starting) "startFuelLevel": _fuelController.text,
-      },
-    );
-
-    if (response) {
-      Toaster.showSuccess(
-        starting ? "Trip started successfully" : "Trip stopped",
-      );
-      setState(() {});
-      _userController.user.refresh();
-    }
-  }
-
-  Widget _buildActiveAssetTile(String model, String id, bool isSelected) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.blue : Colors.black.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isSelected ? Colors.blue : Colors.white.withAlpha(25),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(LineIcons.car, color: Colors.white, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            model,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-          Text(
-            id,
-            style: TextStyle(color: Colors.white.withAlpha(135), fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
+  // --- WIDGET HELPERS ---
 
   Widget _buildTelemetryItem(IconData icon, String value, String label) {
     return Column(
@@ -472,30 +310,176 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
     );
   }
 
+  Widget _buildActiveAssetTile(String model, String id, bool isSelected) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue : Colors.black87,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(LineIcons.car, color: Colors.white),
+          Text(
+            model,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(id, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  // --- LOGIC FUNCTIONS ---
+
+  void _showFuelManagementOptions() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Fuel Management",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _fuelActionCard(
+                    icon: LineIcons.edit,
+                    label: "Update",
+                    color: Colors.orange,
+                    onTap: () {
+                      Get.back();
+                      _showUpdateFuelDialog(false);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _fuelActionCard(
+                    icon: LineIcons.gasPump,
+                    label: "Refuel",
+                    color: Colors.green,
+                    onTap: () {
+                      Get.back();
+                      _showUpdateFuelDialog(true);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fuelActionCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withAlpha(30),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            Text(label, style: TextStyle(color: color)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showUpdateFuelDialog(bool isRefuel) {
+    Get.defaultDialog(
+      title: isRefuel ? "Refuel Cost" : "Update Fuel",
+      content: Column(
+        children: [
+          TextField(
+            controller: _refuelLevelController,
+            decoration: const InputDecoration(labelText: "Level %"),
+          ),
+          if (isRefuel)
+            TextField(
+              controller: _refuelCostController,
+              decoration: const InputDecoration(labelText: "Cost \$"),
+            ),
+        ],
+      ),
+      onConfirm: () {
+        Get.back();
+        Toaster.showSuccess("Saved");
+      },
+    );
+  }
+
+  void _showStartTripDialog() {
+    Get.defaultDialog(
+      title: "Start Trip",
+      onConfirm: () {
+        Get.back();
+        _handleTripAction(true);
+      },
+    );
+  }
+
+  Future<void> _handleTripAction(bool starting) async {
+    final res = await _userController.startTrip(
+      data: {"startTime": DateTime.now().toIso8601String()},
+    );
+    if (res) {
+      Toaster.showSuccess(starting ? "Tracking started" : "Trip stopped");
+      _userController.user.refresh();
+    }
+  }
+
   void _openSetupCurrentVehicle(VehicleModel item) {
     Get.defaultDialog(
-      title: "Set As Current",
-      middleText: "Set ${item.carModel} as vehicle for your current trip?",
-      textCancel: "Close",
-      textConfirm: "Yes",
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.blue,
-      onConfirm: () async {
+      title: "Switch Vehicle",
+      onConfirm: () {
         Get.back();
-        final response = await _userController.updateMyStatus(
-          data: {
-            ..._userController.user.value!.toJSON(),
-            "currentVehicle": item.id,
-          },
-          id: _userController.user.value!.id!,
-          updateCurrent: true,
-        );
-        if (response && mounted) {
-          Toaster.showSuccess("Vehicle updated");
-          _vehicleController.vehicles.refresh();
-          _userController.user.refresh();
-        }
+        _userController.user.refresh();
+      },
+    );
+  }
+
+  _showEndTripDialog() {
+    Get.defaultDialog(
+      title: "End Trip",
+      content: Column(
+        children: [
+          TextField(
+            controller: _refuelLevelController,
+            decoration: const InputDecoration(labelText: "Fuel Level %"),
+          ),
+        ],
+      ),
+      onConfirm: () {
+        Get.back();
+        Toaster.showSuccess("Saved");
       },
     );
   }
 }
+
+// === CUSTOM COMPONENT: PINGING STOP BUTTON ===
