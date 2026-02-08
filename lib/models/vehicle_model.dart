@@ -1,34 +1,36 @@
 class VehicleModel {
   final String? id;
-  final String carModel;
-  final String licencePlate;
-
-  final String engineType;
-  final double fuelRatio;
+  final double usage;
   final String status;
   final String? driver;
-  final double usage;
+  final String carModel;
+  final double fuelLevel;
+  final double fuelRatio;
+  final String engineType;
+  final String licencePlate;
 
   VehicleModel({
     required this.id,
-    required this.carModel,
-    required this.licencePlate,
-    required this.engineType,
-    required this.fuelRatio,
-    required this.status,
     required this.usage,
     required this.driver,
+    required this.status,
+    required this.carModel,
+    required this.fuelLevel,
+    required this.fuelRatio,
+    required this.engineType,
+    required this.licencePlate,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'driver': driver,
-      "carModel": carModel,
-      "licencePlate": licencePlate,
-      'engineType': engineType,
-      "fuelRatio": fuelRatio,
-      "status": status,
       "usage": usage,
+      'driver': driver,
+      "status": status,
+      "carModel": carModel,
+      'fuelLevel': fuelLevel,
+      "fuelRatio": fuelRatio,
+      'engineType': engineType,
+      "licencePlate": licencePlate,
     };
   }
 
@@ -41,6 +43,7 @@ class VehicleModel {
       licencePlate: data['licencePlate'],
       engineType: data['engineType'] ?? '',
       usage: (data['usage'] as num?)?.toDouble() ?? 0,
+      fuelLevel: (data['fuelLevel'] as num?)?.toDouble() ?? 0,
       fuelRatio: (data['fuelRatio'] as num?)?.toDouble() ?? 0.0,
     );
   }

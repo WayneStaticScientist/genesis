@@ -1,11 +1,10 @@
-import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
-
-import 'package:genesis/models/live_track_model.dart';
-import 'package:genesis/models/user_model.dart';
-import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/models/vehicle_model.dart';
+import 'package:genesis/models/live_track_model.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -13,7 +12,9 @@ class SocketController extends GetxController {
   late IO.Socket socket;
   Timer? _statusTimer;
   RxString listenId = "".obs;
+  RxDouble fuelLevel = 0.0.obs;
   String? _previousListenId;
+  Rx<VehicleModel?> currentVehicle = Rx<VehicleModel?>(null);
   Rx<LiveTrackModel?> liveTrackModel = Rx<LiveTrackModel?>(null);
   @override
   void onInit() {
@@ -115,6 +116,7 @@ class SocketController extends GetxController {
         'lat': position.latitude,
         'lng': position.longitude,
         "car": user.currentVehicle,
+        "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
         'timestamp': DateTime.now().toIso8601String(),
       };
       if (listenId.value != user.currentVehicle) {
@@ -132,7 +134,6 @@ class SocketController extends GetxController {
     // 2. Remove the listener from the old channel to prevent memory leaks/duplicate logs
     if (_previousListenId != null) {
       socket.off(_previousListenId!);
-      log('Stopped listening to: $_previousListenId');
     }
 
     // 3. Register the new listener
@@ -141,6 +142,21 @@ class SocketController extends GetxController {
     });
 
     _previousListenId = newId;
-    log('Now listening to: $newId');
+    findVehicle(id: newId, update: true);
+  }
+
+  Future<VehicleModel?> findVehicle({
+    required String id,
+    required bool update,
+  }) async {
+    final response = await Net.get("/vehicle/$id");
+    if (response.hasError) {
+      return null;
+    }
+    final vehicle = VehicleModel.fromJSON(response.body);
+    if (update) {
+      currentVehicle.value = vehicle;
+    }
+    return vehicle;
   }
 }
