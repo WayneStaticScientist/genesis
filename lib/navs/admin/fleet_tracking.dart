@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:exui/exui.dart'; // Assuming exui provides .decoratedBox extension
 
 // Project specific imports
@@ -105,7 +105,9 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen> {
                       BitmapDescriptor.hueBlue,
                     ),
                     infoWindow: InfoWindow(
-                      title: liveData.car,
+                      title: liveData.carModel.isEmpty
+                          ? "Live Location"
+                          : liveData.carModel,
                       snippet: "${liveData.speed.toStringAsFixed(1)} km/h",
                     ),
                   ),
