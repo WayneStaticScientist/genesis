@@ -220,4 +220,21 @@ class UserController extends GetxController {
     user.value?.saveUser();
     return true;
   }
+
+  Future<bool> endTrip({required Map<String, dynamic> data}) async {
+    if (registeringDriver.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    registeringDriver.value = true;
+    final response = await Net.put("/trip", data: data);
+    registeringDriver.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    user.value = User.fromJSON(response.body);
+    user.value?.saveUser();
+    return true;
+  }
 }

@@ -464,19 +464,33 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   }
 
   _showEndTripDialog() {
+    final levelPercent = TextEditingController();
     Get.defaultDialog(
       title: "End Trip",
       content: Column(
         children: [
           TextField(
-            controller: _refuelLevelController,
+            controller: levelPercent,
             decoration: const InputDecoration(labelText: "Fuel Level %"),
           ),
         ],
       ),
-      onConfirm: () {
+      onConfirm: () async {
+        double? level = double.tryParse(levelPercent.text);
+        if (level == null) {
+          return Toaster.showError("Invalid number");
+        }
         Get.back();
-        Toaster.showSuccess("Saved");
+        final res = await _userController.endTrip(
+          data: {
+            "endTime": DateTime.now().toIso8601String(),
+            "endFuelLevel": level,
+          },
+        );
+        if (res) {
+          Toaster.showSuccess("Trip Stopped");
+          _userController.user.refresh();
+        }
       },
     );
   }
