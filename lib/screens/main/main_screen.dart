@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/navs/admin/nav_main.dart';
 import 'package:genesis/navs/admin/nav_payroll.dart';
@@ -23,29 +22,31 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final _userController = Get.find<UserController>();
   String _selectedIndex = "dashboard";
-  Map<String, Widget> widgetTree = {
-    "dashboard": const AdminNavMain(),
-    "drivers": const AdminNavDrivers(),
-    "reports": const AdminNavReports(),
-    "payrolls": const AdminNavPayroll(),
-    "vehicles": const AdminNavVehicles(),
-    "tracking": const FleetTrackingScreen(),
-    "maintanance": const AdminNavMaintenance(),
-  };
+  late final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late Map<String, Widget> widgetTree;
   @override
   void initState() {
     super.initState();
     _selectedIndex = _userController.user.value?.role == "driver"
         ? "tracking"
         : "dashboard";
-    log("user is ${_userController.user.value?.role}");
+    widgetTree = {
+      "dashboard": const AdminNavMain(),
+      "drivers": const AdminNavDrivers(),
+      "reports": const AdminNavReports(),
+      "payrolls": const AdminNavPayroll(),
+      "vehicles": const AdminNavVehicles(),
+      "tracking": FleetTrackingScreen(triggerKey: _scaffoldKey),
+      "maintanance": const AdminNavMaintenance(),
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDeskop = MediaQuery.of(context).size.width > 500;
+    final isDeskop = MediaQuery.of(context).size.width > ScreenSizes.DESKTOP_W;
     // Using a Row to create a persistent Sidebar + Content layout common in ERPs
     return Scaffold(
+      key: _scaffoldKey,
       drawer: !isDeskop
           ? GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap)
           : null,

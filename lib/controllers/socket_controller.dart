@@ -66,9 +66,14 @@ class SocketController extends GetxController {
 
   Future<void> _checkRouteConfigurations() async {
     final user = User.fromStorage();
-
-    if (user == null || user.trip == null || user.currentVehicle == null)
+    if (user == null || user.trip == null || user.currentVehicle == null) {
+      if (user?.currentVehicle != null &&
+          (currentVehicle.value == null ||
+              currentVehicle.value!.id != user!.currentVehicle!)) {
+        findVehicle(id: user!.currentVehicle!, update: true);
+      }
       return;
+    }
     try {
       // 2. Handle Permissions
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

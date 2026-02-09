@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +16,8 @@ import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/utils/toast.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
-  const FleetTrackingScreen({super.key});
+  final GlobalKey<ScaffoldState>? triggerKey;
+  const FleetTrackingScreen({super.key, this.triggerKey});
 
   @override
   State<FleetTrackingScreen> createState() => _FleetTrackingScreenState();
@@ -38,18 +41,20 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   late AnimationController _pingController;
 
   static const _defaultLocation = LatLng(-17.824858, 31.053028);
-
+  late User? user;
   @override
   void initState() {
     super.initState();
+    user = User.fromStorage();
     _pingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
-
-    _vehicleController.fetchAllVehicles(
-      driverId: _userController.user.value?.id ?? "---",
-    );
+    if (user?.role == "driver") {
+      _vehicleController.fetchAllVehicles(
+        driverId: _userController.user.value?.id ?? "---",
+      );
+    }
 
     _locationWorker = ever(_socketController.liveTrackModel, (data) async {
       if (data != null) {
@@ -74,6 +79,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDeskop = MediaQuery.of(context).size.width > ScreenSizes.DESKTOP_W;
     return Scaffold(
       body: Stack(
         children: [
@@ -116,23 +122,30 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child:
                   DrawerButton(
-                    style: ButtonStyle(
-                      iconColor: WidgetStateProperty.all(Colors.black87),
-                      backgroundColor: WidgetStateProperty.all(Colors.white),
-                    ),
-                  ).decoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(30),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                        onPressed: () {
+                          widget.triggerKey?.currentState?.openDrawer();
+                        },
+                        style: ButtonStyle(
+                          iconColor: WidgetStateProperty.all(Colors.black87),
+                          backgroundColor: WidgetStateProperty.all(
+                            Colors.white,
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
+                      )
+                      .decoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(30),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                      )
+                      .visibleIf(widget.triggerKey != null && !isDeskop),
             ),
           ),
 
@@ -141,7 +154,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             top: 80,
             left: 0,
             right: 0,
-            height: 100,
+            height: user?.role == "driver" ? 100 : 0,
             child: Obx(
               () => ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -160,7 +173,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                   });
                 },
               ),
-            ),
+            ).visibleIf(user?.role == "driver"),
           ),
 
           // 4. DRAGGABLE BOTTOM SHEET
@@ -253,17 +266,41 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           ),
                           GestureDetector(
                             onTap: _showFuelManagementOptions,
-                            child: _buildTelemetryItem(
-                              LineIcons.gasPump,
-                              "${_socketController.liveTrackModel.value?.fuelLevel ?? 0}%",
-                              "Fuel (Tap)",
+                            child: Obx(
+                              () => _buildTelemetryItem(
+                                LineIcons.gasPump,
+                                "${_socketController.liveTrackModel.value != null ? _socketController.liveTrackModel.value?.fuelLevel ?? 0 : _socketController.currentVehicle.value?.fuelLevel ?? 0}%",
+                                "Fuel (Tap)",
+                              ),
                             ),
                           ),
-                          _buildTelemetryItem(
-                            LineIcons.clock,
-                            "14 min",
-                            "Arrival",
-                          ),
+                          Obx(() {
+                            final date = _socketController
+                                .liveTrackModel
+                                .value
+                                ?.timestamp;
+                            bool online = false;
+                            String label = "Offline";
+                            if (date != null) {
+                              final difference =
+                                  DateTime.now().millisecondsSinceEpoch -
+                                  date.millisecondsSinceEpoch;
+                              if (difference < 5000 * 60) {
+                                online = true;
+                              }
+                              if (difference < 1000 * 60 * 60) {
+                                label = "${difference ~/ (1000 * 60)} mins ago";
+                              } else {
+                                label =
+                                    "${difference ~/ (1000 * 60 * 60)} hrs ago";
+                              }
+                            }
+                            return _buildTelemetryItem(
+                              LineIcons.clock,
+                              online ? "online" : label,
+                              "status",
+                            );
+                          }),
                         ],
                       ),
 
@@ -426,16 +463,45 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             ),
         ],
       ),
-      onConfirm: () {
+      textCancel: "close",
+      onConfirm: () async {
+        final fuelValue = double.tryParse(_refuelLevelController.text);
+        double? costs = 0;
+        if (fuelValue == null || fuelValue < 0 || fuelValue > 100) {
+          return Toaster.showError(
+            "invalid number , number should be between 0 and 100%",
+          );
+        }
+        if (isRefuel) {
+          costs = double.tryParse(_refuelCostController.text);
+          if (costs == null) {
+            return Toaster.showError("invalid costs number ");
+          }
+        }
         Get.back();
-        Toaster.showSuccess("Saved");
+        final vehicle = !isRefuel
+            ? await _vehicleController.updateFuelLevel(fuelValue)
+            : await _vehicleController.refuelVehicle(
+                level: fuelValue,
+                cost: costs,
+              );
+        if (vehicle != null) {
+          _socketController.currentVehicle.value = vehicle;
+        }
       },
     );
   }
 
   void _showStartTripDialog() {
+    if (_socketController.currentVehicle.value == null) {
+      return Toaster.showError("wait vehicle still inititializing please wait");
+    }
     Get.defaultDialog(
       title: "Start Trip",
+      content:
+          "start trip with vehicle ${_socketController.currentVehicle.value?.carModel}"
+              .text(),
+      textCancel: "close",
       onConfirm: () {
         Get.back();
         _handleTripAction(true);
@@ -448,14 +514,18 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
       data: {"startTime": DateTime.now().toIso8601String()},
     );
     if (res) {
-      Toaster.showSuccess(starting ? "Tracking started" : "Trip stopped");
+      Toaster.showSuccess("Tracking started");
       _userController.user.refresh();
+      _socketController.listenId.value =
+          _userController.user.value?.currentVehicle ?? '';
     }
   }
 
   void _openSetupCurrentVehicle(VehicleModel item) {
     Get.defaultDialog(
       title: "Switch Vehicle",
+      content: "Switch vehicle to ${item.carModel}".text(),
+      textCancel: "close",
       onConfirm: () {
         Get.back();
         _userController.user.refresh();
@@ -464,28 +534,18 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   }
 
   _showEndTripDialog() {
-    final levelPercent = TextEditingController();
+    if (_socketController.currentVehicle.value == null) {
+      return Toaster.showError("wait vehicle still inititializing please wait");
+    }
     Get.defaultDialog(
       title: "End Trip",
-      content: Column(
-        children: [
-          TextField(
-            controller: levelPercent,
-            decoration: const InputDecoration(labelText: "Fuel Level %"),
-          ),
-        ],
-      ),
+      content:
+          "End trip with vehicle ${_socketController.currentVehicle.value?.carModel}"
+              .text(),
       onConfirm: () async {
-        double? level = double.tryParse(levelPercent.text);
-        if (level == null) {
-          return Toaster.showError("Invalid number");
-        }
         Get.back();
         final res = await _userController.endTrip(
-          data: {
-            "endTime": DateTime.now().toIso8601String(),
-            "endFuelLevel": level,
-          },
+          data: {"endTime": DateTime.now().toIso8601String()},
         );
         if (res) {
           Toaster.showSuccess("Trip Stopped");

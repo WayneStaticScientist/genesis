@@ -74,4 +74,30 @@ class VehicleControler extends GetxController {
     fetchAllVehicles();
     return true;
   }
+
+  Future<VehicleModel?> updateFuelLevel(double level) async {
+    final response = await Net.post("/driver/fuel", data: {"level": level});
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return null;
+    }
+    Toaster.showSuccess("fuel updated");
+    return VehicleModel.fromJSON(response.body);
+  }
+
+  Future<VehicleModel?> refuelVehicle({
+    required double level,
+    required double cost,
+  }) async {
+    final response = await Net.post(
+      "/driver/refuel",
+      data: {"level": level, "cost": cost},
+    );
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return null;
+    }
+    Toaster.showSuccess("fuel updated");
+    return VehicleModel.fromJSON(response.body);
+  }
 }
