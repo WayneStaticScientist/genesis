@@ -1,3 +1,7 @@
+import 'package:exui/exui.dart';
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
@@ -15,9 +19,16 @@ class AssignTripModal extends StatefulWidget {
 }
 
 class _AssignTripModalState extends State<AssignTripModal> {
-  final VehicleControler vehicleController = Get.find<VehicleControler>();
+  final _userController = Get.find<UserController>();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  final VehicleControler vehicleController = Get.find<VehicleControler>();
+  final TextEditingController _loadTypeController = TextEditingController();
+  final TextEditingController _loadWeightController = TextEditingController();
+  late final TextEditingController _tripPaymentController =
+      TextEditingController(text: '0');
+  final TextEditingController _destinationNameController =
+      TextEditingController();
 
   // Controllers for the new pickers
   final TextEditingController _destinationController = TextEditingController();
@@ -56,6 +67,10 @@ class _AssignTripModalState extends State<AssignTripModal> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _loadTypeController.dispose();
+    _loadWeightController.dispose();
+    _tripPaymentController.dispose();
+    _destinationNameController.dispose();
     _searchController.dispose();
     _destinationController.dispose();
     super.dispose();
@@ -175,19 +190,21 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 // Destination Input
                 _buildInputLabel("DESTINATION"),
                 TextFormField(
+                  controller: _destinationNameController,
                   decoration: _modernInputDecoration(
                     Icons.map,
                     "Enter destination city/depot",
                   ),
                 ),
+                12.gapHeight,
                 TextFormField(
                   controller: _destinationController,
                   readOnly: true,
                   onTap: _selectLocationOnMap,
                   decoration:
                       _modernInputDecoration(
-                        Icons.map,
-                        "Tap to select on map",
+                        Icons.location_pin,
+                        "Cordinates",
                       ).copyWith(
                         suffixIcon: const Icon(
                           Icons.location_searching,
@@ -213,7 +230,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                         children: [
                           _buildInputLabel("LOAD TYPE"),
                           TextFormField(
-                            initialValue: "Coal",
+                            controller: _loadTypeController,
                             decoration: _modernInputDecoration(
                               Icons.local_shipping,
                               "Type",
@@ -227,12 +244,12 @@ class _AssignTripModalState extends State<AssignTripModal> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInputLabel("WEIGHT (T)"),
+                          _buildInputLabel("WEIGHT (KG)"),
                           TextFormField(
-                            initialValue: "30.5",
+                            controller: _loadWeightController,
                             decoration: _modernInputDecoration(
                               Icons.scale,
-                              "Tons",
+                              "kgs",
                             ),
                           ),
                         ],
@@ -253,39 +270,16 @@ class _AssignTripModalState extends State<AssignTripModal> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedVehicle.value == null) {
-                        Get.snackbar(
-                          "Vehicle Required",
-                          "Please select a vehicle before confirming.",
-                          backgroundColor: Colors.redAccent,
-                          colorText: Colors.white,
-                        );
-                        return;
-                      }
-
-                      Get.back();
-                      Get.snackbar(
-                        "Trip Assigned",
-                        "Trip successfully queued for ${widget.driver.firstName}",
-                        backgroundColor: GTheme.color(),
-                        colorText: Colors.white,
-                        snackPosition: SnackPosition.BOTTOM,
-                        margin: const EdgeInsets.all(20),
-                        borderRadius: 10,
-                        icon: const Icon(
-                          Icons.check_circle,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
+                    onPressed: _initiateNewTrip,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: GTheme.color(),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                       elevation: 5,
-                      shadowColor: GTheme.color().withAlpha(100),
+                      shadowColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(100),
                     ),
                     child: const Text(
                       "CONFIRM ASSIGNMENT",
@@ -475,7 +469,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          departureDateTime.toString(),
+                          GenesisDate.getInformalDate(departureDateTime.value),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const Icon(Icons.calendar_month, size: 18),
@@ -496,7 +490,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          arrivalDateTime.toString(),
+                          GenesisDate.getInformalDate(arrivalDateTime.value),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const Icon(Icons.flag_outlined, size: 18),
@@ -527,7 +521,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "DRIVER PAYMENT",
+                "TRIP PAYMENT",
                 style: TextStyle(
                   color: Colors.green[800],
                   fontWeight: FontWeight.bold,
@@ -541,13 +535,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
           SizedBox(
             width: 120,
             child: TextFormField(
-              initialValue: "700",
+              controller: _tripPaymentController,
               style: TextStyle(
                 color: Colors.green[800],
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
               ),
               decoration: InputDecoration(
+                label: "Enter Amount".text(),
                 prefixText: "\$ ",
                 prefixStyle: TextStyle(color: Colors.green[800], fontSize: 24),
                 border: InputBorder.none,
@@ -591,6 +586,55 @@ class _AssignTripModalState extends State<AssignTripModal> {
         borderSide: BorderSide(color: GTheme.color(), width: 1.5),
       ),
     );
+  }
+
+  void _initiateNewTrip() async {
+    if (selectedVehicle.value == null) {
+      Toaster.showErrorTop(
+        "Vehicle Required",
+        "Please select a vehicle before confirming.",
+      );
+      return;
+    }
+    final loadType = _loadTypeController.text.trim();
+    final loadWeight = double.tryParse(_loadWeightController.text.trim());
+    final tripPrice = double.tryParse(_tripPaymentController.text.trim());
+    if (tripPrice == null) {
+      return Toaster.showErrorTop(
+        "Invalid trip Amount",
+        "You have entered an invalid number on trip amound",
+      );
+    }
+    final destinationName = _destinationController.text.trim();
+    if (destinationName.isEmpty) {
+      Toaster.showErrorTop(
+        "Destination City required",
+        "Please enter destination name before confirming.",
+      );
+      return;
+    }
+    final response = await _userController.startTrip(
+      data: {
+        "loadType": loadType,
+        "loadWeight": loadWeight,
+        "tripPayout": tripPrice,
+        "driver": widget.driver.id,
+        "vehicle": selectedVehicle.value?.id,
+        "startTime": departureDateTime.value.toIso8601String(),
+        "estimatedEndTime": arrivalDateTime.value.toIso8601String(),
+        "location": destinationCoords.value != null
+            ? {
+                "lng": destinationCoords.value!.longitude,
+                "lat": destinationCoords.value!.latitude,
+              }
+            : null,
+      },
+    );
+    if (response) {
+      Get.back();
+      Toaster.showSuccess2("Trip", "trip has been succefully initiated");
+      _userController.fetchDrivers();
+    }
   }
 }
 

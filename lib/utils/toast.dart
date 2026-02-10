@@ -17,6 +17,28 @@ class Toaster {
     );
   }
 
+  static void showErrorTop(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Colors.redAccent,
+      colorText: Colors.white,
+    );
+  }
+
+  static void showSuccess2(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(20),
+      borderRadius: 10,
+      icon: const Icon(Icons.check_circle, color: Colors.white),
+    );
+  }
+
   static void showSuccess(String message) {
     Get.snackbar(
       'Success',
