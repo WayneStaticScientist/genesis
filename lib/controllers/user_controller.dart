@@ -232,6 +232,12 @@ class UserController extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
+    final user = await fetchUser(this.user.value?.id ?? '');
+    if (user != null) {
+      this.user.value = user;
+      this.user.value?.saveUser();
+      this.user.refresh();
+    }
     return true;
   }
 

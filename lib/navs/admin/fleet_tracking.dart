@@ -523,12 +523,9 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   }
 
   Future<void> _handleTripAction(bool starting) async {
-    final res = await _userController.startTrip(
-      data: {"startTime": DateTime.now().toIso8601String()},
-    );
+    final res = await _userController.confirmStartTrip();
     if (res) {
       Toaster.showSuccess("Tracking started");
-      _userController.user.refresh();
       _socketController.listenId.value =
           _userController.user.value?.currentVehicle?.carModel ?? '';
     }

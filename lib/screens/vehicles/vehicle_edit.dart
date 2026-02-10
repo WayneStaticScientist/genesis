@@ -435,7 +435,9 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
 
   void _getDriver() async {
     if (widget.vehicle.driver == null) return;
-    final response = await _driversController.fetchUser(widget.vehicle.driver!);
+    final response = await _driversController.fetchUser(
+      widget.vehicle.driver!.id,
+    );
     setState(() {
       _initialUserInitiliazed = true;
       _assignedDriver = response;

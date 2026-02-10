@@ -167,7 +167,7 @@ class SocketController extends GetxController {
     if (update) {
       currentVehicle.value = vehicle;
 
-      findDriver(vehicle.driver ?? '');
+      findDriver(vehicle.driver?.id ?? '');
     }
     return vehicle;
   }
