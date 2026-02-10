@@ -1,8 +1,11 @@
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:line_icons/line_icons.dart';
 
 class PingingStopButton extends StatelessWidget {
   final bool isOnTrip;
+  final bool isLoading;
   final Animation<double> pingAnimation;
   final VoidCallback onPressed;
 
@@ -11,6 +14,7 @@ class PingingStopButton extends StatelessWidget {
     required this.isOnTrip,
     required this.pingAnimation,
     required this.onPressed,
+    required this.isLoading,
   });
 
   @override
@@ -35,15 +39,17 @@ class PingingStopButton extends StatelessWidget {
             icon: Icon(
               isOnTrip ? LineIcons.stop : LineIcons.play,
               color: Colors.white,
-            ),
-            label: Text(
-              isOnTrip ? "STOP TRIP" : "START TRIP",
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-              ),
-            ),
+            ).visibleIfNot(isLoading),
+            label: isLoading
+                ? WhiteLoader()
+                : Text(
+                    isOnTrip ? "STOP TRIP" : "START TRIP",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
             style: ElevatedButton.styleFrom(
               backgroundColor: isOnTrip
                   ? Colors.red.shade600

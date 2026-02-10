@@ -71,10 +71,13 @@ class SocketController extends GetxController {
     if (user?.role == "driver") {
       liveTrackDriver.value = user;
     }
-    if (user == null || user.trip == null || user.currentVehicle == null) {
+    if (user == null ||
+        user.trip == null ||
+        user.currentVehicle == null ||
+        user.trip?.status == "Pending") {
       if (user?.currentVehicle != null &&
           (currentVehicle.value == null ||
-              currentVehicle.value!.id != user!.currentVehicle!)) {
+              currentVehicle.value!.id != user!.currentVehicle?.id)) {
         findVehicle(id: user!.currentVehicle!.id, update: true);
       }
       return;
@@ -125,7 +128,7 @@ class SocketController extends GetxController {
         'status': 'active',
         'lat': position.latitude,
         'lng': position.longitude,
-        "car": user.currentVehicle,
+        "car": user.currentVehicle?.id,
         "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
         'timestamp': DateTime.now().toIso8601String(),
       };

@@ -12,7 +12,6 @@ import 'package:exui/exui.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
-import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/utils/toast.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
@@ -157,31 +156,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           ),
 
           // 3. ACTIVE ASSETS CAROUSEL (Simplified)
-          Positioned(
-            top: 80,
-            left: 0,
-            right: 0,
-            height: user?.role == "driver" ? 100 : 0,
-            child: Obx(
-              () => ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _vehicleController.vehicles.length,
-                itemBuilder: (context, index) {
-                  final item = _vehicleController.vehicles[index];
-                  final isCurrent =
-                      item.id == _userController.user.value?.currentVehicle;
-                  return _buildActiveAssetTile(
-                    item.carModel,
-                    item.licencePlate,
-                    isCurrent,
-                  ).onTap(() {
-                    if (!isCurrent) _openSetupCurrentVehicle(item);
-                  });
-                },
-              ),
-            ).visibleIf(user?.role == "driver"),
-          ),
 
           // 4. DRAGGABLE BOTTOM SHEET
           DraggableScrollableSheet(
@@ -322,14 +296,14 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                         final user = _userController.user.value;
                         final isOnTrip = (user?.trip?.status == 'Active');
                         return PingingStopButton(
+                          isLoading: _userController.processingTrip.value,
                           isOnTrip: isOnTrip,
                           pingAnimation: _pingController,
                           onPressed: () => isOnTrip
                               ? _showEndTripDialog()
                               : _showStartTripDialog(),
                         ).visibleIf(
-                          user?.role == 'driver' &&
-                              user?.trip?.status == "Pending",
+                          user?.role == 'driver' && user?.trip != null,
                         );
                       }),
                       const SizedBox(height: 50),
@@ -357,31 +331,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
         ),
         Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
       ],
-    );
-  }
-
-  Widget _buildActiveAssetTile(String model, String id, bool isSelected) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.blue : Colors.black87,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(LineIcons.car, color: Colors.white),
-          Text(
-            model,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(id, style: const TextStyle(color: Colors.white70, fontSize: 10)),
-        ],
-      ),
     );
   }
 
@@ -529,18 +478,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
       _socketController.listenId.value =
           _userController.user.value?.currentVehicle?.carModel ?? '';
     }
-  }
-
-  void _openSetupCurrentVehicle(VehicleModel item) {
-    Get.defaultDialog(
-      title: "Switch Vehicle",
-      content: "Switch vehicle to ${item.carModel}".text(),
-      textCancel: "close",
-      onConfirm: () {
-        Get.back();
-        _userController.user.refresh();
-      },
-    );
   }
 
   _showEndTripDialog() {
