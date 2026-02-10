@@ -216,8 +216,6 @@ class UserController extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
-    user.value = User.fromJSON(response.body);
-    user.value?.saveUser();
     return true;
   }
 
