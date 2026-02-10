@@ -1,6 +1,6 @@
-import 'package:genesis/models/current_vehicle_model.dart';
-import 'package:genesis/models/populated_trip_model.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:genesis/models/populated_trip_model.dart';
+import 'package:genesis/models/current_vehicle_model.dart';
 
 class User {
   final String? id;
@@ -20,14 +20,14 @@ class User {
   CurrentVehicleModel? currentVehicle;
   User({
     this.id,
-    this.password,
-    this.status,
-    this.experience,
-    this.rating,
-    this.safety,
-    this.companyId,
-    this.trips,
     this.trip,
+    this.trips,
+    this.safety,
+    this.rating,
+    this.status,
+    this.password,
+    this.companyId,
+    this.experience,
     required this.email,
     this.currentVehicle,
     this.role = 'default',

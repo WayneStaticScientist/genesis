@@ -129,8 +129,9 @@ class SocketController extends GetxController {
         'lat': position.latitude,
         'lng': position.longitude,
         "car": user.currentVehicle?.id,
-        "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
         'timestamp': DateTime.now().toIso8601String(),
+        "location": user.trip?.location?.toJson(),
+        "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
       };
       if (listenId.value != user.currentVehicle) {
         listenId.value = user.currentVehicle!.id;

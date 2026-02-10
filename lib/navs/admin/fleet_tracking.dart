@@ -303,9 +303,14 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               ? _showEndTripDialog()
                               : _showStartTripDialog(),
                         ).visibleIf(
-                          user?.role == 'driver' && user?.trip != null,
+                          user?.role == 'driver' &&
+                              user?.trip != null &&
+                              user?.trip?.status != "Completed",
                         );
                       }),
+                      "Under Review ".text().decoratedBox(
+                        decoration: BoxDecoration(),
+                      ),
                       const SizedBox(height: 50),
                     ],
                   ),
@@ -486,6 +491,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     }
     Get.defaultDialog(
       title: "End Trip",
+      textCancel: "close",
       content:
           "End trip with vehicle ${_socketController.currentVehicle.value?.carModel}"
               .text(),
@@ -495,7 +501,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           data: {"endTime": DateTime.now().toIso8601String()},
         );
         if (res) {
-          Toaster.showSuccess("Trip Stopped");
+          Toaster.showSuccess("Trip Stopped -> waiting for approval");
           _userController.user.refresh();
         }
       },
