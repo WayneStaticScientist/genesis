@@ -1,5 +1,4 @@
 import 'package:exui/exui.dart';
-import 'package:genesis/controllers/socket_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/user_model.dart'; // Ensure this matches your project structure
@@ -9,6 +8,7 @@ import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/pilots/drivers_edit.dart';
 import 'package:genesis/widgets/layouts/driver_card.dart';
 import 'package:genesis/widgets/layouts/new_trip_modal.dart';
+import 'package:genesis/screens/trips/trips_details_screen.dart';
 
 class AdminNavDrivers extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -21,7 +21,6 @@ class AdminNavDrivers extends StatefulWidget {
 class _AdminNavDriversState extends State<AdminNavDrivers> {
   final _refreshController = RefreshController();
   final _driverController = Get.find<UserController>();
-  final _socketController = Get.find<SocketController>();
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -152,9 +151,7 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
 
   void _showAssignTripModal(BuildContext context, User driver) {
     if (driver.trip != null) {
-      if (driver.trip?.status == "Active") {
-        _socketController.listenId.value = driver.currentVehicle?.id ?? "";
-      }
+      Get.to(() => TripDetailsScreen(tripId: driver.trip!.id));
       return;
     }
     // Shows the assignment dialog/sheet

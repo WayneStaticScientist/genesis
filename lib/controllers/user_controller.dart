@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:genesis/models/trip_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
@@ -263,5 +264,18 @@ class UserController extends GetxController {
       this.user.refresh();
     }
     return true;
+  }
+
+  RxBool fetchingTrip = RxBool(false);
+  Rx<TripModel?> trip = Rx(null);
+  Future<void> findTrip(String id) async {
+    fetchingTrip.value = true;
+    final response = await Net.get("/trip/$id");
+    fetchingTrip.value = false;
+    if (response.hasError) {
+      return Future.value();
+    }
+    trip.value = TripModel.fromJson(response.body);
+    return Future.value();
   }
 }

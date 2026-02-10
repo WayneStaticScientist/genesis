@@ -308,9 +308,21 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               user?.trip?.status != "Completed",
                         );
                       }),
-                      "Under Review ".text().decoratedBox(
-                        decoration: BoxDecoration(),
-                      ),
+                      "Under Review "
+                          .text(textAlign: TextAlign.center)
+                          .padding(
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+                          )
+                          .decoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withAlpha(50),
+                              border: Border.all(
+                                color: Colors.orange.withAlpha(100),
+                              ),
+                            ),
+                          )
+                          .sizedBox(width: double.infinity)
+                          .constrained(maxWidth: ScreenSizes.DESKTOP_W * 0.75),
                       const SizedBox(height: 50),
                     ],
                   ),
