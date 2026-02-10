@@ -204,14 +204,15 @@ class UserController extends GetxController {
     User.clearStorage();
   }
 
+  RxBool processingTrip = RxBool(false);
   Future<bool> startTrip({required Map<String, dynamic> data}) async {
-    if (registeringDriver.value) {
+    if (processingTrip.value) {
       Toaster.showError("loading please wait");
       return false;
     }
-    registeringDriver.value = true;
+    processingTrip.value = true;
     final response = await Net.post("/trip", data: data);
-    registeringDriver.value = false;
+    processingTrip.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);
       return false;

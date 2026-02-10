@@ -209,7 +209,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       // Driver Info
                       Obx(() {
                         final user = _socketController.liveTrackDriver.value;
-                        final isOnTrip = (user?.trip ?? "").isNotEmpty;
+                        final isOnTrip = (user?.trip?.status == "Active");
                         return Row(
                           children: [
                             const CircleAvatar(
@@ -312,8 +312,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       // === ANIMATED TRIP BUTTON ===
                       Obx(() {
                         final user = _userController.user.value;
-                        final isOnTrip = (user?.trip ?? "").isNotEmpty;
-
+                        final isOnTrip = (user?.trip?.status == 'Active');
                         return PingingStopButton(
                           isOnTrip: isOnTrip,
                           pingAnimation: _pingController,

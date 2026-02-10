@@ -10,7 +10,8 @@ class DriverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isAvailable = user.status == 'available';
+    bool isOnTrip = user.trip?.status == 'Active';
+    bool pendingTrip = user.trip?.status == 'Pending';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -97,17 +98,21 @@ class DriverCard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: isAvailable
+                        color: isOnTrip
                             ? Colors.green.withAlpha(30)
                             : Colors.orange.withAlpha(30),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        isAvailable ? "Available" : "On Trip",
+                        user.trip == null
+                            ? "Idle"
+                            : (pendingTrip ? "Pending" : "On Trip"),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: isAvailable ? Colors.green : Colors.orange,
+                          color: user.trip == null
+                              ? Colors.grey
+                              : (pendingTrip ? Colors.orange : Colors.green),
                         ),
                       ),
                     ),
@@ -138,9 +143,11 @@ class DriverCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isAvailable
-                    ? GTheme.color().withAlpha(26)
-                    : Colors.orange.withAlpha(26),
+                color: user.trip == null
+                    ? Colors.transparent
+                    : (isOnTrip
+                          ? Colors.green.withAlpha(30)
+                          : Colors.orange.withAlpha(30)),
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(20),
                 ),
@@ -153,17 +160,19 @@ class DriverCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      isAvailable ? Icons.assignment_turned_in : Icons.queue,
+                      isOnTrip ? Icons.assignment_turned_in : Icons.queue,
                       size: 16,
-                      color: isAvailable ? GTheme.color() : Colors.orange[800],
+                      color: isOnTrip ? GTheme.color() : Colors.orange[800],
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      isAvailable ? "ASSIGN NEW TRIP" : "QUEUE NEXT TRIP",
+                      user.trip == null
+                          ? "QUEUE NEXT TRIP"
+                          : (isOnTrip
+                                ? "LIVE TRACK TRIP"
+                                : "Awaiting trip to ${user.trip?.destination}"),
                       style: TextStyle(
-                        color: isAvailable
-                            ? GTheme.color()
-                            : Colors.orange[800],
+                        color: isOnTrip ? GTheme.color() : Colors.orange[800],
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
                         letterSpacing: 1.0,

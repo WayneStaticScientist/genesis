@@ -2,6 +2,7 @@ import 'package:exui/exui.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/toast.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
@@ -281,13 +282,17 @@ class _AssignTripModalState extends State<AssignTripModal> {
                         context,
                       ).colorScheme.primary.withAlpha(100),
                     ),
-                    child: const Text(
-                      "CONFIRM ASSIGNMENT",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    child: Obx(
+                      () => _userController.processingTrip.value
+                          ? WhiteLoader()
+                          : const Text(
+                              "CONFIRM ASSIGNMENT",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -619,6 +624,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "loadWeight": loadWeight,
         "tripPayout": tripPrice,
         "driver": widget.driver.id,
+        "destinationName": destinationName,
         "vehicle": selectedVehicle.value?.id,
         "startTime": departureDateTime.value.toIso8601String(),
         "estimatedEndTime": arrivalDateTime.value.toIso8601String(),

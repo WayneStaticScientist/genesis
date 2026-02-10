@@ -1,21 +1,22 @@
 import 'package:genesis/models/current_vehicle_model.dart';
+import 'package:genesis/models/populated_trip_model.dart';
 import 'package:get_storage/get_storage.dart';
 
 class User {
   final String? id;
-  final String? trip;
   final int? trips;
-  final String? status;
-  final String? experience;
-  final double? rating;
   final int? safety;
   final String role;
   final String email;
   final String country;
+  final String? status;
+  final double? rating;
   final String lastName;
   final String firstName;
   final String? password;
   final String? companyId;
+  final String? experience;
+  final PopulatedTripModel? trip;
   CurrentVehicleModel? currentVehicle;
   User({
     this.id,
@@ -58,7 +59,9 @@ class User {
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
       id: data['_id'],
-      trip: data['trip'],
+      trip: data['trip'] != null
+          ? PopulatedTripModel.fromJSON(data['trip'])
+          : null,
       role: data['role'],
       email: data['email'],
       trips: data['trips'],
@@ -69,9 +72,9 @@ class User {
       companyId: data['companyId'],
       firstName: data['firstName'],
       experience: data['experience'],
-      currentVehicle: data['vehicle'] == null
+      currentVehicle: data['currentVehicle'] == null
           ? null
-          : CurrentVehicleModel.fromJson(data['vehicle']),
+          : CurrentVehicleModel.fromJson(data['currentVehicle']),
       rating: (data['rating'] as num?)?.toDouble(),
     );
   }
