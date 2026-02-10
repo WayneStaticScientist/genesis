@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:get/get.dart';
@@ -73,6 +74,11 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
           SliverAppBar(
             expandedHeight: 120,
             floating: true,
+            systemOverlayStyle: SystemUiOverlayStyle(
+              statusBarColor: Theme.of(context).colorScheme.primary,
+              statusBarBrightness: Brightness.light,
+              statusBarIconBrightness: Brightness.dark,
+            ),
             backgroundColor: GTheme.color(),
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(

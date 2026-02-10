@@ -74,9 +74,9 @@ class DriverCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        user.vehicle == null
+                        user.currentVehicle == null
                             ? "No Vehicle Assigned"
-                            : user.vehicle!.carModel,
+                            : user.currentVehicle!.carModel,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,

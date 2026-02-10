@@ -69,19 +69,16 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
     return Scaffold(
       backgroundColor: GTheme.color(),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.close, color: GTheme.reverse()),
+          icon: Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
         title: "Edit Pilot".text(
-          style: TextStyle(
-            color: GTheme.reverse(),
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5),
         ),
         actions: [
           Padding(

@@ -51,14 +51,12 @@ class _MainScreenState extends State<MainScreen> {
           ? GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap)
           : null,
       backgroundColor: GTheme.surface(),
-      body: SafeArea(
-        child: [
-          if (isDeskop) ...[
-            GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap),
-          ],
-          Expanded(child: widgetTree[_selectedIndex] ?? SizedBox()),
-        ].row().sizedBox(),
-      ),
+      body: [
+        if (isDeskop) ...[
+          GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap),
+        ],
+        Expanded(child: widgetTree[_selectedIndex] ?? SizedBox()),
+      ].row().sizedBox(),
     );
   }
 

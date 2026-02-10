@@ -2,6 +2,7 @@ import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/models/user_model.dart'; // Ensure this matches your project structure
+import 'package:genesis/screens/pilots/drivers_edit.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/widgets/layouts/driver_card.dart';
 import 'package:get/get.dart';
@@ -132,6 +133,8 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
                     return DriverCard(
                       user: driver,
                       onAssign: () => _showAssignTripModal(context, driver),
+                    ).onTap(
+                      () => Get.to(() => AdminEditDriver(driver: driver)),
                     );
                   }, childCount: _driverController.drivers.length),
                 ),

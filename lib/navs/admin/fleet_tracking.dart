@@ -520,7 +520,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
       Toaster.showSuccess("Tracking started");
       _userController.user.refresh();
       _socketController.listenId.value =
-          _userController.user.value?.currentVehicle ?? '';
+          _userController.user.value?.currentVehicle?.carModel ?? '';
     }
   }
 

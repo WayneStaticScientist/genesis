@@ -16,8 +16,7 @@ class User {
   final String firstName;
   final String? password;
   final String? companyId;
-  String? currentVehicle;
-  CurrentVehicleModel? vehicle;
+  CurrentVehicleModel? currentVehicle;
   User({
     this.id,
     this.password,
@@ -34,7 +33,6 @@ class User {
     required this.country,
     required this.lastName,
     required this.firstName,
-    this.vehicle,
   });
 
   Map<String, dynamic> toJSON() {
@@ -53,7 +51,6 @@ class User {
       'firstName': firstName,
       'companyId': companyId,
       'experience': experience,
-      "vehicle": vehicle?.toJson(),
       'currentVehicle': currentVehicle,
     };
   }
@@ -72,8 +69,9 @@ class User {
       companyId: data['companyId'],
       firstName: data['firstName'],
       experience: data['experience'],
-      currentVehicle: data['currentVehicle'],
-      vehicle: CurrentVehicleModel.fromJson(data['vehicle']),
+      currentVehicle: data['vehicle'] == null
+          ? null
+          : CurrentVehicleModel.fromJson(data['vehicle']),
       rating: (data['rating'] as num?)?.toDouble(),
     );
   }

@@ -73,7 +73,7 @@ class SocketController extends GetxController {
       if (user?.currentVehicle != null &&
           (currentVehicle.value == null ||
               currentVehicle.value!.id != user!.currentVehicle!)) {
-        findVehicle(id: user!.currentVehicle!, update: true);
+        findVehicle(id: user!.currentVehicle!.id, update: true);
       }
       return;
     }
@@ -128,7 +128,7 @@ class SocketController extends GetxController {
         'timestamp': DateTime.now().toIso8601String(),
       };
       if (listenId.value != user.currentVehicle) {
-        listenId.value = user.currentVehicle!;
+        listenId.value = user.currentVehicle!.id;
       }
       transmitMessage(channel: 'user-location-update', data: data);
     } catch (e) {
