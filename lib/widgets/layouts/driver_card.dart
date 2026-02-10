@@ -169,7 +169,7 @@ class DriverCard extends StatelessWidget {
                       user.trip == null
                           ? "QUEUE NEXT TRIP"
                           : (isOnTrip
-                                ? "LIVE TRACK TRIP"
+                                ? "TRIP TO ${user.trip?.destination}"
                                 : "Awaiting trip to ${user.trip?.destination}"),
                       style: TextStyle(
                         color: isOnTrip ? GTheme.color() : Colors.orange[800],

@@ -14,4 +14,7 @@ class PopulatedTripModel {
       destination: data['destination'] ?? '',
     );
   }
+  Map<String, dynamic> toJSON() {
+    return {'_id': id, 'status': status, 'destination': destination};
+  }
 }

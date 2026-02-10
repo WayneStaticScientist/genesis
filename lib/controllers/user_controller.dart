@@ -220,6 +220,21 @@ class UserController extends GetxController {
     return true;
   }
 
+  Future<bool> confirmStartTrip() async {
+    if (processingTrip.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    processingTrip.value = true;
+    final response = await Net.put("/trip-confirm");
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    return true;
+  }
+
   Future<bool> endTrip({required Map<String, dynamic> data}) async {
     if (registeringDriver.value) {
       Toaster.showError("loading please wait");

@@ -39,7 +39,6 @@ class User {
   Map<String, dynamic> toJSON() {
     return {
       '_id': id,
-      "trip": trip,
       'role': role,
       'trips': trips,
       'email': email,
@@ -49,10 +48,11 @@ class User {
       'country': country,
       'password': password,
       'lastName': lastName,
+      "trip": trip?.toJSON(),
       'firstName': firstName,
       'companyId': companyId,
       'experience': experience,
-      'currentVehicle': currentVehicle,
+      'currentVehicle': currentVehicle?.toJson(),
     };
   }
 

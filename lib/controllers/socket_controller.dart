@@ -41,7 +41,6 @@ class SocketController extends GetxController {
     );
     socket.connect();
     socket.onConnect((_) {
-      print('Connected to Bun backend');
       _startStatusCheck();
     });
     socket.onDisconnect((_) {
@@ -69,6 +68,9 @@ class SocketController extends GetxController {
 
   Future<void> _checkRouteConfigurations() async {
     final user = User.fromStorage();
+    if (user?.role == "driver") {
+      liveTrackDriver.value = user;
+    }
     if (user == null || user.trip == null || user.currentVehicle == null) {
       if (user?.currentVehicle != null &&
           (currentVehicle.value == null ||

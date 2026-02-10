@@ -64,6 +64,12 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
         );
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((e) {
+      if (user?.trip?.status == "Pending" && user?.role == "driver") {
+        _alartPendingTrip();
+      }
+    });
   }
 
   @override
@@ -293,9 +299,11 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               }
                               if (difference < 1000 * 60 * 60) {
                                 label = "${difference ~/ (1000 * 60)} mins ago";
-                              } else {
+                              } else if (difference < 1000 * 60 * 60 * 24) {
                                 label =
                                     "${difference ~/ (1000 * 60 * 60)} hrs ago";
+                              } else {
+                                label = "offTrip";
                               }
                             }
                             return _buildTelemetryItem(
@@ -319,7 +327,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           onPressed: () => isOnTrip
                               ? _showEndTripDialog()
                               : _showStartTripDialog(),
-                        ).visibleIf(user?.role == 'driver');
+                        ).visibleIf(
+                          user?.role == 'driver' &&
+                              user?.trip?.status == "Pending",
+                        );
                       }),
                       const SizedBox(height: 50),
                     ],
@@ -553,6 +564,21 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           Toaster.showSuccess("Trip Stopped");
           _userController.user.refresh();
         }
+      },
+    );
+  }
+
+  void _alartPendingTrip() {
+    Get.defaultDialog(
+      title: "Pending Trip",
+      content:
+          "You have been assigned a trip to go to , Confirm the trip when you are ready to go"
+              .text(),
+      textCancel: "Close",
+      textConfirm: "Confirm",
+      onConfirm: () {
+        Get.back();
+        _handleTripAction(true);
       },
     );
   }
