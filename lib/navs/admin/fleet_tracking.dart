@@ -74,6 +74,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     _fuelController.dispose();
     _refuelLevelController.dispose();
     _refuelCostController.dispose();
+    _socketController.listenId.value = "";
     super.dispose();
   }
 
@@ -207,7 +208,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
 
                       // Driver Info
                       Obx(() {
-                        final user = _userController.user.value;
+                        final user = _socketController.liveTrackDriver.value;
                         final isOnTrip = (user?.trip ?? "").isNotEmpty;
                         return Row(
                           children: [
@@ -249,6 +250,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               ),
                             ),
                           ],
+                        ).visibleIf(
+                          _socketController.liveTrackDriver.value != null,
                         );
                       }),
 
@@ -317,7 +320,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           onPressed: () => isOnTrip
                               ? _showEndTripDialog()
                               : _showStartTripDialog(),
-                        );
+                        ).visibleIf(user?.role == 'driver');
                       }),
                       const SizedBox(height: 50),
                     ],

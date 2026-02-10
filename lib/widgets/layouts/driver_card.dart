@@ -1,179 +1,181 @@
-import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/models/user_model.dart';
-import 'package:genesis/screens/pilots/drivers_edit.dart';
 import 'package:genesis/utils/theme.dart';
-import 'package:get/get.dart';
+import 'package:genesis/models/user_model.dart';
 
-class GDriverCard extends StatelessWidget {
-  final User driver;
-  const GDriverCard({super.key, required this.driver});
+class DriverCard extends StatelessWidget {
+  final User user;
+  final VoidCallback onAssign;
+
+  const DriverCard({super.key, required this.user, required this.onAssign});
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor = Colors.blue;
+    bool isAvailable = user.status == 'available';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.color(),
-        borderRadius: BorderRadius.circular(30),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(27),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          // Top Profile Section
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 35,
-                      backgroundColor: Colors.blue,
-                      child: Text(
-                        driver.firstName[0],
-                        style: TextStyle(
-                          color: Colors.blue.withAlpha(30),
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                // Avatar
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.grey[200],
+                  child: Text(
+                    "${user.firstName[0]}${user.lastName[0]}",
+                    style: TextStyle(
+                      color: GTheme.color(),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: statusColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
+
+                // Info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        driver.firstName + " " + driver.lastName,
+                        "${user.firstName} ${user.lastName}",
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(
-                            Icons.star,
-                            color: Colors.orange.shade400,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
+                          Icon(Icons.star, size: 14, color: Colors.amber[700]),
                           Text(
-                            driver.rating?.toString() ?? '0',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            driver.experience ?? 'no experiencwe',
+                            " ${user.rating}  •  Safety: ${user.safety}%",
                             style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 13,
+                              fontSize: 12,
+                              color: Colors.grey[600],
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        user.vehicle == null
+                            ? "No Vehicle Assigned"
+                            : user.vehicle!.carModel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.send, color: Colors.blueAccent),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.blue.withAlpha(25),
-                  ),
+
+                // Status & Quick Action
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isAvailable
+                            ? Colors.green.withAlpha(30)
+                            : Colors.orange.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isAvailable ? "Available" : "On Trip",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isAvailable ? Colors.green : Colors.orange,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Quick Icon Button for Assignment
+                    InkWell(
+                      onTap: onAssign,
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: GTheme.color().withAlpha(30),
+                        child: Icon(
+                          Icons.add_road,
+                          size: 18,
+                          color: GTheme.color(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          // Performance Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: BoxDecoration(
-              color: Colors.grey.withAlpha(100),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(30),
+          // Action Button Section (Always visible now, change text based on status)
+          GestureDetector(
+            onTap: onAssign,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: isAvailable
+                    ? GTheme.color().withAlpha(26)
+                    : Colors.orange.withAlpha(26),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(20),
+                ),
+                border: Border(
+                  top: BorderSide(color: Colors.grey.withAlpha(30)),
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildDriverMetric(
-                  Icons.directions_car,
-                  "Trips",
-                  "${driver.trips ?? 0}",
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isAvailable ? Icons.assignment_turned_in : Icons.queue,
+                      size: 16,
+                      color: isAvailable ? GTheme.color() : Colors.orange[800],
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isAvailable ? "ASSIGN NEW TRIP" : "QUEUE NEXT TRIP",
+                      style: TextStyle(
+                        color: isAvailable
+                            ? GTheme.color()
+                            : Colors.orange[800],
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
                 ),
-                _buildDriverMetric(
-                  Icons.shield,
-                  "Safety",
-                  "${driver.safety ?? 0}%",
-                ),
-                _buildDriverMetric(
-                  Icons.timer_outlined,
-                  "Status",
-                  driver.status ?? 'idle',
-                  color: statusColor,
-                ),
-              ],
+              ),
             ),
           ),
         ],
       ),
-    ).onTap(() => Get.to(() => AdminEditDriver(driver: driver)));
-  }
-
-  Widget _buildDriverMetric(
-    IconData icon,
-    String label,
-    String value, {
-    Color color = Colors.black87,
-  }) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 14),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 }

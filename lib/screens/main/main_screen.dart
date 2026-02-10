@@ -32,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
         : "dashboard";
     widgetTree = {
       "dashboard": const AdminNavMain(),
-      "drivers": const AdminNavDrivers(),
+      "drivers": AdminNavDrivers(triggerKey: _scaffoldKey),
       "reports": const AdminNavReports(),
       "payrolls": const AdminNavPayroll(),
       "vehicles": const AdminNavVehicles(),

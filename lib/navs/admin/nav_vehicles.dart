@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:genesis/controllers/socket_controller.dart';
+import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +25,7 @@ class AdminNavVehicles extends StatefulWidget {
 class _AdminNavVehiclesState extends State<AdminNavVehicles> {
   final _refreshController = RefreshController();
   final _statsController = Get.find<StatsController>();
+  final _socketController = Get.find<SocketController>();
   final _vehicleController = Get.find<VehicleControler>();
   late Timer _tickerTimer;
   String searchQuery = "";
@@ -217,8 +220,14 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      GVehicleCard(vehicle: _vehicleController.vehicles[index]),
+                  (context, index) => GVehicleCard(
+                    vehicle: _vehicleController.vehicles[index],
+                    onTrackLive: () {
+                      _socketController.listenId.value =
+                          _vehicleController.vehicles[index].id!;
+                      Get.to(() => FleetTrackingScreen());
+                    },
+                  ),
                   childCount: _vehicleController.vehicles.length,
                 ),
               ),

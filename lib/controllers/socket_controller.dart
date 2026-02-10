@@ -11,9 +11,10 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 class SocketController extends GetxController {
   late IO.Socket socket;
   Timer? _statusTimer;
+  String? _previousListenId;
   RxString listenId = "".obs;
   RxDouble fuelLevel = 0.0.obs;
-  String? _previousListenId;
+  Rx<User?> liveTrackDriver = Rx<User?>(null);
   Rx<VehicleModel?> currentVehicle = Rx<VehicleModel?>(null);
   Rx<LiveTrackModel?> liveTrackModel = Rx<LiveTrackModel?>(null);
   @override
@@ -21,6 +22,7 @@ class SocketController extends GetxController {
     super.onInit();
     initConnection();
     ever(listenId, (String newId) {
+      liveTrackDriver.value = null;
       _updateSocketListener(newId);
     });
   }
@@ -60,6 +62,7 @@ class SocketController extends GetxController {
     _statusTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (socket.connected) {
         _checkRouteConfigurations();
+        _checkAdminConfiguration();
       }
     });
   }
@@ -161,7 +164,42 @@ class SocketController extends GetxController {
     final vehicle = VehicleModel.fromJSON(response.body);
     if (update) {
       currentVehicle.value = vehicle;
+
+      findDriver(vehicle.driver ?? '');
     }
     return vehicle;
+  }
+
+  void _checkAdminConfiguration() {
+    final user = User.fromStorage();
+    if (user == null || listenId.value.isEmpty) {
+      return;
+    }
+    if (liveTrackModel.value == null) {
+      return broadcastFind();
+    }
+    final difference =
+        DateTime.now().millisecondsSinceEpoch -
+        (liveTrackModel.value!.timestamp.millisecondsSinceEpoch);
+    if (difference > 1000 * 60 * 10) {
+      broadcastFind();
+    }
+  }
+
+  void broadcastFind() {
+    final user = User.fromStorage();
+    transmitMessage(
+      channel: 'where-is-the-car',
+      data: {"companyId": user!.companyId, "vehicleId": listenId.value},
+    );
+  }
+
+  void findDriver(String id) async {
+    if (id.isEmpty) return;
+    final response = await Net.get("/user/$id");
+    if (response.hasError) {
+      return;
+    }
+    liveTrackDriver.value = User.fromJSON(response.body);
   }
 }

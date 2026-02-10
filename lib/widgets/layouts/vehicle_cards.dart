@@ -7,7 +7,8 @@ import 'package:get/get.dart';
 
 class GVehicleCard extends StatelessWidget {
   final VehicleModel vehicle;
-  const GVehicleCard({super.key, required this.vehicle});
+  final VoidCallback? onTrackLive;
+  const GVehicleCard({super.key, required this.vehicle, this.onTrackLive});
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +148,7 @@ class GVehicleCard extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => onTrackLive?.call(),
                   icon: const Icon(Icons.map_sharp, size: 18),
                   label: const Text("Track Live"),
                   style: ElevatedButton.styleFrom(
