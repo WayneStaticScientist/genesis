@@ -36,7 +36,7 @@ class TripModel {
       endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
       loadWeight: (json['loadWeight'] as num?)?.toDouble() ?? 0,
       tripPayout: (json['tripPayout'] as num?)?.toDouble() ?? 0,
-      destination: json['destination'],
+      destination: json['destination'] ?? '',
       startTime: json['startTime'] != null
           ? DateTime.parse(json['startTime'])
           : null,

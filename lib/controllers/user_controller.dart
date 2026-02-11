@@ -1,10 +1,8 @@
-import 'dart:developer';
-
-import 'package:genesis/models/trip_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/models/tokens_model.dart';
 import 'package:genesis/services/interceptor.dart';
 import 'package:genesis/services/network_adapter.dart';
@@ -245,15 +243,14 @@ class UserController extends GetxController {
   }
 
   Future<bool> endTrip({required Map<String, dynamic> data}) async {
-    if (registeringDriver.value) {
+    if (processingTrip.value) {
       Toaster.showError("loading please wait");
       return false;
     }
-    registeringDriver.value = true;
+    processingTrip.value = true;
     final response = await Net.put("/trip", data: data);
-    registeringDriver.value = false;
+    processingTrip.value = false;
     if (response.hasError) {
-      log(response.response);
       Toaster.showError(response.response);
       return false;
     }
@@ -263,6 +260,29 @@ class UserController extends GetxController {
       this.user.value?.saveUser();
       this.user.refresh();
     }
+    return true;
+  }
+
+  Future<bool> finalizeTrip({
+    required String tripId,
+    required String tripAction,
+  }) async {
+    if (processingTrip.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    processingTrip.value = true;
+    final response = await Net.delete(
+      "/trip",
+      data: {"tripId": tripId, "tripAction": tripAction},
+    );
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    fetchDrivers();
+    await findTrip(tripId);
     return true;
   }
 

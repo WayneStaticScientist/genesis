@@ -1,6 +1,8 @@
-import 'package:genesis/utils/date_utils.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/controllers/user_controller.dart'; // Adjust path as necessary
 
@@ -306,6 +308,13 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       : "Not started",
                   theme,
                 ),
+                _buildTimeRow(
+                  "Ended on",
+                  trip.startTime != null
+                      ? GenesisDate.getInformalDate(trip.endTime!)
+                      : "Not started",
+                  theme,
+                ).visibleIf(trip.endTime != null),
                 SizedBox(height: 16),
                 _buildTimeRow(
                   "Est. Completion",
@@ -405,14 +414,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       label = "End Trip";
       icon = Icons.flag;
       onTap = () async {
-        // Implement End Trip Logic
-        bool success = await userController.endTrip(
-          data: {
-            "id": trip.status, // Assuming ID or required data structure
-            "status": "Finalized", // Example status change
-          },
-        );
-        if (success) Get.back();
+        _showActionDialog("Mark trip as succefull ", "finalize");
       };
     } else if (status == 'active') {
       label = "Cancel Trip";
@@ -421,15 +423,20 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       onTap = () {
         // Implement Cancel Logic
         // userController.cancelTrip(...) // If method exists
-        Get.snackbar("Action", "Trip Cancelled", backgroundColor: Colors.white);
+        _showActionDialog(
+          "Are you sure you want to cancel this trip?",
+          "cancel",
+        );
       };
     } else if (status == 'pending') {
       label = "Revoke Trip";
       btnColor = Colors.orange;
       icon = Icons.undo;
       onTap = () {
-        // Implement Revoke Logic
-        Get.snackbar("Action", "Trip Revoked", backgroundColor: Colors.white);
+        _showActionDialog(
+          "Are you sure you want revoke the trip , The trip will not be recorded at all",
+          "revoke",
+        );
       };
     } else {
       return SizedBox.shrink(); // No action for other statuses
@@ -481,6 +488,28 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showActionDialog(String s, String t) {
+    Get.defaultDialog(
+      title: "Action",
+      content: s.text(),
+      textCancel: "cancel",
+      textConfirm: "confirm",
+      onConfirm: () async {
+        Get.back();
+        final status = await userController.finalizeTrip(
+          tripId: widget.tripId,
+          tripAction: t,
+        );
+        if (status) {
+          if (t == "revoke") {
+            Get.back();
+          }
+          Toaster.showSuccess2("Trip Action", "Operation was succesfull");
+        }
+      },
     );
   }
 }
