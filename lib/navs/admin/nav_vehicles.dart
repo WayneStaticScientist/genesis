@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:genesis/widgets/layouts/info_layout.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
+import 'package:genesis/widgets/layouts/info_layout.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/widgets/layouts/vehicle_cards.dart';
