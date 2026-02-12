@@ -1,7 +1,3 @@
-import 'package:genesis/controllers/live_tracking_controller.dart';
-import 'package:genesis/controllers/maintainance_controller.dart';
-import 'package:genesis/controllers/socket_controller.dart';
-import 'package:genesis/controllers/stats_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,7 +5,11 @@ import 'package:genesis/models/user_model.dart';
 import 'package:genesis/screens/main/main_screen.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/controllers/stats_controller.dart';
+import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
+import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/controllers/live_tracking_controller.dart';
 
 void main() async {
   await GetStorage.init();
