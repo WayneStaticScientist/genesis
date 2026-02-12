@@ -58,7 +58,7 @@ class SocketController extends GetxController {
 
   void _startStatusCheck() {
     _statusTimer?.cancel();
-    _statusTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _statusTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (socket.connected) {
         _checkRouteConfigurations();
         _checkAdminConfiguration();
