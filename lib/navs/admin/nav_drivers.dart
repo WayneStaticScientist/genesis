@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:exui/exui.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:genesis/models/user_model.dart'; // Ensure this matches your project structure
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:genesis/screens/pilots/drivers_add.dart';
+import 'package:genesis/widgets/layouts/info_layout.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/pilots/drivers_edit.dart';
 import 'package:genesis/widgets/layouts/driver_card.dart';
+import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/widgets/layouts/new_trip_modal.dart';
 import 'package:genesis/screens/trips/trips_details_screen.dart';
 
@@ -19,14 +25,24 @@ class AdminNavDrivers extends StatefulWidget {
 }
 
 class _AdminNavDriversState extends State<AdminNavDrivers> {
+  Timer? _debounceTimer;
+  String _searchKey = '';
   final _refreshController = RefreshController();
   final _driverController = Get.find<UserController>();
+  final _statsController = Get.find<StatsController>();
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _driverController.fetchDrivers();
+    _initDebounceTimer();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -62,8 +78,8 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.filter_list, color: Colors.white),
-                  onPressed: () {},
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  onPressed: () => Get.to(() => AdminAddDriver()),
                 ),
               ],
             ),
@@ -74,15 +90,21 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                 child: Row(
                   children: [
-                    _buildMiniStat("Total", "24", Colors.blue),
+                    _buildMiniStat(
+                      "Total",
+                      _statsController.stats.value?.totalDriversInSystem
+                              .toString() ??
+                          "",
+                      Colors.blue,
+                    ),
                     const SizedBox(width: 10),
-                    _buildMiniStat("Available", "8", Colors.green),
+                    _buildMiniStat("Available", "0", Colors.green),
                     const SizedBox(width: 10),
-                    _buildMiniStat("On Trip", "16", Colors.orange),
+                    _buildMiniStat("On Trip", "0", Colors.orange),
                   ],
                 ),
               ),
-            ),
+            ).visibleIfNotNull(_statsController.stats),
 
             // === 3. SEARCH ===
             SliverToBoxAdapter(
@@ -118,9 +140,22 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
 
             // === 4. DRIVER LIST ===
             Obx(() {
-              if (_driverController.loadingDrivers.value) {
+              if (_driverController.loadingDrivers.value &&
+                  _driverController.drivers.isEmpty) {
                 return const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (_driverController.drivers.isEmpty) {
+                return SliverFillRemaining(
+                  child: InfoLayout(
+                    label: "No Drivers Found",
+                    icon: Icon(
+                      LineIcons.alternateRedo,
+                      size: 32,
+                      color: Colors.grey,
+                    ),
+                  ).center(),
                 );
               }
               return SliverPadding(
@@ -190,6 +225,23 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
         ),
       ),
     );
+  }
+
+  void _initDebounceTimer() {
+    _debounceTimer = Timer.periodic(Duration(milliseconds: 700), _filterSearch);
+  }
+
+  void _filterSearch(Timer timer) {
+    if (_searchController.text != _searchKey) {
+      setState(() {
+        _searchKey = _searchController.text;
+      });
+      fetchDrivers(1);
+    }
+  }
+
+  void fetchDrivers(int i) {
+    _driverController.fetchDrivers(page: i, search: _searchKey);
   }
 }
 

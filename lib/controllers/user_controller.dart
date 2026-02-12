@@ -124,7 +124,7 @@ class UserController extends GetxController {
     driversResponse.value = "";
     loadingDrivers.value = true;
     final response = await Net.get(
-      "/drivers?page=${page}&limit=${limit}&$search=${search}",
+      "/drivers?page=${page}&limit=${limit}&search=${search}",
     );
     loadingDrivers.value = false;
     if (response.hasError) {
