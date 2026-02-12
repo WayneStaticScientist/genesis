@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:genesis/widgets/layouts/info_layout.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:genesis/controllers/stats_controller.dart';
@@ -219,7 +221,14 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
             if (_vehicleController.vehicles.isEmpty &&
                 !_vehicleController.loadingVehicles.value) {
               return SliverFillRemaining(
-                child: "No results found for vehicles".text(),
+                child: InfoLayout(
+                  label: "No Vehicles Found",
+                  icon: Icon(
+                    LineIcons.alternateRedo,
+                    size: 32,
+                    color: Colors.grey,
+                  ),
+                ).center(),
               );
             }
             return SliverPadding(

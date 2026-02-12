@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
@@ -53,6 +55,7 @@ class UserController extends GetxController {
     );
     loading.value = false;
     if (response.hasError) {
+      log(response.response);
       Toaster.showError(response.response);
       return false;
     }
