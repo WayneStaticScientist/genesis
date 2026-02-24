@@ -16,7 +16,7 @@ class DriverCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.cardColor(),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

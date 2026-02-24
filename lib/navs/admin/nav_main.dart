@@ -2,7 +2,9 @@ import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/models/main_stats_model.dart';
+import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart'; // REQUIRED: Add fl_chart to pubspec.yaml
 
@@ -62,7 +64,13 @@ class _AdminNavMainState extends State<AdminNavMain> {
   final Color primaryColor = const Color(0xFF2A2D3E);
   final Color secondaryColor = const Color(0xFF212332);
   final Color accentColor = const Color(0xFF6C5DD3);
-  final Color bgColor = const Color(0xFFF5F6FA); // Light mode background
+  late Color bgColor = Get.isDarkMode
+      ? Colors.grey[900]!
+      : Colors.white; // Light mode background
+  initState() {
+    super.initState();
+    _statsController.fetchStats();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +134,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Container(
           padding: const EdgeInsets.all(0),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Get.isDarkMode ? Colors.grey[800] : Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -137,6 +145,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
             ],
           ),
           child: DrawerButton(
+            color: Get.isDarkMode ? Colors.white : Colors.black87,
             onPressed: () => widget.triggerKey?.currentState?.openDrawer(),
           ),
         ).visibleIfNot(isDeskop),
@@ -149,7 +158,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
-                color: primaryColor,
                 letterSpacing: -0.5,
               ),
             ),
@@ -159,7 +167,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Get.isDarkMode ? Colors.grey[800] : Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -169,9 +177,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
               ),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.notifications_outlined,
-            color: Colors.black87,
+            color: Get.isDarkMode ? Colors.white : Colors.black87,
           ),
         ),
       ],
@@ -200,7 +208,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
             _buildSophisticatedCard(
               "Total Fleet",
               data.totalVehiclesInSystem.toString(),
-              "+12% vs last month",
+              "Total Vehicles",
               Icons.directions_car_filled,
               const Color(0xFF6C5DD3), // Purple
               [3, 5, 4, 6, 5, 8, 7],
@@ -208,23 +216,23 @@ class _AdminNavMainState extends State<AdminNavMain> {
             _buildSophisticatedCard(
               "Active Drivers",
               data.totalDriversInSystem.toString(),
-              "92% Utilization",
+              "Total Drivers",
               Icons.person_pin_circle_rounded,
               const Color(0xFF33D69F), // Green
               [8, 8, 7, 9, 8, 9, 9],
             ),
             _buildSophisticatedCard(
               "Maintenance",
-              data.totalMaintainanceCost.toString(),
-              "4 Critical Repairs",
+              NumberUtils.formatCurrency(data.totalMaintainanceCost),
+              "Maintenance",
               Icons.build_circle_rounded,
               const Color(0xFFFF8F6B), // Orange
               [2, 3, 2, 4, 2, 1, 2],
             ),
             _buildSophisticatedCard(
               "Total Revenue",
-              "\$${(34566 / 1000).toStringAsFixed(1)}k",
-              "+8.4% Growth",
+              NumberUtils.formatCurrency(data.totalRevenue),
+              "Revenue",
               Icons.monetization_on_rounded,
               const Color(0xFF4CA6EA), // Blue
               [2, 3, 566, 776, 234, 53, 6],
@@ -471,7 +479,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.cardColor(),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -501,11 +509,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF2A2D3E),
-            ),
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 4),
           Row(

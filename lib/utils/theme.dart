@@ -8,6 +8,10 @@ class GTheme {
         : const Color(0xFFF4F7FE);
   }
 
+  static Color cardColor() {
+    return Get.isDarkMode ? Colors.grey[800]! : const Color(0xFFF4F7FE);
+  }
+
   //Returns actual Color : White or Black depending on context
   static Color color() {
     return Get.isDarkMode

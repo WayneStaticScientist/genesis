@@ -14,6 +14,7 @@ class VehicleDetails {
 }
 
 class MainStatsModel {
+  double totalRevenue;
   int totalMaintenanceCount;
   int totalDriversInSystem;
   double totalMaintainanceCost;
@@ -21,6 +22,7 @@ class MainStatsModel {
   int numberOfVehiclesWithMaintenance;
   List<VehicleDetails> vehicleDetails;
   MainStatsModel({
+    required this.totalRevenue,
     required this.totalMaintenanceCount,
     required this.totalDriversInSystem,
     required this.totalVehiclesInSystem,
@@ -30,6 +32,7 @@ class MainStatsModel {
   });
   factory MainStatsModel.fromJson(Map<String, dynamic> json) {
     return MainStatsModel(
+      totalRevenue: (json['totalRevenue'] as num?)?.toDouble() ?? 0,
       totalDriversInSystem: json['totalDriversInSystem'] ?? 0,
       totalVehiclesInSystem: json['totalVehiclesInSystem'] ?? 0,
       totalMaintenanceCount: json['totalMaintenanceCount'] ?? 0,

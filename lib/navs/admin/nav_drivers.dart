@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:exui/exui.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icons.dart';
@@ -49,7 +50,7 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
   Widget build(BuildContext context) {
     final isDeskop = MediaQuery.of(context).size.width > ScreenSizes.DESKTOP_W;
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Get.isDarkMode ? Colors.grey[900] : Colors.grey[100],
       body: SmartRefresher(
         controller: _refreshController,
         onRefresh: () async {
@@ -115,7 +116,7 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: GTheme.cardColor(),
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
