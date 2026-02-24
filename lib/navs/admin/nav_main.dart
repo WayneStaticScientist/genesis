@@ -10,42 +10,6 @@ import 'package:fl_chart/fl_chart.dart'; // REQUIRED: Add fl_chart to pubspec.ya
 
 // --- 1. MOCK MODELS & CONTROLLER (Replace with your actual Genesis logic) ---
 
-class Vehicle {
-  final String id;
-  final String model;
-  final String driverName;
-  final String status; // 'Active', 'Maintenance', 'Idle'
-  final String plateNumber;
-  final double fuelLevel;
-
-  Vehicle(
-    this.id,
-    this.model,
-    this.driverName,
-    this.status,
-    this.plateNumber,
-    this.fuelLevel,
-  );
-}
-
-class DashboardStats {
-  final int totalFleet;
-  final int activeDrivers;
-  final int maintenanceCount;
-  final double totalRevenue;
-  final List<double> weeklyRevenue; // For sparklines
-  final List<Vehicle> vehicles;
-
-  DashboardStats({
-    required this.totalFleet,
-    required this.activeDrivers,
-    required this.maintenanceCount,
-    required this.totalRevenue,
-    required this.weeklyRevenue,
-    required this.vehicles,
-  });
-}
-
 // --- 2. MAIN DASHBOARD SCREEN ---
 
 class AdminNavMain extends StatefulWidget {
@@ -116,8 +80,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
             _buildQuickStatsGrid(data),
             const SizedBox(height: 30),
             _buildAnalyticsSection(data),
-            const SizedBox(height: 30),
-            _buildRecentFleetActivity(data),
           ],
         ),
       ),
@@ -211,7 +173,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
               "Total Vehicles",
               Icons.directions_car_filled,
               const Color(0xFF6C5DD3), // Purple
-              [3, 5, 4, 6, 5, 8, 7],
+              _statsController.sevenDaysTotals
+                  .map((e) => e.newVehicles.toDouble())
+                  .toList(),
             ),
             _buildSophisticatedCard(
               "Active Drivers",
@@ -219,7 +183,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
               "Total Drivers",
               Icons.person_pin_circle_rounded,
               const Color(0xFF33D69F), // Green
-              [8, 8, 7, 9, 8, 9, 9],
+              _statsController.sevenDaysTotals
+                  .map((e) => e.newDrivers.toDouble())
+                  .toList(),
             ),
             _buildSophisticatedCard(
               "Maintenance",
@@ -227,7 +193,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
               "Maintenance",
               Icons.build_circle_rounded,
               const Color(0xFFFF8F6B), // Orange
-              [2, 3, 2, 4, 2, 1, 2],
+              _statsController.sevenDaysTotals
+                  .map((e) => e.maintenanceCost.toDouble())
+                  .toList(),
             ),
             _buildSophisticatedCard(
               "Total Revenue",
@@ -235,7 +203,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
               "Revenue",
               Icons.monetization_on_rounded,
               const Color(0xFF4CA6EA), // Blue
-              [2, 3, 566, 776, 234, 53, 6],
+              _statsController.sevenDaysTotals
+                  .map((e) => e.revenue.toDouble())
+                  .toList(),
             ),
           ],
         );
@@ -261,7 +231,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 height: 400,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: GTheme.cardColor(),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -290,11 +260,11 @@ class _AdminNavMainState extends State<AdminNavMain> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5F6FA),
+                            color: GTheme.cardColor(),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
-                            "This Year",
+                            "This Week",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -320,7 +290,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 height: 400,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: GTheme.cardColor(),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -355,116 +325,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
   }
 
   // --- List Section ---
-  Widget _buildRecentFleetActivity(MainStatsModel data) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(30),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Live Vehicle Status",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.filter_list_rounded),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ListView.separated(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: data.vehicleDetails.length,
-            separatorBuilder: (ctx, i) =>
-                Divider(color: Colors.grey.withAlpha(40)),
-            itemBuilder: (context, index) {
-              final vehicle = data.vehicleDetails[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(vehicle.status).withAlpha(40),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.local_shipping_rounded,
-                        color: _getStatusColor(vehicle.status),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            vehicle.model,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "${vehicle.model} • ${vehicle.driverName}",
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _buildFuelIndicator(/*vehicle.fuelLevel*/ 34),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(vehicle.status).withAlpha(40),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _getStatusColor(vehicle.status).withAlpha(60),
-                        ),
-                      ),
-                      child: Text(
-                        vehicle.status,
-                        style: TextStyle(
-                          color: _getStatusColor(vehicle.status),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   // --- Sub-Widgets & Helpers ---
 
@@ -583,32 +443,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 );
-                String text;
-                switch (value.toInt()) {
-                  case 0:
-                    text = 'JAN';
-                    break;
-                  case 2:
-                    text = 'MAR';
-                    break;
-                  case 4:
-                    text = 'MAY';
-                    break;
-                  case 6:
-                    text = 'JUL';
-                    break;
-                  case 8:
-                    text = 'SEP';
-                    break;
-                  case 10:
-                    text = 'NOV';
-                    break;
-                  default:
-                    return Container();
-                }
                 return SideTitleWidget(
                   meta: meta,
-                  child: Text(text, style: style),
+                  child: Text("${value.toInt()}", style: style),
                 );
               },
             ),
@@ -619,7 +456,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
               interval: 1,
               getTitlesWidget: (value, meta) {
                 return Text(
-                  '${value.toInt()}0k',
+                  NumberUtils.formatCurrency(value), // Scale back for labels
                   style: const TextStyle(color: Colors.grey, fontSize: 10),
                 );
               },
@@ -629,21 +466,19 @@ class _AdminNavMainState extends State<AdminNavMain> {
         ),
         borderData: FlBorderData(show: false),
         minX: 0,
-        maxX: 11,
+        maxX: 7,
         minY: 0,
-        maxY: 6,
         lineBarsData: [
           // Expenses Line
           LineChartBarData(
-            spots: const [
-              FlSpot(0, 3),
-              FlSpot(2.6, 2),
-              FlSpot(4.9, 5),
-              FlSpot(6.8, 3.1),
-              FlSpot(8, 4),
-              FlSpot(9.5, 3),
-              FlSpot(11, 4),
-            ],
+            spots: _statsController.sevenDaysTotals
+                .map(
+                  (e) => FlSpot(
+                    _statsController.sevenDaysTotals.indexOf(e).toDouble(),
+                    e.maintenanceCost.toDouble() / 1000, // Scale for demo
+                  ),
+                )
+                .toList(),
             isCurved: true,
             color: const Color(0xFF6C5DD3),
             barWidth: 4,
@@ -651,26 +486,28 @@ class _AdminNavMainState extends State<AdminNavMain> {
             dotData: FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: const Color(0xFF6C5DD3).withOpacity(0.15),
+              color: const Color(0xFF6C5DD3).withAlpha(30),
             ),
           ),
           // Revenue Line
           LineChartBarData(
-            spots: const [
-              FlSpot(0, 1.5),
-              FlSpot(2.6, 1.8),
-              FlSpot(4.9, 1.3),
-              FlSpot(6.8, 2.5),
-              FlSpot(8, 2.2),
-              FlSpot(9.5, 3.8),
-              FlSpot(11, 3.2),
-            ],
+            spots: _statsController.sevenDaysTotals
+                .map(
+                  (e) => FlSpot(
+                    _statsController.sevenDaysTotals.indexOf(e).toDouble(),
+                    e.revenue.toDouble() / 1000, // Scale for demo
+                  ),
+                )
+                .toList(),
             isCurved: true,
-            color: const Color(0xFF33D69F),
+            color: const Color(0xFF4CA6EA),
             barWidth: 4,
             isStrokeCapRound: true,
             dotData: FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: const Color(0xFF4CA6EA).withAlpha(30),
+            ),
           ),
         ],
       ),
@@ -678,6 +515,24 @@ class _AdminNavMainState extends State<AdminNavMain> {
   }
 
   Widget _buildPieChart(MainStatsModel data) {
+    final total =
+        data.activeVehicles + data.inServiceVehicles + data.idleVehicles;
+    if (total == 0) {
+      return Container(
+        height: 200,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.pie_chart_outline, size: 48, color: Colors.grey),
+            const SizedBox(height: 10),
+            Text(
+              "No fleet data available",
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
     return PieChart(
       PieChartData(
         sectionsSpace: 0,
@@ -685,8 +540,13 @@ class _AdminNavMainState extends State<AdminNavMain> {
         sections: [
           PieChartSectionData(
             color: const Color(0xFF33D69F),
-            value: 65,
-            title: '65%',
+            value:
+                ((_statsController.stats.value?.activeVehicles.toDouble() ??
+                        0) /
+                    total) *
+                100,
+            title:
+                _statsController.stats.value?.activeVehicles.toString() ?? "0",
             radius: 50,
             titleStyle: const TextStyle(
               fontSize: 16,
@@ -696,8 +556,14 @@ class _AdminNavMainState extends State<AdminNavMain> {
           ),
           PieChartSectionData(
             color: const Color(0xFFFF8F6B),
-            value: 20,
-            title: '20%',
+            value:
+                ((_statsController.stats.value?.inServiceVehicles.toDouble() ??
+                        0) /
+                    total) *
+                100,
+            title:
+                _statsController.stats.value?.inServiceVehicles.toString() ??
+                "0",
             radius: 50,
             titleStyle: const TextStyle(
               fontSize: 16,
@@ -707,8 +573,11 @@ class _AdminNavMainState extends State<AdminNavMain> {
           ),
           PieChartSectionData(
             color: const Color(0xFF4CA6EA),
-            value: 15,
-            title: '15%',
+            value:
+                ((_statsController.stats.value?.idleVehicles.toDouble() ?? 0) /
+                    total) *
+                100,
+            title: _statsController.stats.value?.idleVehicles.toString() ?? "0",
             radius: 50,
             titleStyle: const TextStyle(
               fontSize: 16,
@@ -724,11 +593,20 @@ class _AdminNavMainState extends State<AdminNavMain> {
   Widget _buildPieLegend() {
     return Column(
       children: [
-        _legendItem(const Color(0xFF33D69F), "Active"),
+        _legendItem(
+          const Color(0xFF33D69F),
+          "Active ${"(${_statsController.stats.value?.activeVehicles.toInt() ?? 0})"}",
+        ),
         const SizedBox(height: 8),
-        _legendItem(const Color(0xFFFF8F6B), "Maintenance"),
+        _legendItem(
+          const Color(0xFFFF8F6B),
+          "Maintenance ${"(${_statsController.stats.value?.inServiceVehicles.toInt() ?? 0})"}",
+        ),
         const SizedBox(height: 8),
-        _legendItem(const Color(0xFF4CA6EA), "Idle / Garage"),
+        _legendItem(
+          const Color(0xFF4CA6EA),
+          "Idle / Garage ${"(${_statsController.stats.value?.idleVehicles.toInt() ?? 0})"}",
+        ),
       ],
     );
   }
@@ -742,48 +620,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
           decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         ),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.black54,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
       ],
     );
-  }
-
-  Widget _buildFuelIndicator(double level) {
-    return Column(
-      children: [
-        const Icon(
-          Icons.local_gas_station_rounded,
-          size: 16,
-          color: Colors.grey,
-        ),
-        const SizedBox(height: 4),
-        SizedBox(
-          width: 40,
-          child: LinearProgressIndicator(
-            value: level,
-            backgroundColor: Colors.grey[200],
-            color: level < 0.3 ? Colors.red : Colors.blue,
-            minHeight: 4,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return const Color(0xFF33D69F);
-      case 'maintenance':
-        return const Color(0xFFFF8F6B);
-      default:
-        return Colors.grey;
-    }
   }
 }
