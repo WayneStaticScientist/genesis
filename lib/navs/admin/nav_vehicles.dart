@@ -135,7 +135,9 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                           ),
                           GMainStatCard(
                             title: "Active Now",
-                            value: "0",
+                            value: _statsController.stats.value!.activeVehicles
+                                .toStringAsFixed(0)
+                                .toString(),
                             icon: Icons.location_on,
                             color: Colors.green,
                           ),
@@ -144,7 +146,8 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                             value: _statsController
                                 .stats
                                 .value!
-                                .totalMaintenanceCount
+                                .inServiceVehicles
+                                .toStringAsFixed(0)
                                 .toString(),
                             icon: Icons.build_circle,
                             color: Colors.orange,

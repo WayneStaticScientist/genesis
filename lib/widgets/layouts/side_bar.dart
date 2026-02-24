@@ -24,7 +24,7 @@ class _GNavBarState extends State<GNavBar> {
       return Container(
         width: 250,
         height: double.infinity,
-        color: GTheme.color(),
+        color: GTheme.cardColor(),
         child: SingleChildScrollView(
           child: [
             32.gapHeight,

@@ -28,9 +28,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
   final Color primaryColor = const Color(0xFF2A2D3E);
   final Color secondaryColor = const Color(0xFF212332);
   final Color accentColor = const Color(0xFF6C5DD3);
-  late Color bgColor = Get.isDarkMode
-      ? Colors.grey[900]!
-      : Colors.white; // Light mode background
+  // Light mode background
   initState() {
     super.initState();
     _statsController.fetchStats();
@@ -39,7 +37,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
       body: Obx(() {
         if (_statsController.isLoading.value) {
           return const Center(
@@ -96,7 +93,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Container(
           padding: const EdgeInsets.all(0),
           decoration: BoxDecoration(
-            color: Get.isDarkMode ? Colors.grey[800] : Colors.white,
+            color: GTheme.cardColor(),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -129,7 +126,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Get.isDarkMode ? Colors.grey[800] : Colors.white,
+            color: GTheme.cardColor(),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
