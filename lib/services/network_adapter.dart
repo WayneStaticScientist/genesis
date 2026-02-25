@@ -11,12 +11,15 @@ class Net {
   static const String baseUrl = "http://$domain/v1";
   static const String url = "http://$domain";
   // static const String baseUrl = "https://api.mistpos.co.zw/v1";
-  static Future<ResponseModel> get(String url) async {
+  static Future<ResponseModel> get(
+    String url, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     if (Net._dio == null) {
       await initDio();
     }
     try {
-      final response = await _dio!.get(url);
+      final response = await _dio!.get(url, queryParameters: queryParameters);
       return ResponseModel(hasError: false, response: "", body: response.data);
     } on DioException catch (e) {
       log("There was error $e");

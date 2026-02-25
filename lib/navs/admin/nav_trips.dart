@@ -1,13 +1,11 @@
+import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/models/current_vehicle_model.dart';
-import 'package:genesis/models/populated_location_model.dart';
-import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/layouts/trip_card.dart';
-
-/// --- MODELS (Included here for self-containment) ---
-
-/// --- MAIN SCREEN ---
+import 'package:genesis/controllers/trips_controller.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/screens/trips/trips_details_screen.dart';
 
 class NavTrips extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -24,7 +22,7 @@ class _NavTripsState extends State<NavTrips> {
   String _selectedStatus = "All";
   DateTimeRange? _selectedDateRange;
   final TextEditingController _searchController = TextEditingController();
-
+  final _tripsController = Get.find<TripsController>();
   final List<String> _statuses = [
     "All",
     "Active",
@@ -33,76 +31,12 @@ class _NavTripsState extends State<NavTrips> {
     "Cancelled",
   ];
 
-  // Mock data representing the models provided
-  final List<TripModel> _allTrips = [
-    TripModel(
-      status: "Active",
-      loadType: "Heavy Machinery",
-      loadWeight: 12500,
-      tripPayout: 2450.00,
-      destination: "Nairobi, Kenya",
-      startTime: DateTime.now().subtract(const Duration(hours: 2)),
-      endTime: null,
-      startFuelLevel: 0.85,
-      endFuelLevel: null,
-      estimatedEndTime: DateTime.now().add(const Duration(hours: 6)),
-      vehicle: CurrentVehicleModel(id: "v1", carModel: "Scania R500"),
-      location: PopulatedLocationModel(lat: -1.28, lng: 36.82),
-    ),
-    TripModel(
-      status: "Pending",
-      loadType: "Perishables",
-      loadWeight: 4200,
-      tripPayout: 850.50,
-      destination: "Mombasa Port",
-      startTime: DateTime.now().add(const Duration(days: 1)),
-      endTime: null,
-      startFuelLevel: 1.0,
-      endFuelLevel: null,
-      estimatedEndTime: null,
-      vehicle: CurrentVehicleModel(id: "v2", carModel: "Volvo FH16"),
-      location: null,
-    ),
-    TripModel(
-      status: "Completed",
-      loadType: "Construction Materials",
-      loadWeight: 18000,
-      tripPayout: 3100.00,
-      destination: "Kampala, Uganda",
-      startTime: DateTime.now().subtract(const Duration(days: 2)),
-      endTime: DateTime.now().subtract(const Duration(hours: 5)),
-      startFuelLevel: 0.9,
-      endFuelLevel: 0.2,
-      estimatedEndTime: null,
-      vehicle: CurrentVehicleModel(id: "v3", carModel: "Mercedes Actros"),
-      location: null,
-    ),
-  ];
-
-  List<TripModel> get _filteredTrips {
-    return _allTrips.where((trip) {
-      final matchesSearch =
-          trip.destination.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          trip.vehicle.carModel.toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ) ||
-          trip.loadType.toLowerCase().contains(_searchQuery.toLowerCase());
-
-      final matchesStatus =
-          _selectedStatus == "All" || trip.status == _selectedStatus;
-
-      bool matchesDate = true;
-      if (_selectedDateRange != null && trip.startTime != null) {
-        matchesDate =
-            trip.startTime!.isAfter(_selectedDateRange!.start) &&
-            trip.startTime!.isBefore(
-              _selectedDateRange!.end.add(const Duration(days: 1)),
-            );
-      }
-
-      return matchesSearch && matchesStatus && matchesDate;
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _tripsController.fetchTrips();
   }
+  // Mock data representing the models provided
 
   @override
   Widget build(BuildContext context) {
@@ -132,15 +66,29 @@ class _NavTripsState extends State<NavTrips> {
             ),
           ),
           Expanded(
-            child: _filteredTrips.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filteredTrips.length,
-                    itemBuilder: (context, index) {
-                      return TripCard(trip: _filteredTrips[index]);
-                    },
-                  ),
+            child: Obx(() {
+              if (_tripsController.trips.isEmpty &&
+                  _tripsController.loadingTrips.value) {
+                return MaterialLoader().center();
+              }
+              if (_tripsController.trips.isEmpty) {
+                return _buildEmptyState();
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _tripsController.trips.length,
+                itemBuilder: (context, index) {
+                  return TripCard(trip: _tripsController.trips[index]).onTap(
+                    () => Get.to(
+                      () => TripDetailsScreen(
+                        tripId: _tripsController.trips[index].vehicle.id,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
           ),
         ],
       ),

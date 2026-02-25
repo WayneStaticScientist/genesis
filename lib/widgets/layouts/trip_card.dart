@@ -31,7 +31,7 @@ class TripCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.surface(),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -113,7 +113,7 @@ class TripCard extends StatelessWidget {
             // Route Section
             Container(
               padding: const EdgeInsets.all(16),
-              color: const Color(0xFFF1F4F8).withAlpha(128),
+              color: GTheme.surface(),
               child: Column(
                 children: [
                   _locationRow(
@@ -150,10 +150,7 @@ class TripCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           "${(trip.startFuelLevel! * 100).toInt()}% Fuel",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
@@ -164,7 +161,6 @@ class TripCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black87,
                     ),
                   ),
                 ],
