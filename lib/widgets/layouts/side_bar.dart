@@ -62,6 +62,12 @@ class _GNavBarState extends State<GNavBar> {
             ).visibleIf(!isDriver),
             _buildNavItem(
               context,
+              'Trips',
+              "Trips",
+              Icons.dashboard,
+            ).visibleIf(!isDriver),
+            _buildNavItem(
+              context,
               'vehicles',
               "Vehicles",
               Icons.directions_car,

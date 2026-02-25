@@ -50,7 +50,7 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
   Widget build(BuildContext context) {
     final isDeskop = MediaQuery.of(context).size.width > ScreenSizes.DESKTOP_W;
     return Scaffold(
-      backgroundColor: Get.isDarkMode ? Colors.grey[900] : Colors.grey[100],
+      backgroundColor: GTheme.surface(),
       body: SmartRefresher(
         controller: _refreshController,
         onRefresh: () async {

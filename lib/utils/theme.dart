@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class GTheme {
+  static get primary => Get.theme.colorScheme.primary;
+
   static Color surface() {
     return Get.isDarkMode
         ? const Color.fromARGB(255, 30, 30, 30)

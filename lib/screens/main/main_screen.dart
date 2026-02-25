@@ -1,6 +1,7 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/navs/admin/nav_trips.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/navs/admin/nav_main.dart';
@@ -31,6 +32,7 @@ class _MainScreenState extends State<MainScreen> {
         ? "tracking"
         : "dashboard";
     widgetTree = {
+      "Trips": NavTrips(triggerKey: _scaffoldKey),
       "dashboard": AdminNavMain(triggerKey: _scaffoldKey),
       "drivers": AdminNavDrivers(triggerKey: _scaffoldKey),
       "reports": const AdminNavReports(),
