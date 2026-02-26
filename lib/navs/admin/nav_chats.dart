@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:genesis/screens/chats/find_chats.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:get/get.dart';
 
 class NavChats extends StatelessWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -27,7 +29,7 @@ class NavChats extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_note_rounded, size: 28),
-            onPressed: () {},
+            onPressed: () => Get.to(() => const FindChatsScreen()),
           ),
           const SizedBox(width: 8),
         ],

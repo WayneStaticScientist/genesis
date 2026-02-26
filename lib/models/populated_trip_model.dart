@@ -11,7 +11,10 @@ class PopulatedTripModel {
     required this.status,
     required this.destination,
   });
-  factory PopulatedTripModel.fromJSON(Map<String, dynamic> data) {
+  factory PopulatedTripModel.fromJSON(dynamic data) {
+    if (data.runtimeType == String) {
+      return PopulatedTripModel(id: '', status: '', destination: '');
+    }
     return PopulatedTripModel(
       id: data['_id'],
       status: data['status'] ?? '',

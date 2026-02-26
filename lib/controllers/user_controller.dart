@@ -311,4 +311,29 @@ class UserController extends GetxController {
     trip.value = TripModel.fromJson(response.body);
     return Future.value();
   }
+
+  RxBool findingChats = RxBool(false);
+  RxList<User> foundChats = RxList([]);
+  Future<void> findChats({
+    int page = 1,
+    int limit = 20,
+    String query = '',
+  }) async {
+    findingChats.value = true;
+    final response = await Net.get(
+      "/chats/users?search=$query&page=$page&limit=$limit",
+    );
+    findingChats.value = false;
+    if (response.hasError) {
+      return Future.value();
+    }
+    foundChats.clear();
+    foundChats.addAll(
+      (response.body['list'] as List<dynamic>?)
+              ?.map((e) => User.fromJSON(e))
+              .toList() ??
+          [],
+    );
+    return Future.value();
+  }
 }
