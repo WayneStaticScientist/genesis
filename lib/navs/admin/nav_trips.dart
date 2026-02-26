@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +20,11 @@ class NavTrips extends StatefulWidget {
 
 class _NavTripsState extends State<NavTrips> {
   // State for filtering
+  Timer? _debounceTimer;
   String _searchQuery = "";
   String _selectedStatus = "All";
   DateTimeRange? _selectedDateRange;
+
   final TextEditingController _searchController = TextEditingController();
   final _tripsController = Get.find<TripsController>();
   final List<String> _statuses = [
@@ -28,15 +32,31 @@ class _NavTripsState extends State<NavTrips> {
     "Active",
     "Pending",
     "Completed",
-    "Cancelled",
+    "Finalized",
   ];
 
   @override
   void initState() {
     super.initState();
     _tripsController.fetchTrips();
+    _initDebounceTimer();
   }
   // Mock data representing the models provided
+
+  filterResults() {
+    _tripsController.fetchTrips(
+      search: _searchQuery,
+      status: _selectedStatus != "All" ? _selectedStatus : "",
+      startTime: _selectedDateRange?.start,
+      endTime: _selectedDateRange?.end,
+    );
+  }
+
+  @override
+  dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +102,7 @@ class _NavTripsState extends State<NavTrips> {
                   return TripCard(trip: _tripsController.trips[index]).onTap(
                     () => Get.to(
                       () => TripDetailsScreen(
-                        tripId: _tripsController.trips[index].vehicle.id,
+                        tripId: _tripsController.trips[index].id,
                       ),
                     ),
                   );
@@ -111,9 +131,8 @@ class _NavTripsState extends State<NavTrips> {
           // Search Bar
           TextField(
             controller: _searchController,
-            onChanged: (val) => setState(() => _searchQuery = val),
             decoration: InputDecoration(
-              hintText: "Search destination, vehicle or load...",
+              hintText: "Search destination,origin ...",
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
@@ -148,8 +167,10 @@ class _NavTripsState extends State<NavTrips> {
                         child: FilterChip(
                           label: Text(status),
                           selected: isSelected,
-                          onSelected: (val) =>
-                              setState(() => _selectedStatus = status),
+                          onSelected: (val) {
+                            setState(() => _selectedStatus = status);
+                            filterResults();
+                          },
                           backgroundColor: Colors.transparent,
                           selectedColor: GTheme.primary.withOpacity(0.1),
                           checkmarkColor: GTheme.primary,
@@ -166,7 +187,7 @@ class _NavTripsState extends State<NavTrips> {
                             side: BorderSide(
                               color: isSelected
                                   ? GTheme.primary
-                                  : Colors.grey[300]!,
+                                  : Colors.grey[300]!.withAlpha(20),
                             ),
                           ),
                         ),
@@ -244,6 +265,7 @@ class _NavTripsState extends State<NavTrips> {
     );
     if (result != null) {
       setState(() => _selectedDateRange = result);
+      filterResults();
     }
   }
 
@@ -270,11 +292,21 @@ class _NavTripsState extends State<NavTrips> {
                 _selectedDateRange = null;
                 _searchController.clear();
               });
+              filterResults();
             },
             child: const Text("Clear all filters"),
           ),
         ],
       ),
     );
+  }
+
+  void _initDebounceTimer() {
+    _debounceTimer = Timer.periodic(const Duration(milliseconds: 700), (timer) {
+      if (_searchController.text != _searchQuery) {
+        setState(() => _searchQuery = _searchController.text);
+        filterResults();
+      }
+    });
   }
 }

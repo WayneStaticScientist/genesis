@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "423723211859",
+    "project_id": "genesis-a50f7",
+    "storage_bucket": "genesis-a50f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:423723211859:android:252806d571d39bb9f97aa6",
+        "android_client_info": {
+          "package_name": "aca.bicosatstudios.genesis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClIusJc3LDcNOmhJiw9LhBn27g-iiCvPo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,10 +1,10 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/controllers/user_controller.dart';
-import 'package:genesis/navs/admin/nav_trips.dart';
-import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/navs/admin/nav_main.dart';
+import 'package:genesis/navs/admin/nav_trips.dart';
+import 'package:genesis/navs/admin/nav_chats.dart';
 import 'package:genesis/navs/admin/nav_payroll.dart';
 import 'package:genesis/navs/admin/nav_drivers.dart';
 import 'package:genesis/navs/admin/nav_reports.dart';
@@ -12,6 +12,7 @@ import 'package:genesis/navs/admin/nav_vehicles.dart';
 import 'package:genesis/widgets/layouts/side_bar.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:genesis/navs/admin/nav_maintanance.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:get/get.dart';
 
 class MainScreen extends StatefulWidget {
@@ -32,7 +33,8 @@ class _MainScreenState extends State<MainScreen> {
         ? "tracking"
         : "dashboard";
     widgetTree = {
-      "Trips": NavTrips(triggerKey: _scaffoldKey),
+      "trips": NavTrips(triggerKey: _scaffoldKey),
+      "chats": NavChats(triggerKey: _scaffoldKey),
       "dashboard": AdminNavMain(triggerKey: _scaffoldKey),
       "drivers": AdminNavDrivers(triggerKey: _scaffoldKey),
       "reports": const AdminNavReports(),

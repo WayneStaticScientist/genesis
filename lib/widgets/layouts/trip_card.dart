@@ -1,5 +1,7 @@
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/trip_model.dart';
+import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/theme.dart';
 
 /// --- TRIP CARD COMPONENT ---
@@ -20,7 +22,7 @@ class TripCard extends StatelessWidget {
       case "Cancelled":
         return Colors.red;
       default:
-        return Colors.grey;
+        return Colors.greenAccent;
     }
   }
 
@@ -73,15 +75,8 @@ class TripCard extends StatelessWidget {
                               fontSize: 16,
                             ),
                           ),
-                          Text(
-                            "ID: ${trip.vehicle.id.toUpperCase()}",
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
                         ],
-                      ),
+                      ).constrained(maxWidth: 120),
                     ],
                   ),
                   _statusChip(trip.status, statusColor),
@@ -95,13 +90,16 @@ class TripCard extends StatelessWidget {
               child: IntrinsicHeight(
                 child: Row(
                   children: [
-                    _logisticsInfo("Weight", "${trip.loadWeight.toInt()} kg"),
+                    _logisticsInfo(
+                      "Weight",
+                      "${NumberUtils.formatNumber(trip.loadWeight)} kg",
+                    ),
                     const VerticalDivider(indent: 5, endIndent: 5),
                     _logisticsInfo("Type", trip.loadType),
                     const VerticalDivider(indent: 5, endIndent: 5),
                     _logisticsInfo(
                       "Payout",
-                      "\$${trip.tripPayout.toStringAsFixed(2)}",
+                      "${NumberUtils.formatCurrency(trip.tripPayout)}",
                     ),
                   ],
                 ),
@@ -119,7 +117,7 @@ class TripCard extends StatelessWidget {
                   _locationRow(
                     Icons.radio_button_checked,
                     "Origin",
-                    "Dispatch Center",
+                    trip.origin.isEmpty ? 'Not specified' : trip.origin,
                     GTheme.primary,
                   ),
                   _locationConnector(),

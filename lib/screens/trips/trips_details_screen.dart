@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/controllers/user_controller.dart'; // Adjust path as necessary
@@ -21,7 +22,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch the trip by ID immediately upon entering the screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       userController.findTrip(widget.tripId);
     });
@@ -33,20 +33,17 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final primaryColor = theme.colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+          icon: Icon(Icons.arrow_back_ios_new),
           onPressed: () => Get.back(),
         ),
         title: Text(
           "Trip Details",
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
           ),
         ),
         actions: [
@@ -141,7 +138,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           ),
           SizedBox(height: 20),
           Text(
-            "DESTINATION",
+            trip.origin,
             style: TextStyle(
               color: Colors.white.withAlpha(200),
               fontSize: 12,
@@ -149,6 +146,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
+          SizedBox(height: 5),
+          "-".text(),
           SizedBox(height: 5),
           Text(
             trip.destination,
@@ -243,7 +242,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.surface(),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -283,9 +282,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.surface(),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
@@ -360,7 +358,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           padding: EdgeInsets.all(16),
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.blueGrey.shade50,
+            color: GTheme.surface(),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -372,7 +370,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   trip.destination,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.blueGrey.shade900,
                   ),
                 ),
               ),
@@ -386,10 +383,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   Widget _buildSectionTitle(ThemeData theme, String title) {
     return Text(
       title,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
+      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 

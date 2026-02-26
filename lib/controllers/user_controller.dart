@@ -9,6 +9,8 @@ import 'package:genesis/models/tokens_model.dart';
 import 'package:genesis/services/interceptor.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:genesis/controllers/messaging_controller.dart';
 
 class UserController extends GetxController {
   Rx<User?> user = Rx(null);
@@ -84,6 +86,13 @@ class UserController extends GetxController {
     if (!response.hasError) {
       user.value = User.fromJSON(response.body['user']);
       user.value!.saveUser();
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      String? token = await messaging.getToken();
+      if (token != null && token != user.value!.chatToken) {
+        await Net.put("/user/update-chat-token", data: {"chatToken": token});
+      }
+      final messgaeController = Get.find<MessagingController>();
+      messgaeController.initializeMessaging();
     }
   }
 
@@ -296,6 +305,7 @@ class UserController extends GetxController {
     final response = await Net.get("/trip/$id");
     fetchingTrip.value = false;
     if (response.hasError) {
+      log("The error is ${response.response}");
       return Future.value();
     }
     trip.value = TripModel.fromJson(response.body);

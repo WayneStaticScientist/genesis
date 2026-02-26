@@ -3,6 +3,8 @@ import 'package:genesis/models/populated_location_model.dart';
 
 class TripModel {
   final String status;
+  final String id;
+  final String origin;
   final String loadType;
   final DateTime? endTime;
   final double loadWeight;
@@ -16,6 +18,8 @@ class TripModel {
   final PopulatedLocationModel? location;
 
   TripModel({
+    required this.id,
+    required this.origin,
     required this.status,
     required this.loadType,
     required this.endTime,
@@ -31,6 +35,8 @@ class TripModel {
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
+      id: json['_id'] ?? '',
+      origin: json['origin'] ?? '',
       status: json['status'],
       loadType: json['loadType'],
       endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,

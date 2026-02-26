@@ -14,6 +14,7 @@ class User {
   final String lastName;
   final String firstName;
   final String? password;
+  final String? chatToken;
   final String? companyId;
   final String? experience;
   final PopulatedTripModel? trip;
@@ -27,6 +28,7 @@ class User {
     this.status,
     this.password,
     this.companyId,
+    this.chatToken,
     this.experience,
     required this.email,
     this.currentVehicle,
@@ -51,6 +53,7 @@ class User {
       "trip": trip?.toJSON(),
       'firstName': firstName,
       'companyId': companyId,
+      "chatToken": chatToken,
       'experience': experience,
       'currentVehicle': currentVehicle?.toJson(),
     };
@@ -59,6 +62,7 @@ class User {
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
       id: data['_id'],
+      chatToken: data['chatToken'],
       trip: data['trip'] != null
           ? PopulatedTripModel.fromJSON(data['trip'])
           : null,
