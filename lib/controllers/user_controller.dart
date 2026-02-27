@@ -45,7 +45,7 @@ class UserController extends GetxController {
     return true;
   }
 
-  Future<bool> registerUser(User user, String company) async {
+  Future<bool> registerUser(dynamic user, String company) async {
     if (loading.value) {
       Toaster.showError("loading please wait");
       return false;
@@ -53,7 +53,7 @@ class UserController extends GetxController {
     loading.value = true;
     final response = await Net.post(
       "/user/register",
-      data: {"user": user.toJSON(), "company": company},
+      data: {"user": user, "company": company},
     );
     loading.value = false;
     if (response.hasError) {
@@ -97,16 +97,13 @@ class UserController extends GetxController {
   }
 
   Rx<bool> registeringDriver = RxBool(false);
-  Future<bool> registerDriver(User user) async {
+  Future<bool> registerDriver(dynamic user) async {
     if (registeringDriver.value) {
       Toaster.showError("loading please wait");
       return false;
     }
     registeringDriver.value = true;
-    final response = await Net.post(
-      "/driver/register",
-      data: {"user": user.toJSON()},
-    );
+    final response = await Net.post("/driver/register", data: {"user": user});
     registeringDriver.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);

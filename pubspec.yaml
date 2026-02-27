@@ -56,6 +56,8 @@ dependencies:
   google_fonts: ^8.0.1
   firebase_core: ^4.4.0
   firebase_messaging: ^16.1.1
+  isar_plus: ^1.2.2
+  isar_plus_flutter_libs: ^1.2.2
 #AIzaSyAhm7vhsscg3jTavveSoVoXuZjqVqsx53s
 dev_dependencies:
   flutter_test:

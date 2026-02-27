@@ -4,6 +4,7 @@ class PopulatedTripModel {
   final String id;
   final String status;
   final String destination;
+
   final PopulatedLocationModel? location;
   PopulatedTripModel({
     this.location,

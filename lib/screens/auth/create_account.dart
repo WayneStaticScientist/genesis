@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/toast.dart';
-import 'package:genesis/models/user_model.dart';
 import 'package:genesis/screens/main/main_screen.dart';
 import 'package:genesis/widgets/actions/form_input.dart';
 import 'package:genesis/widgets/actions/form_button.dart';
@@ -268,16 +267,13 @@ class _CreateAccountState extends State<CreateAccount> {
     );
     final firstName = filteredName.trim().split(" ")[0];
     final lastName = filteredName.trim().split(" ")[1];
-    final response = await _userController.registerUser(
-      User(
-        email: _emailController.text,
-        country: _countryController.text,
-        lastName: lastName,
-        firstName: firstName,
-        password: _passwordController.text,
-      ),
-      _companyController.text,
-    );
+    final response = await _userController.registerUser({
+      "email": _emailController.text,
+      "country": _countryController.text,
+      "lastName": lastName,
+      "firstName": firstName,
+      "password": _passwordController.text,
+    }, _companyController.text);
     if (response && mounted) {
       Toaster.showSuccess("Create Account success");
       Get.offAll(() => MainScreen());

@@ -4,7 +4,6 @@ import 'package:exui/exui.dart';
 import 'package:pinput/pinput.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
-import 'package:genesis/models/user_model.dart';
 import 'package:genesis/controllers/user_controller.dart';
 
 class AdminAddDriver extends StatefulWidget {
@@ -31,19 +30,17 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
     final firstName = filteredName.trim().split(" ")[0];
     final lastName = filteredName.trim().split(" ")[1];
     _formKey.currentState!.save();
-    final response = await _userController.registerDriver(
-      User(
-        trips: 0,
-        email: _email.text,
-        safety: int.tryParse(_safety.text) ?? 0,
-        rating: double.tryParse(_rating.text),
-        lastName: lastName,
-        password: password,
-        firstName: firstName,
-        experience: _experience.text,
-        country: _userController.user.value!.country,
-      ),
-    );
+    final response = await _userController.registerDriver({
+      "trips": 0,
+      "email": _email.text,
+      "safety": int.tryParse(_safety.text) ?? 0,
+      "rating": double.tryParse(_rating.text),
+      "lastName": lastName,
+      "password": password,
+      "firstName": firstName,
+      "experience": _experience.text,
+      "country": _userController.user.value!.country,
+    });
     if (response && mounted) {
       Get.back();
       Toaster.showSuccess('driver added success');

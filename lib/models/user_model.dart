@@ -1,9 +1,12 @@
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/populated_trip_model.dart';
 import 'package:genesis/models/current_vehicle_model.dart';
+import 'package:isar_plus/isar_plus.dart';
+part 'user_model.g.dart';
 
+@collection
 class User {
-  final String? id;
+  final String id;
   final int? trips;
   final int? safety;
   final String role;
@@ -17,10 +20,12 @@ class User {
   final String? chatToken;
   final String? companyId;
   final String? experience;
+  @ignore
   final PopulatedTripModel? trip;
+  @ignore
   CurrentVehicleModel? currentVehicle;
   User({
-    this.id,
+    required this.id,
     this.trip,
     this.trips,
     this.safety,
@@ -61,7 +66,7 @@ class User {
 
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
-      id: data['_id'],
+      id: data['_id'] ?? new DateTime.now().millisecondsSinceEpoch.toString(),
       chatToken: data['chatToken'],
       trip: data['trip'] != null
           ? PopulatedTripModel.fromJSON(data['trip'])
