@@ -1,58 +1,63 @@
+import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/models/messsage_model.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:genesis/controllers/messaging_controller.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String userName;
-  final String avatar;
+  final User user;
 
-  const ChatScreen({
-    super.key,
-    this.userName = "Sarah Jenkins",
-    this.avatar = "https://i.pravatar.cc/150?u=1",
-  });
+  const ChatScreen({required this.user});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  bool _isSending = false;
+  final _messagingController = Get.find<MessagingController>();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  // Mock message data
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'text': "Hey! How's the delivery route looking?",
-      'isMe': false,
-      'time': '10:30 AM',
-    },
-    {
-      'text': "Everything is on track. Vehicle #402 just finished maintenance.",
-      'isMe': true,
-      'time': '10:32 AM',
-    },
-    {
-      'text': "Great. Can you share the live tracking link?",
-      'isMe': false,
-      'time': '10:33 AM',
-    },
-    {
-      'text': "Sure thing, generating the link now...",
-      'isMe': true,
-      'time': '10:35 AM',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _messagingController.getUserMessages(widget.user);
+  }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  @override
+  void dispose() {
+    _messagingController.messages.clear();
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) {
+      Toaster.showError("Message cannot be empty");
+      return;
+    }
     setState(() {
-      _messages.add({
-        'text': _messageController.text,
-        'isMe': true,
-        'time': 'Just now',
-      });
+      _isSending = true;
     });
+    final response = await _messagingController.sendMessage(
+      _messageController.text.trim(),
+      widget.user,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isSending = false;
+    });
+    if (!response) {
+      return;
+    }
     _messageController.clear();
-    // Scroll to bottom
     Future.delayed(const Duration(milliseconds: 100), () {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
@@ -64,14 +69,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color bgBlack = Color(0xFF0F1115);
-    const Color surfaceColor = Color(0xFF16191F);
-    const Color accentBlue = Color(0xFF2563EB);
-
     return Scaffold(
-      backgroundColor: bgBlack,
       appBar: AppBar(
-        backgroundColor: surfaceColor,
+        backgroundColor: GTheme.surface(),
         elevation: 0,
         leadingWidth: 70,
         leading: IconButton(
@@ -84,7 +84,15 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundImage: NetworkImage(widget.avatar),
+                  child: Text(
+                    widget.user.firstName[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  backgroundColor: GTheme.primary,
                 ),
                 Positioned(
                   right: 0,
@@ -95,7 +103,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     decoration: BoxDecoration(
                       color: Colors.greenAccent,
                       shape: BoxShape.circle,
-                      border: Border.all(color: surfaceColor, width: 2),
+                      border: Border.all(color: GTheme.surface(), width: 2),
                     ),
                   ),
                 ),
@@ -106,14 +114,14 @@ class _ChatScreenState extends State<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.userName,
+                  "${widget.user.firstName} ${widget.user.lastName}",
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  "Online",
+                Text(
+                  widget.user.email,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.greenAccent,
@@ -139,41 +147,27 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           // Chat Messages
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const NetworkImage(
-                    'https://www.transparenttextures.com/patterns/carbon-fibre.png',
-                  ),
-                  opacity: 0.05,
-                  repeat: ImageRepeat.repeat,
-                ),
-              ),
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
-                ),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  return _buildMessageBubble(msg, accentBlue);
-                },
-              ),
+          Obx(
+            () => ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              itemCount: _messagingController.messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messagingController.messages[index];
+                return _buildMessageBubble(msg, GTheme.primary);
+              },
             ),
-          ),
+          ).expanded1,
 
           // Input Area
-          _buildInputArea(surfaceColor, accentBlue),
+          _buildInputArea(GTheme.surface(), GTheme.primary),
         ],
       ),
     );
   }
 
-  Widget _buildMessageBubble(Map msg, Color accent) {
-    bool isMe = msg['isMe'];
+  Widget _buildMessageBubble(MesssageModel msg, Color accent) {
+    bool isMe = !(msg.receiverId == widget.user.id);
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -192,7 +186,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withAlpha(30),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -204,7 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
               : CrossAxisAlignment.start,
           children: [
             Text(
-              msg['text'],
+              msg.content,
               style: TextStyle(
                 color: isMe ? Colors.white : Colors.grey.shade200,
                 fontSize: 15,
@@ -216,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  msg['time'],
+                  GenesisDate.getLastSeen(msg.timestamp),
                   style: TextStyle(
                     color: isMe ? Colors.white70 : Colors.grey.shade500,
                     fontSize: 10,
@@ -248,13 +242,13 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       decoration: BoxDecoration(
         color: surface,
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+        border: Border(top: BorderSide(color: Colors.white.withAlpha(30))),
       ),
       child: Row(
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withAlpha(30),
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
@@ -269,9 +263,10 @@ class _ChatScreenState extends State<ChatScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF1C2027),
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Colors.white.withAlpha(30)),
               ),
               child: TextField(
+                enabled: !_isSending,
                 controller: _messageController,
                 style: const TextStyle(color: Colors.white, fontSize: 15),
                 decoration: const InputDecoration(
@@ -292,17 +287,19 @@ class _ChatScreenState extends State<ChatScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.3),
+                    color: accent.withAlpha(77), // 30% alpha of accent color
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: _isSending
+                  ? WhiteLoader()
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
             ),
           ),
         ],

@@ -1,7 +1,7 @@
+import 'package:isar_plus/isar_plus.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/populated_trip_model.dart';
 import 'package:genesis/models/current_vehicle_model.dart';
-import 'package:isar_plus/isar_plus.dart';
 part 'user_model.g.dart';
 
 @collection

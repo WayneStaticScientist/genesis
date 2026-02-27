@@ -15,6 +15,21 @@ class GenesisDate {
     return "${_getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
   }
 
+  static String getLastSeen(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    if (difference.inSeconds < 60) {
+      return "${difference.inSeconds} s";
+    } else if (difference.inMinutes < 60) {
+      return "${difference.inMinutes} min";
+    } else if (difference.inHours < 24) {
+      return "${difference.inHours} hrs";
+    } else if (difference.inDays < 2) {
+      return "${difference.inDays} day(s)";
+    }
+    return "${_getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
+  }
+
   static int getDaysDifference(DateTime to) {
     final from = DateTime.now();
     return to.difference(from).inDays;

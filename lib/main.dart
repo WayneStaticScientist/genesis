@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/screens/main/main_screen.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:genesis/controllers/user_controller.dart';
@@ -23,6 +24,7 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(
     GenesisBackgroundMessageHandler.handleBackgroundMessage,
   );
+  await IsarStatic.init();
   runApp(const MyApp());
 }
 
