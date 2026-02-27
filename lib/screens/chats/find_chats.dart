@@ -114,15 +114,11 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
         children: [
           Text(
             '${chat.firstName} ${chat.lastName}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Text(
             chat.role.toUpperCase(),
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
         ],
       ),

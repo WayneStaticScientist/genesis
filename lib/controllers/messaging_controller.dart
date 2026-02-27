@@ -1,6 +1,6 @@
+import 'package:genesis/utils/toast.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/services/network_adapter.dart';
-import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:genesis/models/user_model.dart';
@@ -49,7 +49,7 @@ class MessagingController extends GetxController {
         )
         .syncedEqualTo(true)
         .findAll();
-    messages.value = msgs;
+    messages.value = msgs.reversed.toList();
   }
 
   RxBool sendingMessage = RxBool(false);
@@ -77,7 +77,7 @@ class MessagingController extends GetxController {
     await isar.write((isar) async {
       isar.messsageModels.put(newMessage);
     });
-    messages.add(newMessage);
+    messages.insert(0, newMessage);
     return true;
   }
 
@@ -85,11 +85,13 @@ class MessagingController extends GetxController {
     final isar = IsarStatic.isar;
     if (isar == null) return;
     final message = MesssageModel.fromJSON(data);
+    message.synced = false;
     await isar.write((isar) async {
       isar.messsageModels.put(message);
     });
     if (currentChatUserId.value == message.senderId) {
       messages.add(message);
+      Get.snackbar("Inchat Message", "check your last message");
       return;
     }
     _syncMessages();
@@ -106,13 +108,13 @@ class MessagingController extends GetxController {
     MesssageModel? dataMessage;
     User? user;
     for (var message in unsyncedMessages) {
-      final receiver = await _userController.getArgumentedUser(
-        message.receiverId,
+      final senderId = await _userController.getArgumentedUser(
+        message.senderId,
       );
-      final response = await _syncMessage(message, receiver, isar);
+      final response = await _syncMessage(message, senderId, isar);
       if (response && dataMessage == null) {
         dataMessage = message;
-        user = receiver;
+        user = senderId;
       }
     }
     if (user != null && dataMessage != null) {
@@ -123,21 +125,21 @@ class MessagingController extends GetxController {
             : dataMessage.content,
       );
     }
-    calculateNotiificationSize();
+    getChatUsers();
   }
 
   Future<bool> _syncMessage(
     MesssageModel message,
-    User? receiver,
+    User? senderId,
     Isar isar,
   ) async {
-    if (receiver == null) return false;
-    receiver.lastMessage = message.content;
-    receiver.notifications = (receiver.notifications) + 1;
+    if (senderId == null) return false;
+    senderId.lastMessage = message.content;
+    senderId.notifications = (senderId.notifications) + 1;
     message.synced = true;
     await isar.write((isar) async {
       isar.messsageModels.put(message);
-      isar.users.put(receiver);
+      isar.users.put(senderId);
     });
     return true;
   }
@@ -162,9 +164,48 @@ class MessagingController extends GetxController {
     calculateNotiificationSize();
   }
 
-  void calculateNotiificationSize() {
+  void calculateNotiificationSize() async {
     final isar = IsarStatic.isar;
     if (isar == null) return;
-    notifications.value = isar.users.where().notificationsProperty().sum();
+    int size = await isar.users.where().notificationsProperty().sumAsync();
+    notifications.value = size;
+  }
+
+  Future<bool> deleteChats(List<String> selectedChats) async {
+    final _userController = Get.find<UserController>();
+    final isar = IsarStatic.isar;
+    if (isar == null || _userController.user.value == null) {
+      Toaster.showError("Database not initialized ! Try again ");
+      return false;
+    }
+    try {
+      for (final user in selectedChats) {
+        await isar.write((isar) async {
+          isar.users.deleteAll(selectedChats);
+          isar.messsageModels
+              .where()
+              .group(
+                (q) => q
+                    .senderIdEqualTo(user)
+                    .and()
+                    .receiverIdEqualTo(_userController.user.value!.id),
+              )
+              .or()
+              .group(
+                (q) => q
+                    .senderIdEqualTo(_userController.user.value!.id)
+                    .and()
+                    .receiverIdEqualTo(user),
+              )
+              .deleteAll();
+        });
+      }
+      Toaster.showSuccess("deletion was succefull");
+      getChatUsers();
+      return true;
+    } catch (e) {
+      Toaster.showError("Error : $e");
+      return false;
+    }
   }
 }

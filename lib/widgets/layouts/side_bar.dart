@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/profile_screen.dart';
+import 'package:genesis/controllers/messaging_controller.dart';
 
 class GNavBar extends StatefulWidget {
   final String selectedIndex;
@@ -16,6 +17,7 @@ class GNavBar extends StatefulWidget {
 
 class _GNavBarState extends State<GNavBar> {
   final _userController = Get.find<UserController>();
+  final _messageController = Get.find<MessagingController>();
 
   @override
   Widget build(BuildContext context) {
@@ -101,11 +103,15 @@ class _GNavBarState extends State<GNavBar> {
                         "Dashboard",
                         Icons.grid_view_rounded,
                       ).visibleIf(!isDriver),
-                      _buildNavItem(
-                        context,
-                        'chats',
-                        "Chats",
-                        Icons.message_outlined,
+                      Obx(
+                        () => _buildNavItem(
+                          context,
+                          'chats',
+                          "Chats",
+                          Icons.message_outlined,
+                          notificationSize:
+                              _messageController.notifications.value,
+                        ),
                       ),
                       _buildNavItem(
                         context,
@@ -277,8 +283,9 @@ class _GNavBarState extends State<GNavBar> {
     BuildContext context,
     String index,
     String title,
-    IconData icon,
-  ) {
+    IconData icon, {
+    int notificationSize = 0,
+  }) {
     bool isSelected = widget.selectedIndex == index;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
@@ -308,11 +315,21 @@ class _GNavBarState extends State<GNavBar> {
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.grey[500],
-                size: 22,
-              ),
+              if (notificationSize > 0)
+                Badge.count(
+                  count: notificationSize,
+                  child: Icon(
+                    icon,
+                    color: isSelected ? Colors.white : Colors.grey[500],
+                    size: 22,
+                  ),
+                )
+              else
+                Icon(
+                  icon,
+                  color: isSelected ? Colors.white : Colors.grey[500],
+                  size: 22,
+                ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(

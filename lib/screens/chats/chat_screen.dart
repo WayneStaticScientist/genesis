@@ -61,13 +61,6 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     _messageController.clear();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    });
   }
 
   @override
@@ -122,7 +115,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
+                ).constrained(maxWidth: 120),
                 Text(
                   widget.user.email,
                   style: TextStyle(
@@ -130,28 +123,18 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: Colors.greenAccent,
                     fontWeight: FontWeight.w500,
                   ),
-                ),
+                ).constrained(maxWidth: 110),
               ],
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.videocam_outlined),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline_rounded),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [
           // Chat Messages
           Obx(
             () => ListView.builder(
+              reverse: true,
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               itemCount: _messagingController.messages.length,
@@ -170,7 +153,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageBubble(MesssageModel msg, Color accent) {
-    bool isMe = !(msg.receiverId == widget.user.id);
+    bool isMe = (msg.receiverId == widget.user.id);
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -249,22 +232,11 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(30),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.add_rounded, color: Colors.white70),
-              onPressed: () {},
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1C2027),
+                color: Colors.grey.withAlpha(50),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(color: Colors.white.withAlpha(30)),
               ),

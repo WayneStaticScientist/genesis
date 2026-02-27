@@ -1,11 +1,28 @@
-import 'package:flutter/material.dart';
-import 'package:genesis/screens/chats/find_chats.dart';
-import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
+import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/screens/chats/find_chats.dart';
+import 'package:genesis/screens/chats/chat_screen.dart';
+import 'package:genesis/controllers/messaging_controller.dart';
 
-class NavChats extends StatelessWidget {
+class NavChats extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
   const NavChats({super.key, this.triggerKey});
+
+  @override
+  State<NavChats> createState() => _NavChatsState();
+}
+
+class _NavChatsState extends State<NavChats> {
+  List<String> selectedChats = List.empty(growable: true);
+  final _messagesController = Get.find<MessagingController>();
+  @override
+  void initState() {
+    _messagesController.getChatUsers();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +31,7 @@ class NavChats extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: DrawerButton(
-          onPressed: () => triggerKey?.currentState?.openDrawer(),
+          onPressed: () => widget.triggerKey?.currentState?.openDrawer(),
         ),
         backgroundColor: GTheme.surface(),
         elevation: 0,
@@ -31,6 +48,11 @@ class NavChats extends StatelessWidget {
             icon: const Icon(Icons.edit_note_rounded, size: 28),
             onPressed: () => Get.to(() => const FindChatsScreen()),
           ),
+          if (selectedChats.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: _deleteSelectedChats,
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -46,15 +68,21 @@ class NavChats extends StatelessWidget {
                   topRight: Radius.circular(32),
                 ),
               ),
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                itemCount: chatData.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final chat = chatData[index];
-                  return _buildChatTile(chat, GTheme.primary);
-                },
-              ),
+              child: Obx(() {
+                if (_messagesController.chatUsers.isEmpty) {
+                  return "No chats , start conversation".text().center();
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  itemCount: _messagesController.chatUsers.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final chat = _messagesController.chatUsers[index];
+                    return _buildChatTile(chat, GTheme.primary);
+                  },
+                );
+              }),
             ),
           ),
         ],
@@ -62,28 +90,42 @@ class NavChats extends StatelessWidget {
     );
   }
 
-  Widget _buildChatTile(Map chat, Color accent) {
+  Widget _buildChatTile(User chat, Color accent) {
+    bool isInList = selectedChats.contains(chat.id);
     return ListTile(
+      onLongPress: () {
+        if (!isInList) {
+          setState(() {
+            selectedChats.add(chat.id);
+          });
+        }
+      },
+      tileColor: isInList ? GTheme.primary : null,
+      onTap: () {
+        if (selectedChats.isEmpty) {
+          Get.to(() => ChatScreen(user: chat));
+          return;
+        }
+        setState(() {
+          if (isInList) {
+            selectedChats.remove(chat.id);
+          } else {
+            selectedChats.add(chat.id);
+          }
+        });
+      },
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      leading: CircleAvatar(
-        radius: 28,
-        backgroundImage: NetworkImage(chat['avatar']),
-      ),
+      leading: CircleAvatar(radius: 28, child: "${chat.firstName[0]}".text()),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            chat['name'],
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 16,
-            ),
-          ),
-          Text(
-            chat['time'],
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
+            "${chat.firstName} ${chat.lastName}",
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ).constrained(maxWidth: 140),
+          Text("-", style: TextStyle(color: Colors.grey, fontSize: 12)),
         ],
       ),
       subtitle: Padding(
@@ -92,18 +134,18 @@ class NavChats extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                chat['message'],
+                chat.lastMessage,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: chat['unread'] > 0 ? Colors.white : Colors.grey,
-                  fontWeight: chat['unread'] > 0
+                  color: chat.notifications > 0 ? null : Colors.grey,
+                  fontWeight: chat.notifications > 0
                       ? FontWeight.w600
                       : FontWeight.normal,
                 ),
               ),
             ),
-            if (chat['unread'] > 0)
+            if (chat.notifications > 0)
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -111,7 +153,7 @@ class NavChats extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Text(
-                  '${chat['unread']}',
+                  '${chat.notifications}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -126,29 +168,22 @@ class NavChats extends StatelessWidget {
       ),
     );
   }
-}
 
-// Mock Data
-final List<Map<String, dynamic>> chatData = [
-  {
-    'name': 'Sarah Jenkins',
-    'message': 'The presentation is ready for tomorrow\'s meeting!',
-    'time': '10:45 AM',
-    'unread': 2,
-    'avatar': 'https://i.pravatar.cc/150?u=1',
-  },
-  {
-    'name': 'Mike Ross',
-    'message': 'Did you see the latest route updates?',
-    'time': '9:12 AM',
-    'unread': 0,
-    'avatar': 'https://i.pravatar.cc/150?u=2',
-  },
-  {
-    'name': 'Design Team',
-    'message': 'Alex: I\'ve uploaded the new mockups to the drive.',
-    'time': 'Yesterday',
-    'unread': 0,
-    'avatar': 'https://i.pravatar.cc/150?u=3',
-  },
-];
+  void _deleteSelectedChats() {
+    Get.defaultDialog(
+      title: "Delete Selected Chats",
+      content: "Messages and the contact will be deleted".text(),
+      textCancel: "close",
+      textConfirm: "delete",
+      onConfirm: () async {
+        Get.back();
+        final response = await _messagesController.deleteChats(selectedChats);
+        if (response && mounted) {
+          setState(() {
+            selectedChats.clear();
+          });
+        }
+      },
+    );
+  }
+}

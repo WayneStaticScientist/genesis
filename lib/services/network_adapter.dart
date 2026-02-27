@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:genesis/services/interceptor.dart';
 import 'package:genesis/models/response_model.dart';
@@ -22,7 +21,6 @@ class Net {
       final response = await _dio!.get(url, queryParameters: queryParameters);
       return ResponseModel(hasError: false, response: "", body: response.data);
     } on DioException catch (e) {
-      log("There was error $e");
       return getError(e);
     }
   }
