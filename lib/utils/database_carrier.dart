@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 class IsarStatic {
   static Isar? isar;
   static Future<void> init() async {
+    if (isar != null) return;
     final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open(
       schemas: [UserSchema, MesssageModelSchema],

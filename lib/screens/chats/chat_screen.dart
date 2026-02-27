@@ -27,12 +27,15 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    widget.user.notifications = 0;
+    _messagingController.currentChatUserId.value = widget.user.id;
     _messagingController.getUserMessages(widget.user);
   }
 
   @override
   void dispose() {
-    _messagingController.messages.clear();
+    _messagingController.currentChatUserId.value = '';
+    _messagingController.clearUser(widget.user);
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();

@@ -6,6 +6,8 @@ part 'user_model.g.dart';
 
 @collection
 class User {
+  int notifications = 0;
+  String lastMessage = '';
   final String id;
   final int? trips;
   final int? safety;
@@ -25,6 +27,8 @@ class User {
   @ignore
   CurrentVehicleModel? currentVehicle;
   User({
+    this.notifications = 0,
+    this.lastMessage = '',
     required this.id,
     this.trip,
     this.trips,

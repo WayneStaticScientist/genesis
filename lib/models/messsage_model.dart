@@ -5,6 +5,7 @@ part 'messsage_model.g.dart';
 @collection
 class MesssageModel {
   bool sent = false;
+  bool synced = true;
   final int id;
   final String content;
   final String senderId;
@@ -12,6 +13,7 @@ class MesssageModel {
   final DateTime timestamp;
   MesssageModel({
     this.sent = false,
+    this.synced = true,
     required this.id,
     required this.content,
     required this.senderId,

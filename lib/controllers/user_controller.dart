@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:genesis/utils/database_carrier.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
@@ -11,6 +12,7 @@ import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
+import 'package:isar_plus/isar_plus.dart';
 
 class UserController extends GetxController {
   Rx<User?> user = Rx(null);
@@ -192,6 +194,16 @@ class UserController extends GetxController {
     user.value = User.fromJSON(response.body['user']);
     user.value?.saveUser();
     return true;
+  }
+
+  Future<User?> getArgumentedUser(String id) async {
+    final isar = IsarStatic.isar;
+    if (isar == null) return null;
+    final localUser = isar.users.where().idEqualTo(id).findFirst();
+    if (localUser != null) {
+      return localUser;
+    }
+    return fetchUser(id);
   }
 
   Future<User?> fetchUser(String id) async {

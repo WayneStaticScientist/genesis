@@ -106,7 +106,7 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
 
   Widget _buildChatTile(User chat, Color accent) {
     return ListTile(
-      onTap: () => Get.to(() => ChatScreen()),
+      onTap: () => Get.to(() => ChatScreen(user: chat)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       leading: CircleAvatar(radius: 28, child: chat.firstName[0].text()),
       title: Row(

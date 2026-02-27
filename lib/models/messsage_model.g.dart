@@ -20,6 +20,8 @@ final MesssageModelSchema = IsarGeneratedSchema(
     idName: 'id',
     embedded: false,
     properties: [
+      IsarPropertySchema(name: 'sent', type: IsarType.bool),
+      IsarPropertySchema(name: 'synced', type: IsarType.bool),
       IsarPropertySchema(name: 'content', type: IsarType.string),
       IsarPropertySchema(name: 'senderId', type: IsarType.string),
       IsarPropertySchema(name: 'receiverId', type: IsarType.string),
@@ -37,12 +39,14 @@ final MesssageModelSchema = IsarGeneratedSchema(
 
 @isarProtected
 int serializeMesssageModel(IsarWriter writer, MesssageModel object) {
-  IsarCore.writeString(writer, 1, object.content);
-  IsarCore.writeString(writer, 2, object.senderId);
-  IsarCore.writeString(writer, 3, object.receiverId);
+  IsarCore.writeBool(writer, 1, value: object.sent);
+  IsarCore.writeBool(writer, 2, value: object.synced);
+  IsarCore.writeString(writer, 3, object.content);
+  IsarCore.writeString(writer, 4, object.senderId);
+  IsarCore.writeString(writer, 5, object.receiverId);
   IsarCore.writeLong(
     writer,
-    4,
+    6,
     object.timestamp.toUtc().microsecondsSinceEpoch,
   );
   return object.id;
@@ -50,17 +54,27 @@ int serializeMesssageModel(IsarWriter writer, MesssageModel object) {
 
 @isarProtected
 MesssageModel deserializeMesssageModel(IsarReader reader) {
+  final bool _sent;
+  _sent = IsarCore.readBool(reader, 1);
+  final bool _synced;
+  {
+    if (IsarCore.readNull(reader, 2)) {
+      _synced = true;
+    } else {
+      _synced = IsarCore.readBool(reader, 2);
+    }
+  }
   final int _id;
   _id = IsarCore.readId(reader);
   final String _content;
-  _content = IsarCore.readString(reader, 1) ?? '';
+  _content = IsarCore.readString(reader, 3) ?? '';
   final String _senderId;
-  _senderId = IsarCore.readString(reader, 2) ?? '';
+  _senderId = IsarCore.readString(reader, 4) ?? '';
   final String _receiverId;
-  _receiverId = IsarCore.readString(reader, 3) ?? '';
+  _receiverId = IsarCore.readString(reader, 5) ?? '';
   final DateTime _timestamp;
   {
-    final value = IsarCore.readLong(reader, 4);
+    final value = IsarCore.readLong(reader, 6);
     if (value == -9223372036854775808) {
       _timestamp = DateTime.fromMillisecondsSinceEpoch(
         0,
@@ -74,6 +88,8 @@ MesssageModel deserializeMesssageModel(IsarReader reader) {
     }
   }
   final object = MesssageModel(
+    sent: _sent,
+    synced: _synced,
     id: _id,
     content: _content,
     senderId: _senderId,
@@ -86,17 +102,27 @@ MesssageModel deserializeMesssageModel(IsarReader reader) {
 @isarProtected
 dynamic deserializeMesssageModelProp(IsarReader reader, int property) {
   switch (property) {
+    case 1:
+      return IsarCore.readBool(reader, 1);
+    case 2:
+      {
+        if (IsarCore.readNull(reader, 2)) {
+          return true;
+        } else {
+          return IsarCore.readBool(reader, 2);
+        }
+      }
     case 0:
       return IsarCore.readId(reader);
-    case 1:
-      return IsarCore.readString(reader, 1) ?? '';
-    case 2:
-      return IsarCore.readString(reader, 2) ?? '';
     case 3:
       return IsarCore.readString(reader, 3) ?? '';
     case 4:
+      return IsarCore.readString(reader, 4) ?? '';
+    case 5:
+      return IsarCore.readString(reader, 5) ?? '';
+    case 6:
       {
-        final value = IsarCore.readLong(reader, 4);
+        final value = IsarCore.readLong(reader, 6);
         if (value == -9223372036854775808) {
           return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toLocal();
         } else {
@@ -114,6 +140,8 @@ dynamic deserializeMesssageModelProp(IsarReader reader, int property) {
 sealed class _MesssageModelUpdate {
   bool call({
     required int id,
+    bool? sent,
+    bool? synced,
     String? content,
     String? senderId,
     String? receiverId,
@@ -129,6 +157,8 @@ class _MesssageModelUpdateImpl implements _MesssageModelUpdate {
   @override
   bool call({
     required int id,
+    Object? sent = ignore,
+    Object? synced = ignore,
     Object? content = ignore,
     Object? senderId = ignore,
     Object? receiverId = ignore,
@@ -137,10 +167,12 @@ class _MesssageModelUpdateImpl implements _MesssageModelUpdate {
     return collection.updateProperties(
           [id],
           {
-            if (content != ignore) 1: content as String?,
-            if (senderId != ignore) 2: senderId as String?,
-            if (receiverId != ignore) 3: receiverId as String?,
-            if (timestamp != ignore) 4: timestamp as DateTime?,
+            if (sent != ignore) 1: sent as bool?,
+            if (synced != ignore) 2: synced as bool?,
+            if (content != ignore) 3: content as String?,
+            if (senderId != ignore) 4: senderId as String?,
+            if (receiverId != ignore) 5: receiverId as String?,
+            if (timestamp != ignore) 6: timestamp as DateTime?,
           },
         ) >
         0;
@@ -150,6 +182,8 @@ class _MesssageModelUpdateImpl implements _MesssageModelUpdate {
 sealed class _MesssageModelUpdateAll {
   int call({
     required List<int> id,
+    bool? sent,
+    bool? synced,
     String? content,
     String? senderId,
     String? receiverId,
@@ -165,16 +199,20 @@ class _MesssageModelUpdateAllImpl implements _MesssageModelUpdateAll {
   @override
   int call({
     required List<int> id,
+    Object? sent = ignore,
+    Object? synced = ignore,
     Object? content = ignore,
     Object? senderId = ignore,
     Object? receiverId = ignore,
     Object? timestamp = ignore,
   }) {
     return collection.updateProperties(id, {
-      if (content != ignore) 1: content as String?,
-      if (senderId != ignore) 2: senderId as String?,
-      if (receiverId != ignore) 3: receiverId as String?,
-      if (timestamp != ignore) 4: timestamp as DateTime?,
+      if (sent != ignore) 1: sent as bool?,
+      if (synced != ignore) 2: synced as bool?,
+      if (content != ignore) 3: content as String?,
+      if (senderId != ignore) 4: senderId as String?,
+      if (receiverId != ignore) 5: receiverId as String?,
+      if (timestamp != ignore) 6: timestamp as DateTime?,
     });
   }
 }
@@ -187,6 +225,8 @@ extension MesssageModelUpdate on IsarCollection<int, MesssageModel> {
 
 sealed class _MesssageModelQueryUpdate {
   int call({
+    bool? sent,
+    bool? synced,
     String? content,
     String? senderId,
     String? receiverId,
@@ -202,16 +242,20 @@ class _MesssageModelQueryUpdateImpl implements _MesssageModelQueryUpdate {
 
   @override
   int call({
+    Object? sent = ignore,
+    Object? synced = ignore,
     Object? content = ignore,
     Object? senderId = ignore,
     Object? receiverId = ignore,
     Object? timestamp = ignore,
   }) {
     return query.updateProperties(limit: limit, {
-      if (content != ignore) 1: content as String?,
-      if (senderId != ignore) 2: senderId as String?,
-      if (receiverId != ignore) 3: receiverId as String?,
-      if (timestamp != ignore) 4: timestamp as DateTime?,
+      if (sent != ignore) 1: sent as bool?,
+      if (synced != ignore) 2: synced as bool?,
+      if (content != ignore) 3: content as String?,
+      if (senderId != ignore) 4: senderId as String?,
+      if (receiverId != ignore) 5: receiverId as String?,
+      if (timestamp != ignore) 6: timestamp as DateTime?,
     });
   }
 }
@@ -233,6 +277,8 @@ class _MesssageModelQueryBuilderUpdateImpl
 
   @override
   int call({
+    Object? sent = ignore,
+    Object? synced = ignore,
     Object? content = ignore,
     Object? senderId = ignore,
     Object? receiverId = ignore,
@@ -241,10 +287,12 @@ class _MesssageModelQueryBuilderUpdateImpl
     final q = query.build();
     try {
       return q.updateProperties(limit: limit, {
-        if (content != ignore) 1: content as String?,
-        if (senderId != ignore) 2: senderId as String?,
-        if (receiverId != ignore) 3: receiverId as String?,
-        if (timestamp != ignore) 4: timestamp as DateTime?,
+        if (sent != ignore) 1: sent as bool?,
+        if (synced != ignore) 2: synced as bool?,
+        if (content != ignore) 3: content as String?,
+        if (senderId != ignore) 4: senderId as String?,
+        if (receiverId != ignore) 5: receiverId as String?,
+        if (timestamp != ignore) 6: timestamp as DateTime?,
       });
     } finally {
       q.close();
@@ -263,6 +311,25 @@ extension MesssageModelQueryBuilderUpdate
 
 extension MesssageModelQueryFilter
     on QueryBuilder<MesssageModel, MesssageModel, QFilterCondition> {
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition> sentEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 1, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  syncedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
   QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition> idEqualTo(
     int value,
   ) {
@@ -323,7 +390,7 @@ extension MesssageModelQueryFilter
   contentEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 1, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -333,7 +400,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -346,7 +413,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -358,7 +425,7 @@ extension MesssageModelQueryFilter
   contentLessThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 1, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -368,7 +435,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -381,7 +448,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 1,
+          property: 3,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -395,7 +462,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -408,7 +475,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -421,7 +488,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -434,7 +501,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 1,
+          property: 3,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -446,7 +513,7 @@ extension MesssageModelQueryFilter
   contentIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 1, value: ''),
+        const EqualCondition(property: 3, value: ''),
       );
     });
   }
@@ -455,7 +522,7 @@ extension MesssageModelQueryFilter
   contentIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 1, value: ''),
+        const GreaterCondition(property: 3, value: ''),
       );
     });
   }
@@ -464,7 +531,7 @@ extension MesssageModelQueryFilter
   senderIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 2, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -474,7 +541,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -487,7 +554,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -499,7 +566,7 @@ extension MesssageModelQueryFilter
   senderIdLessThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 2, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -509,7 +576,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -522,7 +589,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 2,
+          property: 4,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -536,7 +603,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -549,7 +616,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -562,7 +629,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -575,7 +642,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 2,
+          property: 4,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -587,7 +654,7 @@ extension MesssageModelQueryFilter
   senderIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 2, value: ''),
+        const EqualCondition(property: 4, value: ''),
       );
     });
   }
@@ -596,7 +663,7 @@ extension MesssageModelQueryFilter
   senderIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 2, value: ''),
+        const GreaterCondition(property: 4, value: ''),
       );
     });
   }
@@ -605,7 +672,7 @@ extension MesssageModelQueryFilter
   receiverIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 5, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -615,7 +682,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -628,7 +695,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -640,7 +707,7 @@ extension MesssageModelQueryFilter
   receiverIdLessThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 5, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -650,7 +717,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -663,7 +730,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 3,
+          property: 5,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -677,7 +744,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -690,7 +757,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -703,7 +770,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -716,7 +783,7 @@ extension MesssageModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 3,
+          property: 5,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -728,7 +795,7 @@ extension MesssageModelQueryFilter
   receiverIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 3, value: ''),
+        const EqualCondition(property: 5, value: ''),
       );
     });
   }
@@ -737,7 +804,7 @@ extension MesssageModelQueryFilter
   receiverIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 3, value: ''),
+        const GreaterCondition(property: 5, value: ''),
       );
     });
   }
@@ -746,7 +813,7 @@ extension MesssageModelQueryFilter
   timestampEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 4, value: value),
+        EqualCondition(property: 6, value: value),
       );
     });
   }
@@ -755,7 +822,7 @@ extension MesssageModelQueryFilter
   timestampGreaterThan(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 4, value: value),
+        GreaterCondition(property: 6, value: value),
       );
     });
   }
@@ -764,7 +831,7 @@ extension MesssageModelQueryFilter
   timestampGreaterThanOrEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 4, value: value),
+        GreaterOrEqualCondition(property: 6, value: value),
       );
     });
   }
@@ -772,7 +839,7 @@ extension MesssageModelQueryFilter
   QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
   timestampLessThan(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(LessCondition(property: 4, value: value));
+      return query.addFilterCondition(LessCondition(property: 6, value: value));
     });
   }
 
@@ -780,7 +847,7 @@ extension MesssageModelQueryFilter
   timestampLessThanOrEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 4, value: value),
+        LessOrEqualCondition(property: 6, value: value),
       );
     });
   }
@@ -789,7 +856,7 @@ extension MesssageModelQueryFilter
   timestampBetween(DateTime lower, DateTime upper) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(property: 4, lower: lower, upper: upper),
+        BetweenCondition(property: 6, lower: lower, upper: upper),
       );
     });
   }
@@ -800,6 +867,30 @@ extension MesssageModelQueryObject
 
 extension MesssageModelQuerySortBy
     on QueryBuilder<MesssageModel, MesssageModel, QSortBy> {
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortBySent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortBySentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortBySynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortBySyncedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2, sort: Sort.desc);
+    });
+  }
+
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(0);
@@ -816,7 +907,7 @@ extension MesssageModelQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, caseSensitive: caseSensitive);
+      return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
@@ -824,7 +915,7 @@ extension MesssageModelQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -832,7 +923,7 @@ extension MesssageModelQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, caseSensitive: caseSensitive);
+      return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
@@ -840,7 +931,7 @@ extension MesssageModelQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -848,33 +939,57 @@ extension MesssageModelQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(3, caseSensitive: caseSensitive);
+      return query.addSortBy(5, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy>
   sortByReceiverIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(5, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByTimestamp() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(4);
+      return query.addSortBy(6);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy>
   sortByTimestampDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(4, sort: Sort.desc);
+      return query.addSortBy(6, sort: Sort.desc);
     });
   }
 }
 
 extension MesssageModelQuerySortThenBy
     on QueryBuilder<MesssageModel, MesssageModel, QSortThenBy> {
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenBySent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenBySentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenBySynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenBySyncedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2, sort: Sort.desc);
+    });
+  }
+
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(0);
@@ -891,7 +1006,7 @@ extension MesssageModelQuerySortThenBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, caseSensitive: caseSensitive);
+      return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
@@ -899,7 +1014,7 @@ extension MesssageModelQuerySortThenBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -907,7 +1022,7 @@ extension MesssageModelQuerySortThenBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, caseSensitive: caseSensitive);
+      return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
@@ -915,7 +1030,7 @@ extension MesssageModelQuerySortThenBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -923,65 +1038,90 @@ extension MesssageModelQuerySortThenBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(3, caseSensitive: caseSensitive);
+      return query.addSortBy(5, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy>
   thenByReceiverIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(5, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByTimestamp() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(4);
+      return query.addSortBy(6);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy>
   thenByTimestampDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(4, sort: Sort.desc);
+      return query.addSortBy(6, sort: Sort.desc);
     });
   }
 }
 
 extension MesssageModelQueryWhereDistinct
     on QueryBuilder<MesssageModel, MesssageModel, QDistinct> {
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct> distinctBySent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(1);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
+  distinctBySynced() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(2);
+    });
+  }
+
   QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct> distinctByContent({
     bool caseSensitive = true,
   }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(1, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
-  distinctBySenderId({bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(2, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
-  distinctByReceiverId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(3, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
+  distinctBySenderId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(4, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
+  distinctByReceiverId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(5, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
   distinctByTimestamp() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(4);
+      return query.addDistinctBy(6);
     });
   }
 }
 
 extension MesssageModelQueryProperty1
     on QueryBuilder<MesssageModel, MesssageModel, QProperty> {
+  QueryBuilder<MesssageModel, bool, QAfterProperty> sentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(1);
+    });
+  }
+
+  QueryBuilder<MesssageModel, bool, QAfterProperty> syncedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(2);
+    });
+  }
+
   QueryBuilder<MesssageModel, int, QAfterProperty> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(0);
@@ -990,31 +1130,43 @@ extension MesssageModelQueryProperty1
 
   QueryBuilder<MesssageModel, String, QAfterProperty> contentProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(1);
+      return query.addProperty(3);
     });
   }
 
   QueryBuilder<MesssageModel, String, QAfterProperty> senderIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(2);
+      return query.addProperty(4);
     });
   }
 
   QueryBuilder<MesssageModel, String, QAfterProperty> receiverIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(3);
+      return query.addProperty(5);
     });
   }
 
   QueryBuilder<MesssageModel, DateTime, QAfterProperty> timestampProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(4);
+      return query.addProperty(6);
     });
   }
 }
 
 extension MesssageModelQueryProperty2<R>
     on QueryBuilder<MesssageModel, R, QAfterProperty> {
+  QueryBuilder<MesssageModel, (R, bool), QAfterProperty> sentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(1);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R, bool), QAfterProperty> syncedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(2);
+    });
+  }
+
   QueryBuilder<MesssageModel, (R, int), QAfterProperty> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(0);
@@ -1023,33 +1175,45 @@ extension MesssageModelQueryProperty2<R>
 
   QueryBuilder<MesssageModel, (R, String), QAfterProperty> contentProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(1);
+      return query.addProperty(3);
     });
   }
 
   QueryBuilder<MesssageModel, (R, String), QAfterProperty> senderIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(2);
+      return query.addProperty(4);
     });
   }
 
   QueryBuilder<MesssageModel, (R, String), QAfterProperty>
   receiverIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(3);
+      return query.addProperty(5);
     });
   }
 
   QueryBuilder<MesssageModel, (R, DateTime), QAfterProperty>
   timestampProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(4);
+      return query.addProperty(6);
     });
   }
 }
 
 extension MesssageModelQueryProperty3<R1, R2>
     on QueryBuilder<MesssageModel, (R1, R2), QAfterProperty> {
+  QueryBuilder<MesssageModel, (R1, R2, bool), QOperations> sentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(1);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R1, R2, bool), QOperations> syncedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(2);
+    });
+  }
+
   QueryBuilder<MesssageModel, (R1, R2, int), QOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(0);
@@ -1058,28 +1222,28 @@ extension MesssageModelQueryProperty3<R1, R2>
 
   QueryBuilder<MesssageModel, (R1, R2, String), QOperations> contentProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(1);
+      return query.addProperty(3);
     });
   }
 
   QueryBuilder<MesssageModel, (R1, R2, String), QOperations>
   senderIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(2);
+      return query.addProperty(4);
     });
   }
 
   QueryBuilder<MesssageModel, (R1, R2, String), QOperations>
   receiverIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(3);
+      return query.addProperty(5);
     });
   }
 
   QueryBuilder<MesssageModel, (R1, R2, DateTime), QOperations>
   timestampProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(4);
+      return query.addProperty(6);
     });
   }
 }
