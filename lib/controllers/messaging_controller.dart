@@ -62,6 +62,11 @@ class MessagingController extends GetxController {
     final _userController = Get.find<UserController>();
     final me = _userController.user.value;
     if (me == null) return false;
+    final index = chatUsers.indexOf((user) => user.id == receiver.id);
+    if (index > 0) {
+      chatUsers[index].lastMessage = content;
+      chatUsers.refresh();
+    }
     final newMessage = MesssageModel(
       content: content,
       senderId: me.id,
@@ -76,6 +81,8 @@ class MessagingController extends GetxController {
     }
     await isar.write((isar) async {
       isar.messsageModels.put(newMessage);
+      receiver.lastMessage = content;
+      isar.users.put(receiver);
     });
     messages.insert(0, newMessage);
     return true;

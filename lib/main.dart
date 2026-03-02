@@ -17,13 +17,17 @@ import 'package:genesis/services/background_message_handler.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
 import 'package:genesis/controllers/live_tracking_controller.dart';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  GenesisBackgroundMessageHandler.handleBackgroundMessage(message);
+}
+
 void main() async {
   await GetStorage.init();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(
-    GenesisBackgroundMessageHandler.handleBackgroundMessage,
-  );
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await IsarStatic.init();
   runApp(const MyApp());
 }

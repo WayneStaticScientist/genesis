@@ -68,7 +68,8 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withAlpha(27)),
               ),
-              child: const TextField(
+              child: TextField(
+                controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Search people...',
                   hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
