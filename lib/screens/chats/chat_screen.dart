@@ -97,7 +97,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: Colors.greenAccent,
+                      color: Colors.green,
                       shape: BoxShape.circle,
                       border: Border.all(color: GTheme.surface(), width: 2),
                     ),
@@ -120,7 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   widget.user.email,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.greenAccent,
+                    color: Colors.green,
                     fontWeight: FontWeight.w500,
                   ),
                 ).constrained(maxWidth: 110),
@@ -243,7 +243,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: TextField(
                 enabled: !_isSending,
                 controller: _messageController,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
+                style: const TextStyle(fontSize: 15),
                 decoration: const InputDecoration(
                   hintText: "Message...",
                   hintStyle: TextStyle(color: Colors.grey),

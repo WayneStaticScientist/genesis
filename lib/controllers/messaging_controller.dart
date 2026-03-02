@@ -1,12 +1,12 @@
-import 'package:genesis/utils/toast.dart';
-import 'package:genesis/controllers/user_controller.dart';
-import 'package:genesis/services/network_adapter.dart';
 import 'package:get/get.dart';
 import 'package:isar_plus/isar_plus.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/messsage_model.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:genesis/utils/database_carrier.dart';
+import 'package:genesis/services/network_adapter.dart';
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MessagingController extends GetxController {
   RxInt notifications = RxInt(0);
@@ -86,11 +86,24 @@ class MessagingController extends GetxController {
     if (isar == null) return;
     final message = MesssageModel.fromJSON(data);
     message.synced = false;
+    final isarUser = isar.users.where().idEqualTo(message.senderId).findFirst();
+
     await isar.write((isar) async {
       isar.messsageModels.put(message);
+      if (isarUser != null) {
+        isarUser.lastMessage = message.content;
+        isar.users.put(isarUser);
+      }
     });
+    final index = chatUsers.indexOf((user) => user.id == message.senderId);
+    if (index > 0) {
+      chatUsers[index].lastMessage = message.content;
+      chatUsers.refresh();
+    }
+
     if (currentChatUserId.value == message.senderId) {
-      messages.add(message);
+      messages.insert(0, message);
+      messages.refresh();
       Get.snackbar("Inchat Message", "check your last message");
       return;
     }
