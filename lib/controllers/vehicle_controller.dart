@@ -22,6 +22,7 @@ class VehicleControler extends GetxController {
 
   RxInt page = RxInt(1);
   RxInt totalPages = RxInt(0);
+  RxInt currentPage = RxInt(0);
   RxBool loadingVehicles = RxBool(false);
   RxList<VehicleModel> vehicles = RxList([]);
   RxString vehicleFetchingStatus = RxString("");
@@ -48,6 +49,7 @@ class VehicleControler extends GetxController {
       vehicleFetchingStatus.value = response.response;
       return;
     }
+    currentPage.value = page;
     totalPages.value = response.body['totalPages'];
     this.page.value = response.body['page'] as int;
     log("Total Pages: ${totalPages.value} | Current Page: ${this.page.value}");

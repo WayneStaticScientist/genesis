@@ -9,15 +9,17 @@ import 'package:genesis/widgets/actions/filter_chip.dart';
 import 'package:genesis/widgets/layouts/maintanance_card.dart';
 
 class AdminNavMaintenance extends StatefulWidget {
-  const AdminNavMaintenance({super.key});
+  final GlobalKey<ScaffoldState>? triggerKey;
+
+  const AdminNavMaintenance({super.key, this.triggerKey});
 
   @override
   State<AdminNavMaintenance> createState() => _AdminNavMaintenanceState();
 }
 
 class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
-  // Mock Maintenance Data
   final _maintainanceController = Get.find<MaintainanceController>();
+
   @override
   void initState() {
     super.initState();
@@ -26,112 +28,206 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // === PREMIUM HEADER ===
-        SliverAppBar(
-          expandedHeight: 160,
-          floating: true,
-          pinned: true,
-          elevation: 0,
-          backgroundColor: const Color(0xFF0F172A),
-          flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            title: const Text(
-              "Maintenance Vault",
-              style: TextStyle(
+    // Theme references for cleaner code
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC), // Modern soft grey background
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // === MODERN GLASS-STYLE HEADER ===
+          SliverAppBar(
+            leading: CircleAvatar(
+              backgroundColor: Colors.white.withAlpha(30),
+              child: DrawerButton(
                 color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
+                onPressed: () {
+                  widget.triggerKey?.currentState?.openDrawer();
+                },
               ),
             ),
-            background: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            expandedHeight: 140, // Reduced for a sleeker profile
+            floating: true,
+            pinned: true,
+            elevation: 0,
+            stretch: true,
+            backgroundColor: const Color(0xFF0F172A),
+            flexibleSpace: FlexibleSpaceBar(
+              stretchModes: const [
+                StretchMode.blurBackground,
+                StretchMode.zoomBackground,
+              ],
+              titlePadding: const EdgeInsetsDirectional.only(
+                start: 24,
+                bottom: 16,
+              ),
+              centerTitle: false,
+              title: Text(
+                "Maintenance Vault",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
                 ),
               ),
-            ),
-          ),
-          actions: [
-            IconButton(
-              onPressed: () => Get.to(() => AdminAddMaintenance()),
-              icon: Icon(Icons.add),
-            ),
-          ],
-        ),
-
-        // === URGENCY FILTER BUTTONS ===
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
+              background: Stack(
+                fit: StackFit.expand,
                 children: [
-                  GFilterChip(label: "All Tasks", isSelected: true),
-                  GFilterChip(
-                    label: "Critical",
-                    isSelected: false,
-                    color: Colors.red,
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                   ),
-                  GFilterChip(
-                    label: "Upcoming",
-                    isSelected: false,
-                    color: Colors.orange,
-                  ),
-                  GFilterChip(
-                    label: "Completed",
-                    isSelected: false,
-                    color: Colors.green,
+                  // Subtle design element (abstract circle)
+                  Positioned(
+                    right: -50,
+                    top: -20,
+                    child: CircleAvatar(
+                      radius: 100,
+                      backgroundColor: Colors.white.withAlpha(30),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-        Obx(() {
-          if (_maintainanceController.loadingMaintainances.value &&
-              _maintainanceController.maintainances.isEmpty) {
-            return SliverFillRemaining(child: MaterialLoader().center());
-          }
-          if (_maintainanceController
-              .mantainanceFetchingStatus
-              .value
-              .isNotEmpty) {
-            return SliverFillRemaining(
-              child: MaterialErrorWidget(
-                label: _maintainanceController.mantainanceFetchingStatus.value,
-              ).center(),
-            );
-          }
-          if (_maintainanceController.maintainances.isEmpty &&
-              !_maintainanceController.loadingMaintainances.value) {
-            return SliverFillRemaining(
-              child: "No results found for maintainances".text(),
-            );
-          }
-          return SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => GMaintananceCard(
-                  task: _maintainanceController.maintainances[index],
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withAlpha(25),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Get.to(() => AdminAddMaintenance()),
+                  icon: const Icon(Icons.add_rounded, color: Colors.white),
                 ),
-                childCount: _maintainanceController.maintainances.length,
               ),
+            ],
+          ),
+
+          // === REFINED FILTER SECTION ===
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: "Operational Overview".text(
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      GFilterChip(label: "All Tasks", isSelected: true),
+                      GFilterChip(
+                        label: "Critical",
+                        isSelected: false,
+                        color: Colors.redAccent,
+                      ),
+                      GFilterChip(
+                        label: "Upcoming",
+                        isSelected: false,
+                        color: Colors.amber.shade700,
+                      ),
+                      GFilterChip(
+                        label: "Completed",
+                        isSelected: false,
+                        color: Colors.pinkAccent,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-          );
-        }),
-        // === MAINTENANCE LIST ===
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
-    ).expanded1;
+          ),
+
+          // === DYNAMIC CONTENT AREA ===
+          Obx(() {
+            // Loading State
+            if (_maintainanceController.loadingMaintainances.value &&
+                _maintainanceController.maintainances.isEmpty) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: MaterialLoader()),
+              );
+            }
+
+            // Error State
+            if (_maintainanceController
+                .mantainanceFetchingStatus
+                .value
+                .isNotEmpty) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: MaterialErrorWidget(
+                    label:
+                        _maintainanceController.mantainanceFetchingStatus.value,
+                  ),
+                ),
+              );
+            }
+
+            // Empty State
+            if (_maintainanceController.maintainances.isEmpty) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome_motion_rounded,
+                        size: 64,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      "No maintenance tasks recorded".text(
+                        style: TextStyle(color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // List State
+            return SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GMaintananceCard(
+                      task: _maintainanceController.maintainances[index],
+                    ),
+                  ),
+                  childCount: _maintainanceController.maintainances.length,
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
   }
 }

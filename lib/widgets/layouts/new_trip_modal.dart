@@ -1,13 +1,13 @@
-import 'package:exui/exui.dart';
-import 'package:genesis/controllers/user_controller.dart';
-import 'package:genesis/utils/date_utils.dart';
-import 'package:genesis/utils/toast.dart';
-import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/vehicle_model.dart';
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
 
@@ -25,6 +25,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
   final TextEditingController _searchController = TextEditingController();
   final VehicleControler vehicleController = Get.find<VehicleControler>();
   final TextEditingController _loadTypeController = TextEditingController();
+  final TextEditingController originController = TextEditingController();
   final TextEditingController _loadWeightController = TextEditingController();
   late final TextEditingController _tripPaymentController =
       TextEditingController(text: '0');
@@ -33,12 +34,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
 
   // Controllers for the new pickers
   final TextEditingController _destinationController = TextEditingController();
+  final TextEditingController _originCoordsController = TextEditingController();
   final Rx<DateTime> departureDateTime = DateTime.now()
       .add(const Duration(hours: 1))
       .obs;
   final Rx<DateTime> arrivalDateTime = DateTime.now()
       .add(const Duration(hours: 10))
       .obs;
+  final Rx<LatLng?> originCoords = Rx<LatLng?>(null);
   final Rx<LatLng?> destinationCoords = Rx<LatLng?>(null);
 
   // Selection State
@@ -118,6 +121,15 @@ class _AssignTripModalState extends State<AssignTripModal> {
     }
   }
 
+  void _setOriginMap() async {
+    final LatLng? result = await Get.to(() => const MapPickerScreen());
+    if (result != null) {
+      originCoords.value = result;
+      _originCoordsController.text =
+          "Selected: ${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)}";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -186,6 +198,28 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 _buildInputLabel("SELECT VEHICLE *"),
                 Obx(() => _buildVehicleSelector()),
 
+                const SizedBox(height: 20),
+                _buildInputLabel("ORIGIN"),
+                TextFormField(
+                  controller: originController,
+                  decoration: _modernInputDecoration(Icons.map, "Enter Origin"),
+                ),
+                12.gapHeight,
+                TextFormField(
+                  controller: _originCoordsController,
+                  readOnly: true,
+                  onTap: _setOriginMap,
+                  decoration:
+                      _modernInputDecoration(
+                        Icons.location_pin,
+                        "Cordinates",
+                      ).copyWith(
+                        suffixIcon: const Icon(
+                          Icons.location_searching,
+                          size: 20,
+                        ),
+                      ),
+                ),
                 const SizedBox(height: 20),
 
                 // Destination Input
@@ -610,6 +644,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "You have entered an invalid number on trip amound",
       );
     }
+    final origin = originController.text.trim();
+    if (origin.isEmpty) {
+      Toaster.showErrorTop(
+        "Origin City required",
+        "Please enter origin name before confirming.",
+      );
+      return;
+    }
     final destinationName = _destinationController.text.trim();
     if (destinationName.isEmpty) {
       Toaster.showErrorTop(
@@ -620,11 +662,12 @@ class _AssignTripModalState extends State<AssignTripModal> {
     }
     final response = await _userController.startTrip(
       data: {
+        "origin": origin,
         "loadType": loadType,
         "loadWeight": loadWeight,
         "tripPayout": tripPrice,
         "driver": widget.driver.id,
-        "destinationName": destinationName,
+        "destination": destinationName,
         "vehicle": selectedVehicle.value?.id,
         "startTime": departureDateTime.value.toIso8601String(),
         "estimatedEndTime": arrivalDateTime.value.toIso8601String(),
@@ -632,6 +675,12 @@ class _AssignTripModalState extends State<AssignTripModal> {
             ? {
                 "lng": destinationCoords.value!.longitude,
                 "lat": destinationCoords.value!.latitude,
+              }
+            : null,
+        "locationOrigin": originCoords.value != null
+            ? {
+                "lng": originCoords.value!.longitude,
+                "lat": originCoords.value!.latitude,
               }
             : null,
       },

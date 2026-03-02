@@ -1,6 +1,7 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/controllers/vehicle_controller.dart'; // Ensure this exists
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
@@ -15,16 +16,22 @@ class AdminAddMaintenance extends StatefulWidget {
 class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
   final _formKey = GlobalKey<FormState>();
   final _mantainanceController = Get.find<MaintainanceController>();
+  final _vehicleController = Get.find<VehicleControler>();
+
   // Form State
   String _issue = "";
   String _urgency = "Routine";
   double _cost = 0.0;
-  double _health = 85.0; // Default health for a vehicle needing maintenance
+  double _health = 85.0;
   int _daysLeft = 14;
-  String _licencePlate = "";
+  String? _selectedLicencePlate;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
+      if (_selectedLicencePlate == null) {
+        Toaster.showError("Please select a vehicle");
+        return;
+      }
       _formKey.currentState!.save();
 
       final newTask = {
@@ -33,12 +40,13 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
         "issueDetails": _issue,
         "estimatedCosts": _cost,
         "currentHealth": _health,
-        "licencePlate": _licencePlate,
+        "licencePlate": _selectedLicencePlate,
       };
+
       final response = await _mantainanceController.addMantainance(newTask);
       if (response) {
         Get.back();
-        Toaster.showSuccess("mantainance added");
+        Toaster.showSuccess("Maintenance task added");
       }
     }
   }
@@ -46,7 +54,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Matches Maintenance Vault bg
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -65,23 +73,22 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: ElevatedButton.icon(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Obx(
+              () => ElevatedButton.icon(
+                onPressed: _mantainanceController.addingMaintainance.value
+                    ? null
+                    : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-              icon: Obx(
-                () => const Icon(
-                  Icons.add_task_rounded,
-                  size: 18,
-                ).visibleIfNot(_mantainanceController.addingMaintainance.value),
-              ),
-              label: Obx(
-                () => _mantainanceController.addingMaintainance.value
+                icon: _mantainanceController.addingMaintainance.value
+                    ? const SizedBox.shrink()
+                    : const Icon(Icons.add_task_rounded, size: 18),
+                label: _mantainanceController.addingMaintainance.value
                     ? WhiteLoader()
                     : "Create".text(
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -98,30 +105,12 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Vehicle Selection Section
               _sectionHeader("Target Vehicle"),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(25),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withAlpha(30)),
-                ),
-                child: Column(
-                  children: [
-                    _buildField(
-                      label: "Vehicle Licence Plate",
-                      hint: "e.g. Abx-4562",
-                      icon: Icons.directions_car_filled_outlined,
-                      onSaved: (val) => _licencePlate = val ?? "",
-                      validator: (val) =>
-                          val!.isEmpty ? "licence plate is requiresd" : null,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
 
+              // === SEARCHABLE PAGINATED DROPDOWN ===
+              _buildVehicleSelector(),
+
+              const SizedBox(height: 32),
               _sectionHeader("Issue Details"),
               _buildField(
                 label: "Diagnosis / Issue",
@@ -189,7 +178,6 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
                           : (_health < 70 ? Colors.orange : Colors.green),
                       inactiveTrackColor: Colors.white10,
                       thumbColor: Colors.white,
-                      overlayColor: Colors.white.withAlpha(30),
                     ),
                     child: Slider(
                       value: _health,
@@ -207,41 +195,14 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
                 label: "Estimated Cost (\$)",
                 hint: "0.00",
                 icon: Icons.attach_money_rounded,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onSaved: (val) => _cost = double.tryParse(val ?? "0") ?? 0.0,
               ),
 
               const SizedBox(height: 40),
-
-              // Info Card
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withAlpha(30),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blueAccent.withAlpha(50)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: Colors.blueAccent,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child:
-                          "This task will be immediately assigned to the maintenance queue."
-                              .text(
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildInfoCard(),
             ],
           ),
         ),
@@ -249,15 +210,146 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
     );
   }
 
+  Widget _buildVehicleSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(25),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withAlpha(30)),
+      ),
+      child: ListTile(
+        onTap: _showVehicleSearchSheet,
+        leading: Icon(
+          Icons.directions_car_filled_outlined,
+          color: Colors.blueAccent.withAlpha(210),
+        ),
+        title: (_selectedLicencePlate ?? "Select Vehicle").text(
+          style: TextStyle(
+            color: _selectedLicencePlate == null
+                ? Colors.white.withAlpha(100)
+                : Colors.white,
+            fontSize: 14,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: Colors.white54,
+        ),
+      ),
+    );
+  }
+
+  void _showVehicleSearchSheet() {
+    _vehicleController.fetchAllVehicles();
+    Get.bottomSheet(
+      Container(
+        height: Get.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E293B),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            "Search Vehicle".text(
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              onChanged: (val) => _vehicleController.fetchAllVehicles(
+                search: val,
+              ), // Implement debounced search in controller
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Enter Licence Plate...",
+                hintStyle: const TextStyle(color: Colors.white30),
+                prefixIcon: const Icon(Icons.search, color: Colors.blueAccent),
+                filled: true,
+                fillColor: Colors.white10,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Obx(() {
+                if (_vehicleController.loadingVehicles.value &&
+                    _vehicleController.vehicles.isEmpty) {
+                  return Center(child: WhiteLoader());
+                }
+                return ListView.builder(
+                  itemCount:
+                      _vehicleController.vehicles.length +
+                      (_vehicleController.totalPages.value >
+                              _vehicleController.currentPage.value
+                          ? 1
+                          : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _vehicleController.vehicles.length) {
+                      _vehicleController.fetchAllVehicles(
+                        page: _vehicleController.currentPage.value + 1,
+                      ); // Trigger next page
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: WhiteLoader(),
+                        ),
+                      );
+                    }
+                    final vehicle = _vehicleController.vehicles[index];
+                    return ListTile(
+                      title: vehicle.licencePlate.text(
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: "${vehicle.carModel} ${vehicle.licencePlate}"
+                          .text(
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                      onTap: () {
+                        setState(
+                          () => _selectedLicencePlate = vehicle.licencePlate,
+                        );
+                        Get.back();
+                      },
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
   Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16, left: 4),
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
       child: title.toUpperCase().text(
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           color: Colors.blueAccent.withAlpha(230),
-          letterSpacing: 1.0,
+          letterSpacing: 1.2,
         ),
       ),
     );
@@ -344,6 +436,33 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
             .map((e) => DropdownMenuItem(value: e, child: e.text()))
             .toList(),
         onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withAlpha(30),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blueAccent.withAlpha(50)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.blueAccent, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child:
+                "This task will be immediately assigned to the maintenance queue."
+                    .text(
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+          ),
+        ],
       ),
     );
   }
