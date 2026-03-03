@@ -5,6 +5,7 @@ class TripModel {
   final String status;
   final String id;
   final String origin;
+  final dynamic driver;
   final String loadType;
   final DateTime? endTime;
   final double loadWeight;
@@ -18,6 +19,7 @@ class TripModel {
   final PopulatedLocationModel? location;
 
   TripModel({
+    required this.driver,
     required this.id,
     required this.origin,
     required this.status,
@@ -35,6 +37,7 @@ class TripModel {
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
+      driver: json['driver'],
       id: json['_id'] ?? '',
       origin: json['origin'] ?? '',
       status: json['status'],
@@ -59,6 +62,7 @@ class TripModel {
   }
   Map<String, dynamic> toJson() {
     return {
+      'driver': driver,
       'status': status,
       'loadType': loadType,
       'endTime': endTime?.toIso8601String(),

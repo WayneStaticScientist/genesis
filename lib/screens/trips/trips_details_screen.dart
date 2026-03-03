@@ -1,3 +1,6 @@
+import 'package:exui/material.dart';
+import 'package:genesis/controllers/socket_controller.dart';
+import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +21,7 @@ class TripDetailsScreen extends StatefulWidget {
 
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
   final UserController userController = Get.find<UserController>();
+  final _socketController = Get.find<SocketController>();
 
   @override
   void initState() {
@@ -47,6 +51,30 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           ),
         ),
         actions: [
+          Obx(
+            () => "track"
+                .toUpperCase()
+                .text()
+                .textButton(
+                  onPressed: () {
+                    final vehicleId = userController.trip.value?.vehicle.id;
+                    if (vehicleId == "" || vehicleId!.isEmpty) {
+                      Toaster.showError("Vehicle not found");
+                      return;
+                    }
+                    _socketController.listenId.value = vehicleId;
+                    Get.to(() => FleetTrackingScreen());
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                )
+                .visibleIf(
+                  userController.trip.value?.status.toLowerCase() == "active",
+                ),
+          ),
+
           IconButton(
             icon: Icon(Icons.refresh, color: primaryColor),
             onPressed: () => userController.findTrip(widget.tripId),
@@ -82,6 +110,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeaderCard(trip, theme, primaryColor),
+                    SizedBox(height: 20),
+                    _buildSectionTitle(theme, "Driver"),
+                    SizedBox(height: 10),
+                    _buildDriverCard(trip.driver),
                     SizedBox(height: 20),
                     _buildSectionTitle(theme, "Load & Vehicle"),
                     SizedBox(height: 10),
@@ -308,7 +340,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 ),
                 _buildTimeRow(
                   "Ended on",
-                  trip.startTime != null
+                  trip.endTime != null
                       ? GenesisDate.getInformalDate(trip.endTime!)
                       : "Not started",
                   theme,
@@ -504,6 +536,16 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           Toaster.showSuccess2("Trip Action", "Operation was succesfull");
         }
       },
+    );
+  }
+
+  _buildDriverCard(dynamic driver) {
+    if (driver == null || driver.runtimeType == String) {
+      "".text().center();
+    }
+    return ListTile(
+      title: "${driver['firstName']} ${driver['lastName']}".text(),
+      subtitle: "${driver['email']}".text(),
     );
   }
 }

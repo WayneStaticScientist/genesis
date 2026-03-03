@@ -177,7 +177,7 @@ class DriverCard extends StatelessWidget {
                       color: isOnTrip
                           ? Colors.green
                           : user.trip?.status == "Pending"
-                          ? Colors.orange
+                          ? Colors.white
                           : (user.trip?.status == "Completed"
                                 ? Colors.white
                                 : Colors.orange),
@@ -196,7 +196,7 @@ class DriverCard extends StatelessWidget {
                         color: isOnTrip
                             ? Colors.green
                             : user.trip?.status == "Pending"
-                            ? Colors.orange
+                            ? Colors.white
                             : (user.trip?.status == "Completed"
                                   ? Colors.white
                                   : Colors.orange),

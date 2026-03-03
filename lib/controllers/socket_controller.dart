@@ -153,6 +153,9 @@ class SocketController extends GetxController {
     // 3. Register the new listener
     socket.on(newId, (data) {
       liveTrackModel.value = LiveTrackModel.fromJSON(data);
+      if (currentVehicle.value != null) {
+        currentVehicle.value!.fuelLevel = liveTrackModel.value?.fuelLevel ?? 0;
+      }
     });
 
     _previousListenId = newId;

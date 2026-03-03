@@ -652,7 +652,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
       );
       return;
     }
-    final destinationName = _destinationController.text.trim();
+    final destinationName = _destinationNameController.text.trim();
     if (destinationName.isEmpty) {
       Toaster.showErrorTop(
         "Destination City required",

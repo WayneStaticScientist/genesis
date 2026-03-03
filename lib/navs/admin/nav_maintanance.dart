@@ -19,11 +19,11 @@ class AdminNavMaintenance extends StatefulWidget {
 
 class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
   final _maintainanceController = Get.find<MaintainanceController>();
-
+  String _status = '';
   @override
   void initState() {
     super.initState();
-    _maintainanceController.fetchAllMaintainances();
+    filterResults();
   }
 
   @override
@@ -136,22 +136,55 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      GFilterChip(label: "All Tasks", isSelected: true),
+                      GFilterChip(
+                        label: "All Tasks",
+                        isSelected: _status.isEmpty,
+                      ).onTap(() {
+                        setState(() {
+                          _status = "";
+                        });
+                        filterResults();
+                      }),
                       GFilterChip(
                         label: "Critical",
-                        isSelected: false,
+                        isSelected: _status == "Critical",
                         color: Colors.redAccent,
-                      ),
+                      ).onTap(() {
+                        setState(() {
+                          _status = "Critical";
+                        });
+                        filterResults();
+                      }),
                       GFilterChip(
-                        label: "Upcoming",
-                        isSelected: false,
-                        color: Colors.amber.shade700,
-                      ),
+                        label: "Routine",
+                        isSelected: _status == "Routine",
+                        color: Colors.teal.shade700,
+                      ).onTap(() {
+                        setState(() {
+                          _status = "Routine";
+                        });
+                        filterResults();
+                      }),
+                      GFilterChip(
+                        label: "Due Soon",
+                        isSelected: _status == "Due Soon",
+                        color: Colors.deepPurple.shade700,
+                      ).onTap(() {
+                        setState(() {
+                          _status = "Due Soon";
+                        });
+                        filterResults();
+                      }),
                       GFilterChip(
                         label: "Completed",
-                        isSelected: false,
-                        color: Colors.pinkAccent,
-                      ),
+                        isSelected: _status == "Completed",
+                        color: Colors.green,
+                      ).onTap(() {
+                        setState(() {
+                          _status = "Completed";
+                        });
+                        filterResults();
+                      }),
                     ],
                   ),
                 ),
@@ -229,5 +262,9 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
         ],
       ),
     );
+  }
+
+  void filterResults() {
+    _maintainanceController.fetchAllMaintainances(status: _status);
   }
 }

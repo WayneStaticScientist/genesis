@@ -1,18 +1,19 @@
 import 'dart:async';
+import 'package:genesis/screens/chats/chat_screen.dart';
+import 'package:get/get.dart';
+import 'package:exui/exui.dart';
+import 'package:flutter/material.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
-import 'package:get/get.dart';
-import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:exui/exui.dart';
 
 // Project specific imports
+import 'package:genesis/utils/toast.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
-import 'package:genesis/utils/toast.dart';
 
 class FleetTrackingScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -223,10 +224,11 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               ),
                             ),
                             IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                LineIcons.phone,
-                                color: Colors.blue,
+                              onPressed: () =>
+                                  Get.to(() => ChatScreen(user: user!)),
+                              icon: Icon(
+                                LineIcons.commentAlt,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
@@ -252,7 +254,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                             child: Obx(
                               () => _buildTelemetryItem(
                                 LineIcons.gasPump,
-                                "${_socketController.liveTrackModel.value != null ? _socketController.liveTrackModel.value?.fuelLevel ?? 0 : _socketController.currentVehicle.value?.fuelLevel ?? 0}%",
+                                "${_socketController.currentVehicle.value?.fuelLevel ?? 0}%",
                                 "Fuel (Tap)",
                               ),
                             ),
@@ -322,7 +324,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                             ),
                           )
                           .sizedBox(width: double.infinity)
-                          .constrained(maxWidth: ScreenSizes.DESKTOP_W * 0.75),
+                          .constrained(maxWidth: ScreenSizes.DESKTOP_W * 0.75)
+                          .visibleIf(user?.trip?.status == "Completed"),
                       const SizedBox(height: 50),
                     ],
                   ),
@@ -340,7 +343,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   Widget _buildTelemetryItem(IconData icon, String value, String label) {
     return Column(
       children: [
-        Icon(icon, color: Colors.blue, size: 24),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
         const SizedBox(height: 8),
         Text(
           value,

@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -19,6 +16,7 @@ import 'package:genesis/controllers/messaging_controller.dart';
 import 'package:genesis/services/background_message_handler.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
 import 'package:genesis/controllers/live_tracking_controller.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {

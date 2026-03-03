@@ -27,6 +27,7 @@ class MaintainanceController extends GetxController {
     int page = 1,
     int limit = 20,
     String search = '',
+    String status = '',
   }) async {
     if (loadingMaintainances.value) {
       Toaster.showError("loading please wait");
@@ -38,7 +39,7 @@ class MaintainanceController extends GetxController {
     mantainanceFetchingStatus.value = "";
     loadingMaintainances.value = true;
     final response = await Net.get(
-      "/maintainances?page=${page}&limit=${limit}&$search=${search}",
+      "/maintainances?page=${page}&limit=${limit}&$search=${search}&status=$status",
     );
     loadingMaintainances.value = false;
     if (response.hasError) {

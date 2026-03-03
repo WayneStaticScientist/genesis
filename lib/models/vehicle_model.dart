@@ -5,7 +5,7 @@ class VehicleModel {
   final double usage;
   final String status;
   final String carModel;
-  final double fuelLevel;
+  double fuelLevel;
   final double fuelRatio;
   final String engineType;
   final String licencePlate;
