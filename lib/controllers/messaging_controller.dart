@@ -7,6 +7,7 @@ import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:genesis/services/genesis_notification_handler.dart';
 
 class MessagingController extends GetxController {
   RxInt notifications = RxInt(0);
@@ -18,9 +19,14 @@ class MessagingController extends GetxController {
   }
 
   void initializeMessaging() async {
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.data['type'] == "message") {
-        return _decodeMessage(message.data);
+        return _decodeMessage(message.data, message);
       }
     });
 
@@ -88,7 +94,7 @@ class MessagingController extends GetxController {
     return true;
   }
 
-  void _decodeMessage(Map<String, dynamic> data) async {
+  void _decodeMessage(Map<String, dynamic> data, RemoteMessage rmessage) async {
     final isar = IsarStatic.isar;
     if (isar == null) return;
     final message = MesssageModel.fromJSON(data);
@@ -114,6 +120,7 @@ class MessagingController extends GetxController {
       Get.snackbar("Inchat Message", "check your last message");
       return;
     }
+    GenesisNotificationHandler.showNotification(rmessage);
     _syncMessages();
   }
 
@@ -126,7 +133,6 @@ class MessagingController extends GetxController {
         .syncedEqualTo(false)
         .findAll();
     MesssageModel? dataMessage;
-    User? user;
     for (var message in unsyncedMessages) {
       final senderId = await _userController.getArgumentedUser(
         message.senderId,
@@ -134,16 +140,7 @@ class MessagingController extends GetxController {
       final response = await _syncMessage(message, senderId, isar);
       if (response && dataMessage == null) {
         dataMessage = message;
-        user = senderId;
       }
-    }
-    if (user != null && dataMessage != null) {
-      Get.snackbar(
-        "${user.firstName} ${user.lastName}",
-        dataMessage.content.length > 30
-            ? "${dataMessage.content.substring(0, 30)}..."
-            : dataMessage.content,
-      );
     }
     getChatUsers();
   }

@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -29,6 +32,18 @@ void main() async {
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await IsarStatic.init();
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(channel);
+
+  // 4. Set Foreground Notification Options (for when app is open)
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
   runApp(const MyApp());
 }
 

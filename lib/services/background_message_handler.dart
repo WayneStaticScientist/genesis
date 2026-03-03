@@ -1,11 +1,24 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:genesis/models/messsage_model.dart';
+import 'package:genesis/services/genesis_notification_handler.dart';
 import 'package:genesis/utils/database_carrier.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'messages_channel', // ID must match your backend
+  'High Importance Notifications',
+  description: 'This channel is used for chat messages.',
+  importance: Importance.high,
+  playSound: true,
+);
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 class GenesisBackgroundMessageHandler {
   static const String NotificationMessagesCounter =
       "GenesisBackgroundMessageHandler";
   static Future<void> handleBackgroundMessage(RemoteMessage message) async {
+    GenesisNotificationHandler.showNotification(message);
     if (message.data['type'] == "message") {
       return _decodeMessage(message.data);
     }
