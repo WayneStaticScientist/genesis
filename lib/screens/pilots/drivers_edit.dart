@@ -1,5 +1,6 @@
-import 'dart:developer';
-
+import 'package:exui/material.dart';
+import 'package:genesis/models/licence_model.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,16 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
   late TextEditingController _experience = TextEditingController(
     text: widget.driver.experience,
   );
-
+  late DateTime? expiryDate = widget.driver.licence?.expiryDate;
+  late TextEditingController _licenceNumber = TextEditingController(
+    text: widget.driver.licence?.licenceNumber ?? '',
+  );
+  late TextEditingController _licenceClass = TextEditingController(
+    text: widget.driver.licence?.licenceClass.toString() ?? '',
+  );
+  late TextEditingController _expiryDate = TextEditingController(
+    text: GenesisDate.formatNormalDateN(widget.driver.licence?.expiryDate),
+  );
   @override
   void initState() {
     super.initState();
@@ -45,6 +55,17 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
       final filteredName = _name.text.replaceAll(RegExp('\\s{2,}'), ' ');
       final firstName = filteredName.trim().split(" ")[0];
       final lastName = filteredName.trim().split(" ")[1];
+
+      int? licenceClass = int.tryParse(_licenceClass.text);
+      if (licenceClass == null && expiryDate != null) {
+        Toaster.showError("Invalide licence class Number , Valid are 1-5");
+      }
+      String licenceNumber = _licenceNumber.text.trim().toLowerCase();
+      if (licenceNumber.isEmpty && expiryDate != null) {
+        return Toaster.showError(
+          "Invalid licence number , it should not be empty",
+        );
+      }
       final updatedDriver = {
         "firstName": firstName,
         "lastName": lastName,
@@ -52,8 +73,14 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
         "experience": _experience.text,
         "rating": double.tryParse(_rating.text) ?? 0,
         "safety": _safety.text,
+        "licence": expiryDate != null
+            ? LicenceModel(
+                expiryDate: expiryDate!,
+                licenceClass: licenceClass!,
+                licenceNumber: licenceNumber,
+              )
+            : null,
       };
-      log("The data is $updatedDriver");
       final result = await _userController.updateDriver(
         data: updatedDriver,
         id: widget.driver.id,
@@ -201,7 +228,48 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                 items: ["On Trip", "Available", "Offline"],
                 onChanged: (val) => setState(() => _status = val!),
               ),
-
+              const SizedBox(height: 24),
+              _sectionHeader("Licence Information"),
+              _buildField(
+                label: "Licence Number",
+                hint: "16digit number",
+                controller: _licenceNumber,
+                icon: Icons.shield,
+              ),
+              _buildField(
+                label: "Licence Class",
+                hint: "1-5",
+                controller: _licenceClass,
+                icon: Icons.numbers,
+              ),
+              _buildField(
+                label: "Expiry Date",
+                hint: "Tap to select",
+                editable: false,
+                controller: _expiryDate,
+                icon: Icons.calendar_month,
+                ontap: () => selectDate(context),
+              ),
+              if (expiryDate != null) ...[
+                "Revoke Licence"
+                    .text()
+                    .elevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(side: BorderSide.none),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          expiryDate = null;
+                          _licenceClass.text = '';
+                          _licenceNumber.text = '';
+                          _expiryDate.text = '';
+                        });
+                      },
+                    )
+                    .sizedBox(width: double.infinity),
+              ],
               const SizedBox(height: 40),
               // Retention Info
               Container(
@@ -257,10 +325,12 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
     required String label,
     required String hint,
     required IconData icon,
+    bool editable = true,
     String? initialValue,
     TextInputType? keyboardType,
     TextEditingController? controller,
     FormFieldValidator<String>? validator,
+    VoidCallback? ontap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -271,6 +341,8 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
       child: TextFormField(
         controller: controller,
         validator: validator,
+        onTap: () => ontap?.call(),
+        readOnly: !editable,
         keyboardType: keyboardType,
         style: TextStyle(color: GTheme.reverse()),
         decoration: InputDecoration(
@@ -294,6 +366,22 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
         ),
       ),
     );
+  }
+
+  Future<void> selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _expiryDate.text = GenesisDate.formatNormalDateN(picked);
+        expiryDate = picked;
+      });
+    }
   }
 
   Widget _buildDropdown({

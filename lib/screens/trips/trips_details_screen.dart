@@ -111,9 +111,17 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   children: [
                     _buildHeaderCard(trip, theme, primaryColor),
                     SizedBox(height: 20),
-                    _buildSectionTitle(theme, "Driver"),
+                    _buildSectionTitle(theme, "Driver & Info"),
                     SizedBox(height: 10),
                     _buildDriverCard(trip.driver),
+                    ListTile(
+                      title: "\$${trip.tolgateFees.toString()}".text(),
+                      subtitle: "tolgate fees".text(),
+                    ),
+                    ListTile(
+                      title: "${trip.vehicle.carModel}".text(),
+                      subtitle: "Vehicle".text(),
+                    ),
                     SizedBox(height: 20),
                     _buildSectionTitle(theme, "Load & Vehicle"),
                     SizedBox(height: 10),

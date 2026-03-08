@@ -23,6 +23,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
   final _userController = Get.find<UserController>();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _tolgateFees = TextEditingController(text: "0");
   final VehicleControler vehicleController = Get.find<VehicleControler>();
   final TextEditingController _loadTypeController = TextEditingController();
   final TextEditingController originController = TextEditingController();
@@ -199,12 +200,23 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 Obx(() => _buildVehicleSelector()),
 
                 const SizedBox(height: 20),
+                _buildInputLabel("FEES/COSTS"),
+                TextFormField(
+                  controller: _tolgateFees,
+                  decoration: _modernInputDecoration(
+                    Icons.monetization_on,
+                    "Tolgate Fees",
+                  ),
+                ),
+                12.gapHeight,
+                const SizedBox(height: 20),
                 _buildInputLabel("ORIGIN"),
                 TextFormField(
                   controller: originController,
                   decoration: _modernInputDecoration(Icons.map, "Enter Origin"),
                 ),
                 12.gapHeight,
+
                 TextFormField(
                   controller: _originCoordsController,
                   readOnly: true,
@@ -644,6 +656,13 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "You have entered an invalid number on trip amound",
       );
     }
+    final tolgateFees = double.tryParse(_tripPaymentController.text.trim());
+    if (tolgateFees == null) {
+      return Toaster.showErrorTop(
+        "Invalid Tolgate Fees Amount",
+        "You have entered an invalid number on Tolgate Fees",
+      );
+    }
     final origin = originController.text.trim();
     if (origin.isEmpty) {
       Toaster.showErrorTop(
@@ -660,6 +679,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
       );
       return;
     }
+
     final response = await _userController.startTrip(
       data: {
         "origin": origin,
@@ -667,6 +687,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "loadWeight": loadWeight,
         "tripPayout": tripPrice,
         "driver": widget.driver.id,
+        "tolgateFees": tolgateFees,
         "destination": destinationName,
         "vehicle": selectedVehicle.value?.id,
         "startTime": departureDateTime.value.toIso8601String(),

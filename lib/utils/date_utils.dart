@@ -7,6 +7,11 @@ class GenesisDate {
     return "${getWeekDayName(dateTime)} ${dateTime.day} ${_getMonthName(dateTime.month)} ${dateTime.year}";
   }
 
+  static String formatNormalDateN(DateTime? dateTime) {
+    if (dateTime == null) return "";
+    return "${getWeekDayName(dateTime)} ${dateTime.day} ${_getMonthName(dateTime.month)} ${dateTime.year}";
+  }
+
   static String getInformalDate(DateTime dateTime) {
     return "${_getMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }

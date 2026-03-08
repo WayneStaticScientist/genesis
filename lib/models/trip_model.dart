@@ -2,6 +2,7 @@ import 'package:genesis/models/current_vehicle_model.dart';
 import 'package:genesis/models/populated_location_model.dart';
 
 class TripModel {
+  final double tolgateFees;
   final String status;
   final String id;
   final String origin;
@@ -19,6 +20,7 @@ class TripModel {
   final PopulatedLocationModel? location;
 
   TripModel({
+    required this.tolgateFees,
     required this.driver,
     required this.id,
     required this.origin,
@@ -38,6 +40,7 @@ class TripModel {
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
       driver: json['driver'],
+      tolgateFees: (json['tolgateFees'] as num?)?.toDouble() ?? 0,
       id: json['_id'] ?? '',
       origin: json['origin'] ?? '',
       status: json['status'],
@@ -62,6 +65,7 @@ class TripModel {
   }
   Map<String, dynamic> toJson() {
     return {
+      'tolgateFees': tolgateFees,
       'driver': driver,
       'status': status,
       'loadType': loadType,

@@ -1,3 +1,4 @@
+import 'package:genesis/models/licence_model.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/populated_trip_model.dart';
@@ -26,10 +27,13 @@ class User {
   final PopulatedTripModel? trip;
   @ignore
   CurrentVehicleModel? currentVehicle;
+  @ignore
+  LicenceModel? licence;
   User({
     this.notifications = 0,
     this.lastMessage = '',
     required this.id,
+    this.licence,
     this.trip,
     this.trips,
     this.safety,
@@ -53,6 +57,7 @@ class User {
       'role': role,
       'trips': trips,
       'email': email,
+      'licence': licence,
       'rating': rating,
       'status': status,
       'safety': safety,
@@ -70,6 +75,7 @@ class User {
 
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
+      licence: data['licence'],
       id: data['_id'] ?? new DateTime.now().millisecondsSinceEpoch.toString(),
       chatToken: data['chatToken'],
       trip: data['trip'] != null
