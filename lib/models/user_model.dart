@@ -35,13 +35,12 @@ class User {
   List<DeductionItem> taxes;
   @ignore
   List<DeductionItem> insurance;
+
   User({
     this.notifications = 0,
     this.lastMessage = '',
     required this.id,
     required this.payment,
-    required this.insurance,
-    required this.taxes,
     this.licence,
     this.trip,
     this.trips,
@@ -58,6 +57,8 @@ class User {
     required this.country,
     required this.lastName,
     required this.firstName,
+    this.taxes = const [], // Provide a default
+    this.insurance = const [],
   });
 
   Map<String, dynamic> toJSON() {
