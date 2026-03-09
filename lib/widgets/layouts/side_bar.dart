@@ -155,7 +155,7 @@ class _GNavBarState extends State<GNavBar> {
                       _buildNavItem(
                         context,
                         'payrolls',
-                        "Financials",
+                        "Payroll",
                         Icons.account_balance_wallet_outlined,
                       ).visibleIf(!isDriver),
 

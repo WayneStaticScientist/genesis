@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/models/user_model.dart';
@@ -18,18 +19,47 @@ class MessagingController extends GetxController {
     _syncMessages();
   }
 
+  void subribeToAdmin() async {
+    final user = User.fromStorage();
+    if (user == null) return;
+    GetStorage storage = GetStorage();
+    final notification = storage.read("genesis-admin-notification");
+    if (user.role == "driver" && notification != null) {
+      return unsubribeFromAdmin();
+    }
+    if (notification != null) {
+      return;
+    }
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic(user.companyId!);
+      storage.write('genesis-admin-notification', "subscribed");
+    } catch (e) {
+      print('Failed to subscribe: $e');
+    }
+  }
+
+  void unsubribeFromAdmin() async {
+    final user = User.fromStorage();
+    if (user == null) return;
+    try {
+      GetStorage storage = GetStorage();
+      await FirebaseMessaging.instance.unsubscribeFromTopic(user.companyId!);
+      storage.remove('genesis-admin-notification');
+    } catch (e) {}
+  }
+
   void initializeMessaging() async {
     await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
+    subribeToAdmin();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.data['type'] == "message") {
         return _decodeMessage(message.data, message);
       }
     });
-
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {});
   }
 

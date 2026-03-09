@@ -1,3 +1,4 @@
+import 'package:genesis/models/deducton_item.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/licence_model.dart';
@@ -15,6 +16,7 @@ class User {
   final String role;
   final String email;
   final String country;
+  final double payment;
   final String? status;
   final double? rating;
   final String lastName;
@@ -29,10 +31,17 @@ class User {
   CurrentVehicleModel? currentVehicle;
   @ignore
   LicenceModel? licence;
+  @ignore
+  List<DeductionItem> taxes;
+  @ignore
+  List<DeductionItem> insurance;
   User({
     this.notifications = 0,
     this.lastMessage = '',
     required this.id,
+    required this.payment,
+    required this.insurance,
+    required this.taxes,
     this.licence,
     this.trip,
     this.trips,
@@ -61,8 +70,11 @@ class User {
       'rating': rating,
       'status': status,
       'safety': safety,
+      "payment": payment,
       'country': country,
       'password': password,
+      "taxes": taxes.map((e) => e.toJson()),
+      "insurance": insurance.map((e) => e.toJson()),
       'lastName': lastName,
       "trip": trip?.toJSON(),
       'firstName': firstName,
@@ -75,6 +87,19 @@ class User {
 
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
+      payment: (data['payment'] as num?)?.toDouble() ?? 0,
+      taxes: data['taxes'] != null
+          ? (data['taxes'] as List<dynamic>)
+                .toList()
+                .map((e) => DeductionItem.fromJSON(e))
+                .toList()
+          : [],
+      insurance: data['insurance'] != null
+          ? (data['insurance'] as List<dynamic>)
+                .toList()
+                .map((e) => DeductionItem.fromJSON(e))
+                .toList()
+          : [],
       licence: data['licence'] != null
           ? LicenceModel.fromJSON(data['licence'])
           : null,

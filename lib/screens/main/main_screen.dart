@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
       "dashboard": AdminNavMain(triggerKey: _scaffoldKey),
       "drivers": AdminNavDrivers(triggerKey: _scaffoldKey),
       "reports": const AdminNavReports(),
-      "payrolls": const AdminNavPayroll(),
+      "payrolls": AdminNavPayroll(triggerKey: _scaffoldKey),
       "vehicles": const AdminNavVehicles(),
       "tracking": FleetTrackingScreen(triggerKey: _scaffoldKey),
       "maintanance": AdminNavMaintenance(triggerKey: _scaffoldKey),
