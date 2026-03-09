@@ -1,3 +1,4 @@
+import 'package:genesis/models/licence_model.dart';
 import 'package:genesis/models/populated_driver_model.dart';
 
 class VehicleModel {
@@ -10,8 +11,10 @@ class VehicleModel {
   final String engineType;
   final String licencePlate;
   final PopulatedDriverModel? driver;
+  LicenceModel? licence;
 
   VehicleModel({
+    this.licence,
     required this.id,
     required this.usage,
     required this.driver,
@@ -28,6 +31,7 @@ class VehicleModel {
       "_id": id,
       "usage": usage,
       "status": status,
+      'licence': licence,
       "carModel": carModel,
       'fuelLevel': fuelLevel,
       "fuelRatio": fuelRatio,
@@ -40,6 +44,9 @@ class VehicleModel {
   factory VehicleModel.fromJSON(dynamic data) {
     return VehicleModel(
       id: data['_id'],
+      licence: data['licence'] != null
+          ? LicenceModel.fromJSON(data['licence'])
+          : null,
       driver: data['driver'] != null
           ? PopulatedDriverModel.fromJSON(data['driver'])
           : null,

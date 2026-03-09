@@ -9,14 +9,14 @@ class LicenceModel {
   });
   factory LicenceModel.fromJSON(data) {
     return LicenceModel(
-      expiryDate: DateTime.parse(data['expiryDate']),
+      expiryDate: DateTime.parse(data['expiryDate']).toLocal(),
       licenceClass: data['licenceClass'],
       licenceNumber: data['licenceNumber'],
     );
   }
   Map toJson() {
     return {
-      "expiryDate": expiryDate,
+      "expiryDate": expiryDate.toUtc().toIso8601String(),
       "licenceClass": licenceClass,
       'licenceNumber': licenceNumber,
     };

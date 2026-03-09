@@ -99,13 +99,16 @@ class UserController extends GetxController {
   }
 
   Rx<bool> registeringDriver = RxBool(false);
-  Future<bool> registerDriver(dynamic user) async {
+  Future<bool> registerDriver(dynamic user, dynamic licence) async {
     if (registeringDriver.value) {
       Toaster.showError("loading please wait");
       return false;
     }
     registeringDriver.value = true;
-    final response = await Net.post("/driver/register", data: {"user": user});
+    final response = await Net.post(
+      "/driver/register",
+      data: {"user": user, "licence": licence},
+    );
     registeringDriver.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);

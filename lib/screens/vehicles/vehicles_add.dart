@@ -1,10 +1,13 @@
-import 'package:exui/exui.dart';
-import 'package:flutter/material.dart';
-import 'package:genesis/controllers/vehicle_controller.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:genesis/utils/toast.dart';
-import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
+import 'package:exui/material.dart';
+import 'package:flutter/material.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/models/licence_model.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:genesis/controllers/vehicle_controller.dart';
 
 class AdminAddVehicle extends StatefulWidget {
   const AdminAddVehicle({super.key});
@@ -21,11 +24,25 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
   String _plate = "";
   String _status = "Active";
   String _type = "Electric";
+  final TextEditingController _licenceNumber = TextEditingController();
+  final TextEditingController _licenceClass = TextEditingController();
+  final TextEditingController _expiryDate = TextEditingController();
+  DateTime? expiryDate;
   double _fuelRatio = 0.0;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      int? licenceClass = int.tryParse(_licenceClass.text);
+      if (licenceClass == null && expiryDate != null) {
+        Toaster.showError("Invalide licence class Number , Valid are 1-5");
+      }
+      String licenceNumber = _licenceNumber.text.trim().toLowerCase();
+      if (licenceNumber.isEmpty && expiryDate != null) {
+        return Toaster.showError(
+          "Invalid licence number , it should not be empty",
+        );
+      }
       final newVehicle = {
         "usage": 0, // Initial usage
         "type": _type,
@@ -35,7 +52,16 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         "licencePlate": _plate,
         "fuelRatio": _fuelRatio,
       };
-      final response = await _vehicleController.registerVehicle(newVehicle);
+      final response = await _vehicleController.registerVehicle(
+        newVehicle,
+        expiryDate != null
+            ? LicenceModel(
+                expiryDate: expiryDate!,
+                licenceClass: licenceClass!,
+                licenceNumber: licenceNumber,
+              ).toJson()
+            : null,
+      );
       if (mounted && response) {
         Get.back();
         Toaster.showSuccess("vehicle registered success");
@@ -171,6 +197,48 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                 items: ["Active", "In Service", "Idle"],
                 onChanged: (val) => setState(() => _status = val!),
               ),
+              const SizedBox(height: 16),
+              _sectionHeader("Licence Information"),
+              _buildField(
+                label: "Licence Number",
+                hint: "16digit number",
+                controller: _licenceNumber,
+                icon: Icons.shield,
+              ),
+              _buildField(
+                label: "Licence Class",
+                hint: "1-5",
+                controller: _licenceClass,
+                icon: Icons.numbers,
+              ),
+              _buildField(
+                label: "Expiry Date",
+                hint: "Tap to select",
+                editable: false,
+                controller: _expiryDate,
+                icon: Icons.calendar_month,
+                ontap: () => selectDate(context),
+              ),
+              if (expiryDate != null) ...[
+                "Revoke Licence"
+                    .text()
+                    .elevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(side: BorderSide.none),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          expiryDate = null;
+                          _licenceClass.text = '';
+                          _licenceNumber.text = '';
+                          _expiryDate.text = '';
+                        });
+                      },
+                    )
+                    .sizedBox(width: double.infinity),
+              ],
 
               const SizedBox(height: 40),
               // Tips card
@@ -227,7 +295,10 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
     required String label,
     required String hint,
     required IconData icon,
+    bool editable = true,
     TextInputType? keyboardType,
+    TextEditingController? controller,
+    VoidCallback? ontap,
     FormFieldSetter<String>? onSaved,
     FormFieldValidator<String>? validator,
   }) {
@@ -238,6 +309,9 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextFormField(
+        readOnly: !editable,
+        controller: controller,
+        onTap: () => ontap?.call(),
         onSaved: onSaved,
         validator: validator,
         keyboardType: keyboardType,
@@ -297,5 +371,21 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         ),
       ],
     );
+  }
+
+  Future<void> selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _expiryDate.text = GenesisDate.formatNormalDateN(picked);
+        expiryDate = picked;
+      });
+    }
   }
 }

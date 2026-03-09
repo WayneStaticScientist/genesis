@@ -78,7 +78,7 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                 expiryDate: expiryDate!,
                 licenceClass: licenceClass!,
                 licenceNumber: licenceNumber,
-              )
+              ).toJson()
             : null,
       };
       final result = await _userController.updateDriver(

@@ -7,10 +7,13 @@ import 'package:get/get.dart';
 
 class VehicleControler extends GetxController {
   RxBool registeringVehicle = RxBool(false);
-  Future<bool> registerVehicle(dynamic data) async {
+  Future<bool> registerVehicle(dynamic data, licence) async {
     if (registeringVehicle.value) return false;
     registeringVehicle.value = true;
-    final response = await Net.post("/vehicle/register", data: data);
+    final response = await Net.post(
+      "/vehicle/register",
+      data: {'vehicle': data, "licence": licence},
+    );
     registeringVehicle.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);
