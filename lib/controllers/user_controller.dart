@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/utils/database_carrier.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
@@ -347,5 +348,25 @@ class UserController extends GetxController {
           [],
     );
     return Future.value();
+  }
+
+  RxBool updatingUserPayroll = false.obs;
+  Future<bool> updateUserPayroll(
+    double newAmount,
+    List<DeductionItem> insurances,
+    String userId,
+  ) async {
+    updatingUserPayroll.value = true;
+    final response = await Net.put(
+      "/payroll/user",
+      data: {"amount": newAmount, "userId": userId, "insurances": insurances},
+    );
+    updatingUserPayroll.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    findChats(limit: 1000);
+    return true;
   }
 }

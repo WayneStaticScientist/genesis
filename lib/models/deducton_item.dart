@@ -3,25 +3,31 @@ enum DeductionType { percentage, fixed }
 class DeductionItem {
   final String name;
   final double value;
-  final DeductionType type;
+  final DeductionType deductionType;
 
-  DeductionItem({required this.name, required this.value, required this.type});
+  DeductionItem({
+    required this.name,
+    required this.value,
+    required this.deductionType,
+  });
 
   double calculate(double baseSalary) {
-    return type == DeductionType.percentage
+    return deductionType == DeductionType.percentage
         ? (baseSalary * (value / 100))
         : value;
   }
 
   Map toJson() {
-    return {"name": name, "value": value, "type": type.index};
+    return {"name": name, "value": value, "deductionType": deductionType.index};
   }
 
   factory DeductionItem.fromJSON(data) {
     return DeductionItem(
       name: data['name'],
       value: (data['value'] as num?)?.toDouble() ?? 0,
-      type: data['type'] == 0 ? DeductionType.percentage : DeductionType.fixed,
+      deductionType: data['deductionType'] == 0
+          ? DeductionType.percentage
+          : DeductionType.fixed,
     );
   }
 }

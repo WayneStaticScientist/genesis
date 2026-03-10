@@ -1,44 +1,11 @@
+import 'dart:async';
+
+import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/widgets/layouts/employee_dialog.dart';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/models/deducton_item.dart';
-
-class Employee {
-  final int id;
-  final String name;
-  final String role;
-  final double salary;
-  final String avatar;
-  double taxRate;
-  double insuranceRate;
-  List<DeductionItem> taxes;
-  List<DeductionItem> insurance;
-  List<PaymentRecord> history;
-
-  Employee({
-    required this.id,
-    required this.name,
-    required this.role,
-    required this.salary,
-    required this.taxes,
-    required this.insurance,
-    required this.avatar,
-    this.taxRate = 10.0,
-    this.insuranceRate = 3.0,
-    required this.history,
-  });
-
-  double get netPay {
-    double deductions =
-        (salary * (taxRate / 100)) + (salary * (insuranceRate / 100));
-    return salary - deductions;
-  }
-}
-
-class PaymentRecord {
-  final String date;
-  final double amount;
-
-  PaymentRecord({required this.date, required this.amount});
-}
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/controllers/user_controller.dart';
 
 class AdminNavPayroll extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -49,116 +16,30 @@ class AdminNavPayroll extends StatefulWidget {
 }
 
 class _AdminNavPayrollState extends State<AdminNavPayroll> {
-  final List<Employee> _employees = [
-    Employee(
-      id: 1,
-      taxes: [
-        DeductionItem(
-          name: "Federal Tax",
-          value: 12,
-          type: DeductionType.percentage,
-        ),
-      ],
-      insurance: [
-        DeductionItem(
-          name: "Health Plan",
-          value: 250,
-          type: DeductionType.fixed,
-        ),
-      ],
+  final _searchController = TextEditingController();
+  final _userController = Get.find<UserController>();
+  String _searchKey = '';
+  Timer? _debounceTimer;
+  @override
+  void initState() {
+    filterResults();
+    super.initState();
+    _initDebouncer();
+  }
 
-      name: "Sarah Jenkins",
-      role: "Product Designer",
-      salary: 8500,
-      avatar: "SJ",
-      taxRate: 12,
-      insuranceRate: 4,
-      history: [PaymentRecord(date: "Dec 28, 2023", amount: 7140)],
-    ),
-    Employee(
-      id: 2,
-      taxes: [
-        DeductionItem(
-          name: "Federal Tax",
-          value: 12,
-          type: DeductionType.percentage,
-        ),
-      ],
-      insurance: [
-        DeductionItem(
-          name: "Health Plan",
-          value: 250,
-          type: DeductionType.fixed,
-        ),
-      ],
+  void filterResults() {
+    _userController.findChats(query: _searchKey, page: 1);
+  }
 
-      name: "Marcus Chen",
-      role: "Sr. Engineer",
-      salary: 12000,
-      avatar: "MC",
-      taxRate: 15,
-      insuranceRate: 5,
-      history: [PaymentRecord(date: "Dec 28, 2023", amount: 9600)],
-    ),
-    Employee(
-      taxes: [
-        DeductionItem(
-          name: "Federal Tax",
-          value: 12,
-          type: DeductionType.percentage,
-        ),
-      ],
-      insurance: [
-        DeductionItem(
-          name: "Health Plan",
-          value: 250,
-          type: DeductionType.fixed,
-        ),
-      ],
-
-      id: 3,
-      name: "Elena Rodriguez",
-      role: "HR Lead",
-      salary: 7200,
-      avatar: "ER",
-      history: [],
-    ),
-    Employee(
-      id: 4,
-      taxes: [
-        DeductionItem(
-          name: "Federal Tax",
-          value: 12,
-          type: DeductionType.percentage,
-        ),
-      ],
-      insurance: [
-        DeductionItem(
-          name: "Health Plan",
-          value: 250,
-          type: DeductionType.fixed,
-        ),
-      ],
-
-      name: "David Kim",
-      role: "Marketing",
-      salary: 6500,
-      avatar: "DK",
-      taxRate: 8,
-      insuranceRate: 2,
-      history: [],
-    ),
-  ];
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _runPayroll() {
-    setState(() {
-      for (var emp in _employees) {
-        emp.history.insert(
-          0,
-          PaymentRecord(date: "Jan 30, 2024", amount: emp.netPay),
-        );
-      }
-    });
+    setState(() {});
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -182,10 +63,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
 
   @override
   Widget build(BuildContext context) {
-    double totalGross = _employees.fold(0, (sum, item) => sum + item.salary);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -238,14 +116,18 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                           const SizedBox(height: 16),
                           Row(
                             children: [
-                              _headerMetric(
-                                "Gross Total",
-                                "\$${totalGross.toInt()}",
+                              Obx(
+                                () => _headerMetric(
+                                  "Gross Total",
+                                  "${NumberUtils.formatCurrency(_userController.foundChats.fold(0, (prev, current) => current.payment + prev))}",
+                                ),
                               ),
                               const SizedBox(width: 16),
-                              _headerMetric(
-                                "Staff",
-                                "${_employees.length} Active",
+                              Obx(
+                                () => _headerMetric(
+                                  "Staff",
+                                  "${_userController.foundChats.length} Active",
+                                ),
                               ),
                             ],
                           ),
@@ -289,99 +171,101 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final emp = _employees[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 8,
-                ),
-                child: InkWell(
-                  onTap: () => _showEmployeeDialog(emp),
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(40),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(16),
+          Obx(
+            () => SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final emp = _userController.foundChats[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
+                  child: InkWell(
+                    onTap: () => _showEmployeeDialog(emp),
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(40),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          child: Center(
-                            child: Text(
-                              emp.avatar,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Center(
+                              child: Text(
+                                emp.firstName[0],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${emp.firstName} ${emp.lastName}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  emp.role.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                emp.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                              const Text(
+                                "NET PAYOUT",
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                               Text(
-                                emp.role.toUpperCase(),
+                                "\$${emp.payment.toStringAsFixed(0)}",
                                 style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text(
-                              "NET PAYOUT",
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: Colors.blue,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            Text(
-                              "\$${emp.netPay.toStringAsFixed(0)}",
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            }, childCount: _employees.length),
+                );
+              }, childCount: _userController.foundChats.length),
+            ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
@@ -453,7 +337,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
     );
   }
 
-  void _showEmployeeDialog(Employee emp) {
+  void _showEmployeeDialog(User emp) {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -462,237 +346,19 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
             ),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 500),
-              padding: const EdgeInsets.all(24),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: const Color(0xFF0F172A),
-                          child: Text(
-                            emp.avatar,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                emp.name,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                emp.role,
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 32),
-
-                    _sectionHeader("Taxes", Icons.account_balance, () {
-                      _addDeduction(emp, emp.taxes, setDialogState);
-                    }),
-                    ...emp.taxes.map(
-                      (t) => _deductionTile(t, () {
-                        setDialogState(() => emp.taxes.remove(t));
-                        setState(() {}); // Update the main dashboard net pay
-                      }),
-                    ),
-
-                    const SizedBox(height: 20),
-                    _sectionHeader("Insurance", Icons.security, () {
-                      _addDeduction(emp, emp.insurance, setDialogState);
-                    }),
-                    ...emp.insurance.map(
-                      (i) => _deductionTile(i, () {
-                        setDialogState(() => emp.insurance.remove(i));
-                        setState(() {}); // Update the main dashboard net pay
-                      }),
-                    ),
-
-                    const Divider(height: 40),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Calculated Net:",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          "\$${emp.netPay.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Save Changes"),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: EmployeeDialog(emp: emp, setDialogState: setDialogState),
           );
         },
       ),
     );
   }
 
-  void _addDeduction(
-    Employee emp,
-    List<DeductionItem> list,
-    Function setDialogState,
-  ) {
-    final nameController = TextEditingController();
-    final valController = TextEditingController();
-    DeductionType selectedType = DeductionType.percentage;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setInnerState) => AlertDialog(
-          title: const Text("New Deduction"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Name (e.g. VAT)"),
-              ),
-              TextField(
-                controller: valController,
-                decoration: const InputDecoration(labelText: "Value"),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              SegmentedButton<DeductionType>(
-                segments: const [
-                  ButtonSegment(
-                    value: DeductionType.percentage,
-                    label: Text("%"),
-                  ),
-                  ButtonSegment(value: DeductionType.fixed, label: Text("\$")),
-                ],
-                selected: {selectedType},
-                onSelectionChanged: (set) =>
-                    setInnerState(() => selectedType = set.first),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                setDialogState(() {
-                  list.add(
-                    DeductionItem(
-                      name: nameController.text,
-                      value: double.tryParse(valController.text) ?? 0,
-                      type: selectedType,
-                    ),
-                  );
-                });
-                setState(() {});
-                Navigator.pop(context);
-              },
-              child: const Text("Add"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionHeader(String title, IconData icon, VoidCallback onAdd) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: Colors.blue),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        IconButton(
-          onPressed: onAdd,
-          icon: const Icon(
-            Icons.add_circle_outline,
-            color: Colors.blue,
-            size: 20,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _deductionTile(DeductionItem item, VoidCallback onRemove) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(item.name, style: const TextStyle(fontSize: 13)),
-          ),
-          Text(
-            item.type == DeductionType.percentage
-                ? "${item.value}%"
-                : "\$${item.value}",
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: onRemove,
-            child: const Icon(
-              Icons.remove_circle,
-              color: Colors.redAccent,
-              size: 18,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _initDebouncer() {
+    _debounceTimer = Timer.periodic(Duration(milliseconds: 700), (time) {
+      if (_searchController.text != _searchKey) {
+        _searchKey = _searchController.text;
+        filterResults();
+      }
+    });
   }
 }
