@@ -1,12 +1,13 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/deducton_item.dart';
-import 'package:genesis/utils/toast.dart';
-import 'package:genesis/widgets/inputs/default_formfield.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
-import 'package:get/get.dart';
+import 'package:genesis/widgets/inputs/default_formfield.dart';
+import 'package:genesis/controllers/payroll_controller.dart';
 
 class EmployeeDialog extends StatefulWidget {
   final User emp;
@@ -25,7 +26,13 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
   late final _paymentController = TextEditingController(
     text: widget.emp.payment.toString(),
   );
-  final userController = Get.find<UserController>();
+  final _payrollController = Get.find<PayrollController>();
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  late List<DeductionItem> insurances = widget.emp.insurance;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -82,12 +89,6 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             "Leaving 0 or empty for payment will not generate payslip for the member"
                 .text(style: TextStyle(fontSize: 10)),
             const Divider(height: 32),
-            ...widget.emp.taxes.map(
-              (t) => _deductionTile(t, () {
-                widget.setDialogState(() => widget.emp.taxes.remove(t));
-                setState(() {}); // Update the main dashboard net pay
-              }),
-            ),
 
             const SizedBox(height: 20),
             _sectionHeader("Insurance", Icons.security, () {
@@ -97,9 +98,9 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 widget.setDialogState,
               );
             }),
-            ...widget.emp.insurance.map(
+            ...insurances.map(
               (i) => _deductionTile(i, () {
-                widget.setDialogState(() => widget.emp.insurance.remove(i));
+                widget.setDialogState(() => insurances.remove(i));
                 setState(() {}); // Update the main dashboard net pay
               }),
             ),
@@ -113,7 +114,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  "\$${widget.emp.payment.toStringAsFixed(2)}",
+                  "${NumberUtils.calculatePriceFoldString(widget.emp, insurances: insurances)}",
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -136,7 +137,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 ),
                 onPressed: () => _saveChanges(),
                 child: Obx(
-                  () => userController.updatingUserPayroll.value
+                  () => _payrollController.updatingUserPayroll.value
                       ? WhiteLoader()
                       : const Text("Save Changes"),
                 ),
@@ -278,13 +279,18 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
         : double.tryParse(_paymentController.text);
     if (amount == null)
       return Toaster.showError("invalid number entered on payment");
-    final response = await userController.updateUserPayroll(
+    final response = await _payrollController.updateUserPayroll(
       amount,
-      widget.emp.insurance,
+      insurances,
       widget.emp.id,
     );
     if (response) {
       Toaster.showSuccess("updated success");
+      if (mounted) {
+        widget.emp.payment = amount;
+        widget.setDialogState(() {});
+        setState(() {});
+      }
     }
   }
 }

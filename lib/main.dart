@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/payroll_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -63,6 +64,7 @@ class MyApp extends StatelessWidget {
         Get.put(SocketController());
         Get.put(TripsController());
         Get.put(MessagingController());
+        Get.put(PayrollController());
       }),
       title: 'Genesis',
       theme: ThemeData(

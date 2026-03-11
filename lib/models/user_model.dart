@@ -8,6 +8,7 @@ part 'user_model.g.dart';
 
 @collection
 class User {
+  double finalPayment = 0;
   int notifications = 0;
   String lastMessage = '';
   final String id;
@@ -16,7 +17,7 @@ class User {
   final String role;
   final String email;
   final String country;
-  final double payment;
+  double payment;
   final String? status;
   final double? rating;
   final String lastName;

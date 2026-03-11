@@ -1,19 +1,18 @@
 import 'dart:developer';
 
-import 'package:genesis/models/deducton_item.dart';
-import 'package:genesis/utils/database_carrier.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
-import 'package:genesis/models/user_model.dart';
+import 'package:isar_plus/isar_plus.dart';
 import 'package:genesis/models/trip_model.dart';
+import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/tokens_model.dart';
 import 'package:genesis/services/interceptor.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
-import 'package:isar_plus/isar_plus.dart';
+import 'package:genesis/utils/database_carrier.dart';
 
 class UserController extends GetxController {
   Rx<User?> user = Rx(null);
@@ -348,25 +347,5 @@ class UserController extends GetxController {
           [],
     );
     return Future.value();
-  }
-
-  RxBool updatingUserPayroll = false.obs;
-  Future<bool> updateUserPayroll(
-    double newAmount,
-    List<DeductionItem> insurances,
-    String userId,
-  ) async {
-    updatingUserPayroll.value = true;
-    final response = await Net.put(
-      "/payroll/user",
-      data: {"amount": newAmount, "userId": userId, "insurances": insurances},
-    );
-    updatingUserPayroll.value = false;
-    if (response.hasError) {
-      Toaster.showError(response.response);
-      return false;
-    }
-    findChats(limit: 1000);
-    return true;
   }
 }

@@ -1,11 +1,11 @@
 import 'dart:async';
-
-import 'package:genesis/utils/number_utils.dart';
-import 'package:genesis/widgets/layouts/employee_dialog.dart';
+import 'package:exui/exui.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/user_model.dart';
-import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/controllers/payroll_controller.dart';
+import 'package:genesis/widgets/layouts/employee_dialog.dart';
 
 class AdminNavPayroll extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -17,7 +17,7 @@ class AdminNavPayroll extends StatefulWidget {
 
 class _AdminNavPayrollState extends State<AdminNavPayroll> {
   final _searchController = TextEditingController();
-  final _userController = Get.find<UserController>();
+  final _payrollController = Get.find<PayrollController>();
   String _searchKey = '';
   Timer? _debounceTimer;
   @override
@@ -28,7 +28,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
   }
 
   void filterResults() {
-    _userController.findChats(query: _searchKey, page: 1);
+    _payrollController.findEmployees(query: _searchKey, page: 1);
   }
 
   @override
@@ -39,25 +39,17 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
   }
 
   void _runPayroll() {
-    setState(() {});
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text(
-              "Payroll Processed Successfully!",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        margin: const EdgeInsets.all(20),
-      ),
+    Get.defaultDialog(
+      title: "Payment Procedural",
+      content:
+          "Confirm with payment of ${NumberUtils.formatCurrency(_payrollController.grossTotal.value)}"
+              .text(),
+      textCancel: "cancel",
+      textConfirm: "proceed",
+      onConfirm: () {
+        Get.back();
+        _payrollController.proceedPayment();
+      },
     );
   }
 
@@ -119,14 +111,14 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                               Obx(
                                 () => _headerMetric(
                                   "Gross Total",
-                                  "${NumberUtils.formatCurrency(_userController.foundChats.fold(0, (prev, current) => current.payment + prev))}",
+                                  "${NumberUtils.formatCurrency(_payrollController.grossTotal.value)}",
                                 ),
                               ),
                               const SizedBox(width: 16),
                               Obx(
                                 () => _headerMetric(
                                   "Staff",
-                                  "${_userController.foundChats.length} Active",
+                                  "${_payrollController.employees.length} Active",
                                 ),
                               ),
                             ],
@@ -174,7 +166,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
           Obx(
             () => SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
-                final emp = _userController.foundChats[index];
+                final emp = _payrollController.employees[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
@@ -228,7 +220,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                                   ),
                                 ),
                                 Text(
-                                  emp.role.toUpperCase(),
+                                  "${emp.role.toUpperCase()} - ${NumberUtils.formatCurrency(emp.payment)}",
                                   style: const TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey,
@@ -251,7 +243,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                                 ),
                               ),
                               Text(
-                                "\$${emp.payment.toStringAsFixed(0)}",
+                                "\$${emp.finalPayment.toStringAsFixed(0)}",
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
@@ -264,7 +256,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                     ),
                   ),
                 );
-              }, childCount: _userController.foundChats.length),
+              }, childCount: _payrollController.employees.length),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
