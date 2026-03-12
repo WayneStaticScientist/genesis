@@ -1,19 +1,19 @@
 class GenesisDate {
   static String formatMonthAndDay(DateTime dateTime) {
-    return "${_getMonthName(dateTime.month)} ${dateTime.day}";
+    return "${getMonthName(dateTime.month)} ${dateTime.day}";
   }
 
   static String formatNormalDate(DateTime dateTime) {
-    return "${getWeekDayName(dateTime)} ${dateTime.day} ${_getMonthName(dateTime.month)} ${dateTime.year}";
+    return "${getWeekDayName(dateTime)} ${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}";
   }
 
   static String formatNormalDateN(DateTime? dateTime) {
     if (dateTime == null) return "";
-    return "${getWeekDayName(dateTime)} ${dateTime.day} ${_getMonthName(dateTime.month)} ${dateTime.year}";
+    return "${getWeekDayName(dateTime)} ${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}";
   }
 
   static String getInformalDate(DateTime dateTime) {
-    return "${_getMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+    return "${getMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 
   static String getInformalShortDate(DateTime dateTime) {
@@ -61,7 +61,7 @@ class GenesisDate {
     }
   }
 
-  static String _getMonthName(int month) {
+  static String getMonthName(int month) {
     switch (month) {
       case 1:
         return "January";

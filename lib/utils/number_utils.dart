@@ -27,20 +27,14 @@ class NumberUtils {
     List<DeductionItem> taxes,
     List<DeductionItem> insurances,
   ) {
-    double totalTaxPercentage = insurances.fold(
-      0.0,
-      (prev, DeductionItem tax) => tax.deductionType == DeductionType.percentage
-          ? prev + tax.value
-          : 0.0 + prev,
-    );
-    double totalTaxValue = insurances.fold(
-      0.0,
-      (prev, DeductionItem tax) => tax.deductionType == DeductionType.fixed
-          ? prev + tax.value
-          : 0.0 + prev,
-    );
-    return (emp.payment - emp.payment * (totalTaxPercentage / 100)) -
-        totalTaxValue;
+    final insuranceFold = splitDeductions(insurances);
+    final taxFold = splitDeductions(taxes);
+    return (emp.payment *
+            (1 -
+                insuranceFold.totalPercent / 100 -
+                taxFold.totalPercent / 100)) -
+        insuranceFold.totalValue -
+        taxFold.totalValue;
   }
 
   static String calculatePriceFoldString(

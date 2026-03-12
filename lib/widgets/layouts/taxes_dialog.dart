@@ -1,40 +1,27 @@
-import 'package:exui/material.dart';
-import 'package:genesis/screens/payroll/payroll_user_history.dart';
 import 'package:get/get.dart';
-import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/utils/toast.dart';
-import 'package:genesis/utils/number_utils.dart';
-import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
-import 'package:genesis/widgets/inputs/default_formfield.dart';
 import 'package:genesis/controllers/payroll_controller.dart';
 
-class EmployeeDialog extends StatefulWidget {
-  final User emp;
+class TaxesDialog extends StatefulWidget {
   final Function setDialogState;
-  const EmployeeDialog({
-    super.key,
-    required this.emp,
-    required this.setDialogState,
-  });
+  const TaxesDialog({super.key, required this.setDialogState});
 
   @override
-  State<EmployeeDialog> createState() => _EmployeeDialogState();
+  State<TaxesDialog> createState() => _TaxesDialogState();
 }
 
-class _EmployeeDialogState extends State<EmployeeDialog> {
-  late final _paymentController = TextEditingController(
-    text: widget.emp.payment.toString(),
-  );
+class _TaxesDialogState extends State<TaxesDialog> {
   final _payrollController = Get.find<PayrollController>();
+  late List<DeductionItem> taxes;
   @override
   void initState() {
+    taxes = _payrollController.taxes;
     super.initState();
   }
 
-  late List<DeductionItem> insurances = widget.emp.insurance;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -47,28 +34,22 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: const Color(0xFF0F172A),
-                  child: Text(
-                    widget.emp.firstName[0],
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "${widget.emp.firstName} ${widget.emp.lastName}",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Obx(
+                        () => Text(
+                          "Taxes List(${_payrollController.taxes.length})",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       Text(
-                        widget.emp.role,
+                        GenesisDate.formatNormalDate(DateTime.now()),
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ],
@@ -80,67 +61,17 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 ),
               ],
             ),
-            14.gapHeight,
-            "View Payrolls"
-                .text(style: TextStyle())
-                .outlinedButton(
-                  onPressed: () =>
-                      Get.to(() => PayrollUserHistory(user: widget.emp)),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadiusGeometry.circular(3),
-                    ),
-                  ),
-                )
-                .sizedBox(width: double.infinity),
             const Divider(height: 32),
-            DefaultFormfield(
-              keyboardType: TextInputType.number,
-              controller: _paymentController,
-              label: "Payment",
-              hint: "Amount in USD",
-              icon: Icons.money,
-            ),
-            "Leaving 0 or empty for payment will not generate payslip for the member"
-                .text(style: TextStyle(fontSize: 10)),
-            const Divider(height: 32),
-
-            const SizedBox(height: 20),
-            _sectionHeader("Insurance", Icons.security, () {
-              _addDeduction(
-                widget.emp,
-                widget.emp.insurance,
-                widget.setDialogState,
-              );
+            _sectionHeader("Taxes", Icons.security, () {
+              _addDeduction(widget.setDialogState);
             }),
-            ...insurances.map(
+            ...taxes.map(
               (i) => _deductionTile(i, () {
-                widget.setDialogState(() => insurances.remove(i));
+                widget.setDialogState(() => taxes.remove(i));
                 setState(() {}); // Update the main dashboard net pay
               }),
             ),
-            13.gapHeight,
-            _sectionHeader("Taxes", Icons.security, null),
-            6.gapHeight,
-            ..._payrollController.taxes.map((i) => _deductionTile(i, null)),
             const Divider(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Calculated Net:",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  "${NumberUtils.calculatePriceFoldString(widget.emp, insurances: insurances, taxes: _payrollController.taxes)}",
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -155,7 +86,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 ),
                 onPressed: () => _saveChanges(),
                 child: Obx(
-                  () => _payrollController.updatingUserPayroll.value
+                  () => _payrollController.addingPayrollTax.value
                       ? WhiteLoader()
                       : const Text("Save Changes"),
                 ),
@@ -167,11 +98,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     );
   }
 
-  void _addDeduction(
-    User emp,
-    List<DeductionItem> list,
-    Function setDialogState,
-  ) {
+  void _addDeduction(Function setDialogState) {
     final nameController = TextEditingController();
     final valController = TextEditingController();
     DeductionType selectedType = DeductionType.percentage;
@@ -216,7 +143,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             TextButton(
               onPressed: () {
                 setDialogState(() {
-                  list.add(
+                  taxes.add(
                     DeductionItem(
                       name: nameController.text,
                       value: double.tryParse(valController.text) ?? 0,
@@ -235,7 +162,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     );
   }
 
-  Widget _sectionHeader(String title, IconData icon, VoidCallback? onAdd) {
+  Widget _sectionHeader(String title, IconData icon, VoidCallback onAdd) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -246,20 +173,19 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-        if (onAdd != null)
-          IconButton(
-            onPressed: onAdd,
-            icon: const Icon(
-              Icons.add_circle_outline,
-              color: Colors.blue,
-              size: 20,
-            ),
+        IconButton(
+          onPressed: onAdd,
+          icon: const Icon(
+            Icons.add_circle_outline,
+            color: Colors.blue,
+            size: 20,
           ),
+        ),
       ],
     );
   }
 
-  Widget _deductionTile(DeductionItem item, VoidCallback? onRemove) {
+  Widget _deductionTile(DeductionItem item, VoidCallback onRemove) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -279,38 +205,20 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 8),
-          if (onRemove != null)
-            InkWell(
-              onTap: onRemove,
-              child: const Icon(
-                Icons.remove_circle,
-                color: Colors.redAccent,
-                size: 18,
-              ),
+          InkWell(
+            onTap: onRemove,
+            child: const Icon(
+              Icons.remove_circle,
+              color: Colors.redAccent,
+              size: 18,
             ),
+          ),
         ],
       ),
     );
   }
 
   void _saveChanges() async {
-    final amount = _paymentController.text.trim().isEmpty
-        ? 0.0
-        : double.tryParse(_paymentController.text);
-    if (amount == null)
-      return Toaster.showError("invalid number entered on payment");
-    final response = await _payrollController.updateUserPayroll(
-      amount,
-      insurances,
-      widget.emp.id,
-    );
-    if (response) {
-      Toaster.showSuccess("updated success");
-      if (mounted) {
-        widget.emp.payment = amount;
-        widget.setDialogState(() {});
-        setState(() {});
-      }
-    }
+    await _payrollController.addPayrollTax(taxes);
   }
 }

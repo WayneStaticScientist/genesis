@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'package:exui/material.dart';
 import 'package:genesis/screens/payroll/payroll_history.dart';
 import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/widgets/layouts/taxes_dialog.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +72,12 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
             ),
             expandedHeight: 220,
             actions: [
+              "Taxes"
+                  .text(style: TextStyle(color: Colors.white))
+                  .textIconButton(
+                    onPressed: () => _showTaxesDialog(),
+                    icon: Icon(Icons.percent, color: Colors.white),
+                  ),
               IconButton(
                 onPressed: () => Get.to(() => PayrollHistory()),
                 icon: Icon(Icons.refresh, color: Colors.white),
@@ -169,7 +178,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      "Jan Cycle",
+                      "${GenesisDate.getMonthName(DateTime.now().month)} Cycle",
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontSize: 12,
@@ -293,19 +302,23 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            label: const Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: Colors.blue),
-                SizedBox(width: 12),
-                Text(
-                  "Process Full Payroll",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+            label: Obx(
+              () => _payrollController.paymentProceeding.value
+                  ? WhiteLoader()
+                  : const Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.blue),
+                        SizedBox(width: 12),
+                        Text(
+                          "Process Full Payroll",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -357,6 +370,22 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
               borderRadius: BorderRadius.circular(28),
             ),
             child: EmployeeDialog(emp: emp, setDialogState: setDialogState),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showTaxesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: TaxesDialog(setDialogState: setDialogState),
           );
         },
       ),
