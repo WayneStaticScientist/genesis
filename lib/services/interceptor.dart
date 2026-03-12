@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:genesis/models/response_model.dart';
@@ -18,7 +18,7 @@ class AuthenticationInterceptor extends Interceptor {
     options.headers["Authorization"] =
         TokenModel.fromStorage().accessTokenHeader;
     options.headers["device"] = await getDeviceId();
-    options.headers['User-Agent'] = 'Mistpos';
+    options.headers['User-Agent'] = 'Genesis';
     return handler.next(options);
   }
 
@@ -85,7 +85,7 @@ Future<String> getDeviceId() async {
   id = box.read('deviceIdapp');
   if (id != null && id.trim().isNotEmpty) return id;
   id =
-      "x${10000 + Random().nextInt(100000)}-${DateTime.now().toIso8601String()}";
+      "x${10000 + math.Random().nextInt(100000)}-${DateTime.now().toIso8601String()}";
   box.write("deviceIdapp", id);
   return id;
 }

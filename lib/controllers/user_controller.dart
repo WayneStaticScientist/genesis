@@ -73,8 +73,11 @@ class UserController extends GetxController {
 
   void validateUser() async {
     if (user.value == null) return;
+    log("user is there");
     loading.value = true;
     final response = await AuthenticationInterceptor.requestToken();
+    log("user fetched response is ${response.statusCode}");
+
     loading.value = false;
     if (response.statusCode == 401) {
       user.value = null;

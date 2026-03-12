@@ -1,10 +1,10 @@
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/controllers/payroll_controller.dart';
-import 'package:genesis/models/payroll_details.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/widgets/layouts/date_stepper.dart';
-import 'package:get/get.dart';
+import 'package:genesis/controllers/payroll_controller.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 
 class PayrollHistory extends StatefulWidget {
   const PayrollHistory({super.key});
@@ -17,8 +17,6 @@ class _PayrollHistoryState extends State<PayrollHistory> {
   final _payrollController = Get.find<PayrollController>();
 
   late DateTimeRange _selectedRange;
-  List<PayrollDetails> _filteredPayroll = [];
-
   @override
   void initState() {
     super.initState();
@@ -29,9 +27,12 @@ class _PayrollHistoryState extends State<PayrollHistory> {
     filterResults();
   }
 
-  void _filterData(DateTimeRange? range) {}
-  double get _totalGross =>
-      _filteredPayroll.fold(0, (sum, item) => sum + item.grossTotal);
+  void _filterData(DateTimeRange range) {
+    setState(() {
+      _selectedRange = range;
+    });
+    filterResults();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,12 +98,16 @@ class _PayrollHistoryState extends State<PayrollHistory> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          Text(
-                            NumberUtils.formatCurrency(_totalGross),
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
+                          Obx(
+                            () => Text(
+                              NumberUtils.formatCurrency(
+                                _payrollController.totalGrossHistory.value,
+                              ),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              ),
                             ),
                           ),
                         ],
@@ -117,11 +122,13 @@ class _PayrollHistoryState extends State<PayrollHistory> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          Text(
-                            "${_filteredPayroll.length}",
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                          Obx(
+                            () => Text(
+                              "${_payrollController.payrollHistory.length}",
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -131,74 +138,76 @@ class _PayrollHistoryState extends State<PayrollHistory> {
                 ],
               ),
             ),
-            _filteredPayroll.isEmpty
-                ? Text("No payroll data found for this period.")
-                : ListView.separated(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredPayroll.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final item = _filteredPayroll[index];
-                      return Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: colorScheme.outlineVariant),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: colorScheme.primary.withAlpha(
-                                  30,
-                                ),
-                                child: Icon(
-                                  Icons.payments_outlined,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      GenesisDate.formatNormalDate(
-                                        item.createdAt,
-                                      ),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "${item.totalEmployees} Employees",
-                                      style: TextStyle(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                NumberUtils.formatCurrency(item.grossTotal),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 16,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
+            Obx(() {
+              if (_payrollController.fetchingPayrollHistory.value) {
+                return MaterialLoader();
+              }
+              if (_payrollController.payrollHistory.isEmpty) {
+                return Text("No payroll data found for this period.");
+              }
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: _payrollController.payrollHistory.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final item = _payrollController.payrollHistory[index];
+                  return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: colorScheme.outlineVariant),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: colorScheme.primary.withAlpha(30),
+                            child: Icon(
+                              Icons.payments_outlined,
+                              color: colorScheme.primary,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  GenesisDate.formatNormalDate(item.createdAt),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${item.totalEmployees} Employees",
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            NumberUtils.formatCurrency(item.grossTotal),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
           ],
         ),
       ),
