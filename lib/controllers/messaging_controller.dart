@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:genesis/utils/toast.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/messsage_model.dart';
 import 'package:genesis/utils/database_carrier.dart';

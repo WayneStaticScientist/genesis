@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:genesis/models/payroll_details.dart';
 import 'package:get/get.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/models/user_model.dart';
@@ -9,6 +11,7 @@ class PayrollController extends GetxController {
   RxDouble grossTotal = 0.0.obs;
   RxBool findingEmployees = RxBool(false);
   RxList<User> employees = RxList([]);
+
   Future<void> findEmployees({
     int page = 1,
     int limit = 1000,
@@ -37,6 +40,7 @@ class PayrollController extends GetxController {
           }).toList() ??
           [],
     );
+    fetchLastPayroll();
     return Future.value();
   }
 
@@ -94,6 +98,41 @@ class PayrollController extends GetxController {
     Toaster.showSuccess2(
       "Payment Success",
       "payroll have been emitted for all events",
+    );
+  }
+
+  Rx<PayrollDetails?> lastPayrollDetails = Rx<PayrollDetails?>(null);
+  RxBool fetchingLastPayroll = false.obs;
+  void fetchLastPayroll() async {
+    if (fetchingLastPayroll.value) return;
+    fetchingLastPayroll.value = true;
+    final response = await Net.get("/payroll/last-payroll");
+    fetchingLastPayroll.value = false;
+    if (response.hasError) return;
+    lastPayrollDetails.value = PayrollDetails.fromJSON(
+      response.body['lastPayroll'],
+    );
+  }
+
+  RxList<PayrollDetails> payrollHistory = RxList<PayrollDetails>();
+  RxDouble totalGrossHistory = 0.0.obs;
+  RxBool fetchingPayrollHistory = false.obs;
+  void fetchPayRowHistory(DateTimeRange range) async {
+    payrollHistory.clear();
+    fetchingPayrollHistory.value = true;
+    final response = await Net.get(
+      "/payroll/range?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}",
+    );
+    fetchingPayrollHistory.value = false;
+    if (response.hasError) return;
+    payrollHistory.value =
+        (response.body['list'] as List<dynamic>?)
+            ?.map((e) => PayrollDetails.fromJSON(e))
+            .toList() ??
+        [];
+    totalGrossHistory.value = payrollHistory.fold(
+      0.0,
+      (prev, data) => prev + data.grossTotal,
     );
   }
 }

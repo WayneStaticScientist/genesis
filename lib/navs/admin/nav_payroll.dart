@@ -1,6 +1,8 @@
 import 'dart:async';
-import 'package:exui/exui.dart';
+import 'package:genesis/screens/payroll/payroll_history.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/utils/number_utils.dart';
@@ -66,6 +68,12 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
               },
             ),
             expandedHeight: 220,
+            actions: [
+              IconButton(
+                onPressed: () => Get.to(() => PayrollHistory()),
+                icon: Icon(Icons.refresh, color: Colors.white),
+              ),
+            ],
             pinned: true,
             backgroundColor: const Color(0xFF0F172A),
             flexibleSpace: FlexibleSpaceBar(
@@ -104,6 +112,16 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
                             ),
+                          ),
+                          Obx(
+                            () =>
+                                _payrollController.lastPayrollDetails.value !=
+                                    null
+                                ? "Last Cycle - ${GenesisDate.getInformalDate(_payrollController.lastPayrollDetails.value!.createdAt)} "
+                                      .text(
+                                        style: TextStyle(color: Colors.white),
+                                      )
+                                : 0.gapWidth,
                           ),
                           const SizedBox(height: 16),
                           Row(
