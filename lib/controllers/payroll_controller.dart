@@ -127,9 +127,11 @@ class PayrollController extends GetxController {
     final response = await Net.get("/payroll/last-payroll");
     fetchingLastPayroll.value = false;
     if (response.hasError) return;
-    lastPayrollDetails.value = PayrollDetails.fromJSON(
-      response.body['lastPayroll'],
-    );
+    if (response.body['lastPayroll'] == null ||
+        response.body['lastPayroll']['createdAt'] == null)
+      lastPayrollDetails.value = PayrollDetails.fromJSON(
+        response.body['lastPayroll'],
+      );
   }
 
   RxList<PayrollDetails> payrollHistory = RxList<PayrollDetails>();

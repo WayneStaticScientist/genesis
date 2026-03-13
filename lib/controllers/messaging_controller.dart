@@ -55,10 +55,11 @@ class MessagingController extends GetxController {
       sound: true,
     );
     subribeToAdmin();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (message.data['type'] == "message") {
-        return _decodeMessage(message.data, message);
+        return await _decodeMessage(message.data, message);
       }
+      GenesisNotificationHandler.showNotification(message);
     });
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {});
   }
@@ -124,7 +125,10 @@ class MessagingController extends GetxController {
     return true;
   }
 
-  void _decodeMessage(Map<String, dynamic> data, RemoteMessage rmessage) async {
+  Future<void> _decodeMessage(
+    Map<String, dynamic> data,
+    RemoteMessage rmessage,
+  ) async {
     final isar = IsarStatic.isar;
     if (isar == null) return;
     final message = MesssageModel.fromJSON(data);
@@ -150,7 +154,7 @@ class MessagingController extends GetxController {
       Get.snackbar("Inchat Message", "check your last message");
       return;
     }
-    GenesisNotificationHandler.showNotification(rmessage);
+
     _syncMessages();
   }
 

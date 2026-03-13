@@ -1,4 +1,3 @@
-import 'package:genesis/controllers/payroll_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -13,6 +12,7 @@ import 'package:genesis/controllers/trips_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:genesis/controllers/payroll_controller.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
 import 'package:genesis/services/background_message_handler.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
