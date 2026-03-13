@@ -71,16 +71,39 @@ class _AdminNavMainState extends State<AdminNavMain> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 30),
-            _buildQuickStatsGrid(data),
-            const SizedBox(height: 30),
-            _buildAnalyticsSection(data),
-          ],
+          children: [_buildHeader(), _buildMainSection()],
         ),
       ),
     );
+  }
+
+  Widget _buildMainSection() {
+    return Obx(() {
+      if (_statsController.isLoading.value) {
+        return CircularProgressIndicator(color: Color(0xFF6C5DD3));
+      }
+      if (_statsController.errorState.value.isNotEmpty ||
+          _statsController.stats.value == null) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 10),
+            Text("Error: ${_statsController.errorState.value}"),
+            TextButton(
+              onPressed: () => _statsController.fetchStats(),
+              child: const Text("Retry"),
+            ),
+          ],
+        );
+      }
+      return [
+        const SizedBox(height: 30),
+        _buildQuickStatsGrid(_statsController.stats.value!),
+        const SizedBox(height: 30),
+        _buildAnalyticsSection(_statsController.stats.value!),
+      ].column(mainAxisSize: MainAxisSize.min);
+    });
   }
 
   // --- Header ---

@@ -158,7 +158,12 @@ class _GNavBarState extends State<GNavBar> {
                         "Payroll",
                         Icons.account_balance_wallet_outlined,
                       ).visibleIf(!isDriver),
-
+                      _buildNavItem(
+                        context,
+                        'my_payments',
+                        "My Payments",
+                        Icons.account_balance,
+                      ),
                       const SizedBox(height: 24),
                       _sectionHeader("SYSTEM"),
                       _buildNavItem(

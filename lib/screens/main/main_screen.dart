@@ -1,3 +1,4 @@
+import 'package:genesis/screens/payroll/payroll_user_history.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
         ? "tracking"
         : "dashboard";
     widgetTree = {
+      "my_payments": PayrollUserHistory(user: _userController.user.value!),
       "trips": NavTrips(triggerKey: _scaffoldKey),
       "chats": NavChats(triggerKey: _scaffoldKey),
       "dashboard": AdminNavMain(triggerKey: _scaffoldKey),
