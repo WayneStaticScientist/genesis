@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/widgets/layouts/employee_card.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -21,12 +25,12 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
   Timer? _debounceTimer;
 
   // Mocking the controllers based on your structure
-  // final _userController = Get.find<UserController>();
+  final _userController = Get.find<UserController>();
 
   @override
   void initState() {
     super.initState();
-    // _userController.fetchEmployees();
+    filter();
   }
 
   @override
@@ -78,7 +82,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddEmployeeSheet(context),
-        backgroundColor: GTheme.primary(),
+        backgroundColor: GTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           "New Staff",
@@ -100,7 +104,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
           widget.triggerKey?.currentState?.openDrawer();
         },
       ),
-      backgroundColor: GTheme.primary(),
+      backgroundColor: GTheme.primary,
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: false,
         titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
@@ -117,7 +121,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [GTheme.primary(), const Color(0xFF4F46E5)],
+              colors: [GTheme.primary, const Color(0xFF4F46E5)],
             ),
           ),
         ),
@@ -152,9 +156,9 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withAlpha(30),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.2), width: 1),
+          border: Border.all(color: color..withAlpha(35), width: 1),
         ),
         child: Column(
           children: [
@@ -171,7 +175,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: color.withOpacity(0.8),
+                color: color.withAlpha(0),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -191,7 +195,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withAlpha(30),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -203,7 +207,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
           decoration: InputDecoration(
             hintText: "Find employee by name or email...",
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            prefixIcon: Icon(LineIcons.search, color: GTheme.primary()),
+            prefixIcon: Icon(LineIcons.search, color: GTheme.primary),
             suffixIcon: Icon(LineIcons.filter, color: Colors.grey.shade400),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 17),
@@ -214,22 +218,23 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
   }
 
   Widget _buildEmployeeList() {
-    // In real app, wrap with Obx
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return _EmployeeCard(
-            name: "John Doe #${index + 1}",
-            role: index % 3 == 0
-                ? "Admin"
-                : (index % 3 == 1 ? "Manager" : "Driver"),
-            email: "john.doe@genesis.com",
-            status: index % 4 == 0 ? "On Trip" : "Active",
-          );
-        }, childCount: 10),
-      ),
-    );
+    return Obx(() {
+      if (_userController.findingChats.value) {
+        return SliverFillRemaining(child: MaterialLoader().center());
+      }
+      if (_userController.foundChats.isEmpty) {
+        return SliverFillRemaining(child: "no employees found".text());
+      }
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final user = _userController.foundChats[index];
+            return EmployeeCard(user: user);
+          }, childCount: _userController.foundChats.length),
+        ),
+      );
+    });
   }
 
   void _showAddEmployeeSheet(BuildContext context) {
@@ -239,101 +244,13 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
       backgroundColor: Colors.transparent,
     );
   }
+
+  void filter() {
+    _userController.findChats(query: _searchKey);
+  }
 }
 
 // --- SUB-WIDGET: EMPLOYEE CARD ---
-class _EmployeeCard extends StatelessWidget {
-  final String name, role, email, status;
-  const _EmployeeCard({
-    required this.name,
-    required this.role,
-    required this.email,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Color roleColor = role == "Admin"
-        ? Colors.indigo
-        : (role == "Manager" ? Colors.amber : Colors.teal);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: roleColor.withOpacity(0.1),
-            child: Text(
-              name[0],
-              style: TextStyle(
-                color: roleColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: roleColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        role,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: roleColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  email,
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          const Icon(LineIcons.angleRight, size: 18, color: Colors.grey),
-        ],
-      ),
-    );
-  }
-}
 
 // --- SUB-WIDGET: ADD EMPLOYEE MODAL ---
 class AddEmployeeModal extends StatefulWidget {
@@ -396,13 +313,11 @@ class _AddEmployeeModalState extends State<AddEmployeeModal> {
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? GTheme.primary()
-                          : Colors.grey.shade50,
+                      color: isSelected ? GTheme.primary : Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
-                            ? GTheme.primary()
+                            ? GTheme.primary
                             : Colors.grey.shade200,
                       ),
                     ),
@@ -437,7 +352,7 @@ class _AddEmployeeModalState extends State<AddEmployeeModal> {
             child: ElevatedButton(
               onPressed: () => Get.back(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: GTheme.primary(),
+                backgroundColor: GTheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

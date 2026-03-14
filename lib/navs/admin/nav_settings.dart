@@ -51,7 +51,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Adjust the interface for low light",
               trailing: Switch.adaptive(
                 value: _darkMode,
-                activeColor: GTheme.primary(),
+                activeColor: GTheme.primary,
                 onChanged: (val) => setState(() => _darkMode = val),
               ),
             ),
@@ -65,7 +65,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Approve routine requests automatically",
               trailing: Switch.adaptive(
                 value: _autoApproveMaintenance,
-                activeColor: GTheme.primary(),
+                activeColor: GTheme.primary,
                 onChanged: (val) =>
                     setState(() => _autoApproveMaintenance = val),
               ),
@@ -77,7 +77,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Alerts for new trip assignments",
               trailing: Switch.adaptive(
                 value: _notificationsEnabled,
-                activeColor: GTheme.primary(),
+                activeColor: GTheme.primary,
                 onChanged: (val) => setState(() => _notificationsEnabled = val),
               ),
             ),
@@ -92,7 +92,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Use FaceID or Fingerprint",
               trailing: Switch.adaptive(
                 value: _biometricAuth,
-                activeColor: GTheme.primary(),
+                activeColor: GTheme.primary,
                 onChanged: (val) => setState(() => _biometricAuth = val),
               ),
             ),
@@ -212,7 +212,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               Text(
                 "${_radiusAdjustment.toInt()} km",
                 style: TextStyle(
-                  color: GTheme.primary(),
+                  color: GTheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -227,7 +227,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             value: _radiusAdjustment,
             min: 1,
             max: 50,
-            activeColor: GTheme.primary(),
+            activeColor: GTheme.primary,
             inactiveColor: Colors.grey.shade100,
             onChanged: (val) => setState(() => _radiusAdjustment = val),
           ),
