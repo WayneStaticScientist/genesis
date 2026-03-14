@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/screens/employees/employees_edit.dart';
+import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 
 class EmployeeCard extends StatelessWidget {
@@ -8,9 +10,9 @@ class EmployeeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color roleColor = user.role == "Admin"
+    Color roleColor = user.role == "admin"
         ? Colors.indigo
-        : (user.role == "Manager" ? Colors.amber : Colors.teal);
+        : (user.role == "manager" ? Colors.amber : Colors.teal);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -27,64 +29,67 @@ class EmployeeCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: roleColor.withAlpha(30),
-            child: Text(
-              user.firstName[0],
-              style: TextStyle(
-                color: roleColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+      child: InkWell(
+        onTap: () => Get.to(() => EmployeesEditScreen(user: user)),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: roleColor.withAlpha(30),
+              child: Text(
+                user.firstName[0],
+                style: TextStyle(
+                  color: roleColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '${user.firstName} ${user.lastName}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: roleColor.withAlpha(30),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        user.role,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: roleColor,
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '${user.firstName} ${user.lastName}',
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                Text(
-                  user.email,
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: roleColor.withAlpha(30),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          user.role,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: roleColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    user.email,
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(LineIcons.angleRight, size: 18, color: Colors.grey),
-        ],
+            const Icon(LineIcons.angleRight, size: 18, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }

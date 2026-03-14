@@ -351,4 +351,20 @@ class UserController extends GetxController {
     );
     return Future.value();
   }
+
+  Rx<bool> registeringEmployee = RxBool(false);
+  Future<bool> registerEmployee(dynamic user) async {
+    if (registeringEmployee.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    registeringEmployee.value = true;
+    final response = await Net.post("/employee/register", data: {"user": user});
+    registeringEmployee.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    return true;
+  }
 }

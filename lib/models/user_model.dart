@@ -26,6 +26,7 @@ class User {
   final String? chatToken;
   final String? companyId;
   final String? experience;
+  final List<String> permissions;
   @ignore
   final PopulatedTripModel? trip;
   @ignore
@@ -38,6 +39,7 @@ class User {
   List<DeductionItem> insurance;
 
   User({
+    required this.permissions,
     this.notifications = 0,
     this.lastMessage = '',
     required this.id,
@@ -83,12 +85,18 @@ class User {
       'companyId': companyId,
       "chatToken": chatToken,
       'experience': experience,
+      'permissions': permissions,
       'currentVehicle': currentVehicle?.toJson(),
     };
   }
 
   factory User.fromJSON(Map<String, dynamic> data) {
     return User(
+      permissions:
+          (data['permissions'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       payment: (data['payment'] as num?)?.toDouble() ?? 0,
       taxes: data['taxes'] != null
           ? (data['taxes'] as List<dynamic>)
