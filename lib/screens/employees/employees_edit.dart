@@ -24,10 +24,10 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
   late String _selectedRole = widget.user.role; // Default role
   bool _obscurePassword = true;
   final _userController = Get.find<UserController>();
-  late List<String> permissions = List.empty(growable: true);
+  late List<String> permissions = widget.user.permissions;
   // Manager Specific Permissions
   late final fullNameController = TextEditingController(
-    text: "${widget.user.firstName} ${widget.user.lastMessage}",
+    text: "${widget.user.firstName} ${widget.user.lastName}",
   );
   late final emailController = TextEditingController(text: widget.user.email);
   late final passwordController = TextEditingController();
@@ -43,7 +43,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
           onPressed: () => Get.back(),
         ),
         title: const Text(
-          "Add New Employee",
+          "Edit Employee",
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
       ),
@@ -98,11 +98,6 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
                 isPassword: true,
                 obscurePassword: _obscurePassword,
                 controller: passwordController,
-                validator: (String? input) {
-                  if (input == null || input.trim().length < 3)
-                    return "invalid password";
-                  return null;
-                },
                 suffix: IconButton(
                   icon: Icon(
                     _obscurePassword ? LineIcons.eyeSlash : LineIcons.eye,
@@ -146,7 +141,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
                     () => _userController.registeringEmployee.value
                         ? WhiteLoader()
                         : const Text(
-                            "Create Employee Account",
+                            "Update Employee Account",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -169,7 +164,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Onboard Talent",
+          '${widget.user.firstName} ${widget.user.lastName}',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
@@ -179,7 +174,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          "Fill in the credentials to provide system access.",
+          "If you leave the password field empty password wont be changed.",
           style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
         ),
       ],
@@ -314,8 +309,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
     );
     final firstName = filteredName.trim().split(" ")[0];
     final lastName = filteredName.trim().split(" ")[1];
-    final response = await _userController.registerEmployee({
-      "trips": 0,
+    final response = await _userController.updateEmployee({
       "email": emailController.text.replaceAll(" ", '').toLowerCase(),
       "lastName": lastName,
       "password": passwordController.text,
@@ -323,11 +317,10 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
       "role": _selectedRole,
       "country": _userController.user.value!.country,
       "permissions": _selectedRole == "manager" ? permissions : [],
-    });
+    }, widget.user.id);
     if (response && mounted) {
       _userController.findChats();
-      Get.back();
-      Toaster.showSuccess('Employee added success');
+      Toaster.showSuccess('Employee updated success');
     }
   }
 }

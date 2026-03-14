@@ -367,4 +367,19 @@ class UserController extends GetxController {
     }
     return true;
   }
+
+  Future<bool> updateEmployee(dynamic user, String userId) async {
+    if (registeringEmployee.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    registeringEmployee.value = true;
+    final response = await Net.put("/employee/$userId", data: {"user": user});
+    registeringEmployee.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    return true;
+  }
 }
