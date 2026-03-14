@@ -1,3 +1,5 @@
+import 'package:genesis/navs/admin/nav_employee.dart';
+import 'package:genesis/navs/admin/nav_settings.dart';
 import 'package:genesis/screens/payroll/payroll_user_history.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
@@ -34,6 +36,8 @@ class _MainScreenState extends State<MainScreen> {
         ? "tracking"
         : "dashboard";
     widgetTree = {
+      "employees": AdminNavEmployees(triggerKey: _scaffoldKey),
+      "settings": AdminSettingsScreen(triggerKey: _scaffoldKey),
       "my_payments": PayrollUserHistory(user: _userController.user.value!),
       "trips": NavTrips(triggerKey: _scaffoldKey),
       "chats": NavChats(triggerKey: _scaffoldKey),
