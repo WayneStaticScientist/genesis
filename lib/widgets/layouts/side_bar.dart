@@ -148,12 +148,6 @@ class _GNavBarState extends State<GNavBar> {
                       ),
                       _buildNavItem(
                         context,
-                        'reports',
-                        "Analytics",
-                        Icons.analytics_outlined,
-                      ).visibleIf(!isDriver),
-                      _buildNavItem(
-                        context,
                         'payrolls',
                         "Payroll",
                         Icons.account_balance_wallet_outlined,
