@@ -8,6 +8,7 @@ class LiveTrackModel {
   final double fuelLevel;
   final DateTime timestamp;
   final double rotation;
+  final String state;
 
   LiveTrackModel({
     required this.user,
@@ -19,10 +20,12 @@ class LiveTrackModel {
     required this.fuelLevel,
     required this.timestamp,
     required this.rotation,
+    required this.state,
   });
   factory LiveTrackModel.fromJSON(dynamic data) {
     return LiveTrackModel(
       carModel: data['carModel'] ?? '',
+      state: data['state'] ?? '',
       user: data['user'] ?? '',
       rotation: (data['rotation'] as num?)?.toDouble() ?? 0,
       lat: (data['lat'] as num?)?.toDouble() ?? 0,

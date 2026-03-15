@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:genesis/screens/chats/chat_screen.dart';
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:get/get.dart';
@@ -59,7 +61,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     }
 
     _locationWorker = ever(_socketController.liveTrackModel, (data) async {
-      if (data != null) {
+      if (data != null && _automaticTracking) {
         final controller = await _mapController.future;
         controller.animateCamera(
           CameraUpdate.newLatLng(LatLng(data.lat, data.lng)),
@@ -95,6 +97,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     super.dispose();
   }
 
+  bool _automaticTracking = true;
   @override
   Widget build(BuildContext context) {
     final isDeskop = MediaQuery.of(context).size.width > ScreenSizes.DESKTOP_W;
@@ -104,6 +107,11 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           // 1. GOOGLE MAP LAYER
           Obx(() {
             final liveData = _socketController.liveTrackModel.value;
+            final destination =
+                _socketController.liveTrackDriver.value?.trip?.location;
+            final origin =
+                _socketController.liveTrackDriver.value?.trip?.locationOrigin;
+            final trip = _socketController.liveTrackDriver.value?.trip;
             final hasData = liveData != null;
             final currentPos = hasData
                 ? LatLng(liveData.lat, liveData.lng)
@@ -121,6 +129,32 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
               zoomControlsEnabled: false,
               myLocationButtonEnabled: false,
               markers: {
+                if (destination != null)
+                  Marker(
+                    markerId: const MarkerId('green_marker_1'),
+                    position: LatLng(destination.lat, destination.lng),
+                    infoWindow: InfoWindow(
+                      title: 'destination',
+                      snippet: (trip?.destination).empty("not specified"),
+                    ),
+                    // THIS IS THE KEY PART:
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen,
+                    ),
+                  ),
+                if (origin != null)
+                  Marker(
+                    markerId: const MarkerId('green_marker_1'),
+                    position: LatLng(origin.lat, origin.lng),
+                    infoWindow: InfoWindow(
+                      title: 'origin',
+                      snippet: (trip?.origin).empty("not specified"),
+                    ),
+                    // THIS IS THE KEY PART:
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueRed,
+                    ),
+                  ),
                 if (hasData)
                   Marker(
                     markerId: const MarkerId('live_vehicle'),
@@ -172,7 +206,51 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       .visibleIf(widget.triggerKey != null && !isDeskop),
             ),
           ),
-
+          Positioned(
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child:
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _automaticTracking = !_automaticTracking;
+                        });
+                      },
+                      style: ButtonStyle(
+                        iconColor: WidgetStateProperty.all(Colors.black87),
+                        backgroundColor: WidgetStateProperty.all(Colors.white),
+                      ),
+                      icon: Icon(
+                        Icons.camera,
+                        color: _automaticTracking ? Colors.green : null,
+                      ),
+                    ).decoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        border: BoxBorder.all(
+                          width: 4,
+                          color: _automaticTracking
+                              ? Colors.green
+                              : Colors.transparent,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(30),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                    ),
+              ),
+            ),
+          ),
           // 3. ACTIVE ASSETS CAROUSEL (Simplified)
 
           // 4. DRAGGABLE BOTTOM SHEET
@@ -207,14 +285,22 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       // Driver Info
                       Obx(() {
                         final user = _socketController.liveTrackDriver.value;
+                        final liveData = _socketController.liveTrackModel.value;
                         final isOnTrip = (user?.trip?.status == "Active");
+                        Duration? difference;
+                        if (liveData != null) {
+                          difference = DateTime.now().difference(
+                            liveData.timestamp,
+                          );
+                        }
                         return Row(
                           children: [
                             CircleAvatar(
                               radius: 25,
-                              child:
-                                  ("${user?.firstName ?? 'Driver'} ${user?.lastName ?? ''}")[0]
-                                      .text(),
+                              child: ("Driver".from(
+                                user?.firstName,
+                                user?.lastName,
+                              ))[0].text(),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -222,18 +308,32 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "${user?.firstName ?? 'Driver'} ${user?.lastName ?? ''}",
+                                    "Driver".from(
+                                      user?.firstName,
+                                      user?.lastName,
+                                    ),
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    isOnTrip ? "On Trip" : "Idle",
+                                    isOnTrip.lors(
+                                      (liveData == null).lors(
+                                        "Searching....",
+                                        (liveData?.state == 'not-found').lors(
+                                          "Idle",
+                                          ((difference?.inMinutes ?? 0) < 2)
+                                              .lors("Active", "Offline"),
+                                        ),
+                                      ),
+                                      "Idle",
+                                    ),
                                     style: TextStyle(
-                                      color: isOnTrip
-                                          ? Colors.green
-                                          : Colors.grey,
+                                      color: isOnTrip.lorc(
+                                        Colors.green,
+                                        Colors.grey,
+                                      ),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -259,13 +359,27 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Obx(
-                            () => _buildTelemetryItem(
+                          Obx(() {
+                            final liveData =
+                                _socketController.liveTrackModel.value;
+                            Duration? difference;
+                            if (liveData != null) {
+                              difference = DateTime.now().difference(
+                                liveData.timestamp,
+                              );
+                            }
+                            return _buildTelemetryItem(
                               LineIcons.lightningBolt,
-                              "${VehicleUtlis.speedToStandardUnits(_socketController.liveTrackModel.value?.speed)}",
+                              (difference == null).lors(
+                                VehicleUtlis.speedToStandardUnits(0),
+                                ((difference?.inMinutes ?? 0) > 2).lors(
+                                  VehicleUtlis.speedToStandardUnits(0),
+                                  "${VehicleUtlis.speedToStandardUnits(_socketController.liveTrackModel.value?.speed)}",
+                                ),
+                              ),
                               "Speed",
-                            ),
-                          ),
+                            );
+                          }),
                           GestureDetector(
                             onTap: _showFuelManagementOptions,
                             child: Obx(
@@ -326,6 +440,31 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               user?.trip != null &&
                               user?.trip?.status != "Completed",
                         );
+                      }),
+                      Obx(() {
+                        final user = _socketController.liveTrackDriver.value;
+                        if (user == null) return 0.gapHeight;
+                        final isOnTrip =
+                            (user.trip?.status == 'Active' ||
+                            user.trip?.status == "Completed");
+                        return [
+                              ListTile(
+                                title: (user.trip?.destination)
+                                    .empty("No destination Specified")
+                                    .text(),
+                                subtitle: 'Destination'.text(),
+                                leading: Icon(Icons.location_city),
+                              ),
+                              ListTile(
+                                title: (user.trip?.origin)
+                                    .empty("No Origin Specified")
+                                    .text(),
+                                subtitle: 'from'.text(),
+                                leading: Icon(Icons.route_outlined),
+                              ),
+                            ]
+                            .column(mainAxisSize: MainAxisSize.min)
+                            .visibleIf(isOnTrip);
                       }),
                       "Under Review "
                           .text(textAlign: TextAlign.center)
@@ -555,5 +694,3 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     );
   }
 }
-
-// === CUSTOM COMPONENT: PINGING STOP BUTTON ===

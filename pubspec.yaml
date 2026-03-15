@@ -58,6 +58,7 @@ dependencies:
   isar_plus_flutter_libs: ^1.2.2
   path_provider: ^2.1.5
   flutter_local_notifications: ^20.1.0
+  google_maps_custom_marker: ^1.0.3
 #AIzaSyAhm7vhsscg3jTavveSoVoXuZjqVqsx53s
 dev_dependencies:
   flutter_test:

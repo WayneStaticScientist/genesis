@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
 import 'package:get/get.dart';
@@ -109,19 +110,23 @@ class SocketController extends GetxController {
       if (Platform.isAndroid) {
         locationSettings = AndroidSettings(
           accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-          intervalDuration: const Duration(seconds: 30),
+          distanceFilter: 5,
+          intervalDuration: const Duration(seconds: 3), // Or every 3 seconds
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationText: "Tracking your trip...",
+            notificationTitle: "Genesis Live",
+          ),
         );
       } else if (Platform.isIOS) {
         locationSettings = AppleSettings(
           accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
+          distanceFilter: 5,
           pauseLocationUpdatesAutomatically: true,
         );
       } else {
         locationSettings = const LocationSettings(
           accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
+          distanceFilter: 5,
         );
       }
       _positionStreamSubscription =
@@ -226,6 +231,7 @@ class SocketController extends GetxController {
     if (response.hasError) {
       return;
     }
+    log("The response is ${response.body}");
     liveTrackDriver.value = User.fromJSON(response.body);
   }
 }
