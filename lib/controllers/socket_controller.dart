@@ -66,11 +66,18 @@ class SocketController extends GetxController {
     });
   }
 
+  StreamSubscription<Position>? _positionStreamSubscription;
   Future<void> _checkRouteConfigurations() async {
     final user = User.fromStorage();
     if (user?.role == "driver") {
       liveTrackDriver.value = user;
     }
+    if (_positionStreamSubscription != null && user?.trip == null) {
+      _positionStreamSubscription?.cancel();
+      _positionStreamSubscription = null;
+      return;
+    }
+    if (_positionStreamSubscription != null) return;
     if (user == null ||
         user.trip == null ||
         user.currentVehicle == null ||
@@ -80,6 +87,7 @@ class SocketController extends GetxController {
               currentVehicle.value!.id != user!.currentVehicle?.id)) {
         findVehicle(id: user!.currentVehicle!.id, update: true);
       }
+
       return;
     }
     try {
@@ -116,30 +124,39 @@ class SocketController extends GetxController {
           distanceFilter: 10,
         );
       }
+      _positionStreamSubscription =
+          Geolocator.getPositionStream(
+            locationSettings: locationSettings,
+          ).listen((Position position) {
+            // This block runs EVERY time the user moves
+            final data = {
+              'user': user.id,
+              'status': 'active',
+              "speed": position.speed,
+              'lat': position.latitude,
+              'lng': position.longitude,
+              'rotation': position.heading,
+              "car": user.currentVehicle?.id,
+              'timestamp': DateTime.now().toIso8601String(),
+              "location": user.trip?.location?.toJson(),
+              "startPostion": user.trip?.location?.toJson(),
+              "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
+            };
+            if (listenId.value != user.currentVehicle) {
+              listenId.value = user.currentVehicle!.id;
+            }
 
-      // 4. Get Current Position
-      Position position = await Geolocator.getCurrentPosition(
-        locationSettings: locationSettings,
-      );
-
-      // 5. Emit Data
-      final data = {
-        'user': user.id,
-        'status': 'active',
-        'lat': position.latitude,
-        'lng': position.longitude,
-        "car": user.currentVehicle?.id,
-        'timestamp': DateTime.now().toIso8601String(),
-        "location": user.trip?.location?.toJson(),
-        "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
-      };
-      if (listenId.value != user.currentVehicle) {
-        listenId.value = user.currentVehicle!.id;
-      }
-      transmitMessage(channel: 'user-location-update', data: data);
+            transmitMessage(channel: 'user-location-update', data: data);
+          });
     } catch (e) {
       print('Error getting location: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    super.dispose();
   }
 
   void _updateSocketListener(String newId) {

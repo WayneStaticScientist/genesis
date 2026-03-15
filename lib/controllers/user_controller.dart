@@ -8,11 +8,11 @@ import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/tokens_model.dart';
 import 'package:genesis/services/interceptor.dart';
+import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
-import 'package:genesis/utils/database_carrier.dart';
 
 class UserController extends GetxController {
   Rx<User?> user = Rx(null);

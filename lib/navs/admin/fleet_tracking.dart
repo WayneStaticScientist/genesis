@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:genesis/screens/chats/chat_screen.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -70,8 +72,17 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
         _alartPendingTrip();
       }
     });
+    loadCustomMarker();
   }
 
+  void loadCustomMarker() async {
+    vehicleIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(size: Size(48, 48)),
+      'assets/icons/car.png', // Path to your car image
+    );
+  }
+
+  BitmapDescriptor? vehicleIcon;
   @override
   void dispose() {
     _pingController.dispose();
@@ -97,7 +108,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             final currentPos = hasData
                 ? LatLng(liveData.lat, liveData.lng)
                 : _defaultLocation;
-
             return GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: currentPos,
@@ -115,9 +125,16 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                   Marker(
                     markerId: const MarkerId('live_vehicle'),
                     position: currentPos,
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueBlue,
-                    ),
+                    rotation:
+                        liveData.rotation, // Bearing from your GPS data (0-360)
+                    anchor: const Offset(
+                      0.5,
+                      0.5,
+                    ), // Centers the icon so it rotates correctly
+                    icon:
+                        vehicleIcon ??
+                        BitmapDescriptor
+                            .defaultMarker, // Fallback if icon isn't loaded
                   ),
               },
             );
@@ -165,8 +182,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             maxChildSize: 0.95,
             builder: (context, scrollController) {
               return Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: GTheme.surface(),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
                 child: SingleChildScrollView(
@@ -193,11 +210,11 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                         final isOnTrip = (user?.trip?.status == "Active");
                         return Row(
                           children: [
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 25,
-                              backgroundImage: NetworkImage(
-                                'https://i.pravatar.cc/150?u=marcus',
-                              ),
+                              child:
+                                  ("${user?.firstName ?? 'Driver'} ${user?.lastName ?? ''}")[0]
+                                      .text(),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -245,7 +262,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           Obx(
                             () => _buildTelemetryItem(
                               LineIcons.lightningBolt,
-                              "${_socketController.liveTrackModel.value?.speed.toStringAsFixed(2) ?? '0'}km/h",
+                              "${VehicleUtlis.speedToStandardUnits(_socketController.liveTrackModel.value?.speed)}",
                               "Speed",
                             ),
                           ),
