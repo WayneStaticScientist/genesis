@@ -32,7 +32,6 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Modern soft grey background
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [

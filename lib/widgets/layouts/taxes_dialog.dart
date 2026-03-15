@@ -1,3 +1,4 @@
+import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/date_utils.dart';
@@ -190,7 +191,7 @@ class _TaxesDialogState extends State<TaxesDialog> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

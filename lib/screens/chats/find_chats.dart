@@ -46,7 +46,7 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: GTheme.surface(),
+        backgroundColor: GTheme.surface(context),
         elevation: 0,
         title: const Text(
           'Find People',
@@ -64,7 +64,7 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Container(
               decoration: BoxDecoration(
-                color: GTheme.surface(),
+                color: GTheme.surface(context),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withAlpha(27)),
               ),
@@ -84,7 +84,7 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: GTheme.surface().withAlpha(128),
+                color: GTheme.surface(context).withAlpha(128),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),

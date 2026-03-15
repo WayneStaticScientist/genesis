@@ -11,10 +11,10 @@ class TripCard extends StatelessWidget {
 
   const TripCard({super.key, required this.trip});
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(String status, BuildContext context) {
     switch (status) {
       case "Active":
-        return GTheme.primary;
+        return GTheme.primary(context);
       case "Completed":
         return Colors.green;
       case "Pending":
@@ -28,12 +28,12 @@ class TripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(trip.status);
+    final statusColor = _getStatusColor(trip.status, context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.surface(),
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -111,14 +111,14 @@ class TripCard extends StatelessWidget {
             // Route Section
             Container(
               padding: const EdgeInsets.all(16),
-              color: GTheme.surface(),
+              color: GTheme.surface(context),
               child: Column(
                 children: [
                   _locationRow(
                     Icons.radio_button_checked,
                     "Origin",
                     trip.origin.isEmpty ? 'Not specified' : trip.origin,
-                    GTheme.primary,
+                    GTheme.primary(context),
                   ),
                   _locationConnector(),
                   _locationRow(

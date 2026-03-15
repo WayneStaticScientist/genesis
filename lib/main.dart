@@ -1,3 +1,5 @@
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/genesis_settings.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -53,6 +55,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = User.fromStorage();
+    final settings = GenesisSettings.readSettings();
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       initialBinding: BindingsBuilder(() {
@@ -74,7 +77,10 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.dark(primary: Colors.blue),
         brightness: Brightness.dark,
       ),
-      themeMode: ThemeMode.system,
+      themeMode: settings.isSystemThemeMode.lord(
+        ThemeMode.system,
+        settings.isDarkMode.lord(ThemeMode.dark, ThemeMode.light),
+      ),
       home: user != null ? const MainScreen() : const LoginScreen(),
     );
   }

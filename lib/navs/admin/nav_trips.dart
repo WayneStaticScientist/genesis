@@ -62,7 +62,7 @@ class _NavTripsState extends State<NavTrips> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: GTheme.surface(),
+        backgroundColor: GTheme.surface(context),
         leading: DrawerButton(
           onPressed: () {
             widget.triggerKey?.currentState?.openDrawer();
@@ -120,7 +120,7 @@ class _NavTripsState extends State<NavTrips> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
       decoration: BoxDecoration(
-        color: GTheme.surface(),
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -144,7 +144,7 @@ class _NavTripsState extends State<NavTrips> {
                     )
                   : null,
               filled: true,
-              fillColor: GTheme.cardColor(),
+              fillColor: GTheme.cardColor(context),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
@@ -172,11 +172,11 @@ class _NavTripsState extends State<NavTrips> {
                             filterResults();
                           },
                           backgroundColor: Colors.transparent,
-                          selectedColor: GTheme.primary.withOpacity(0.1),
-                          checkmarkColor: GTheme.primary,
+                          selectedColor: GTheme.primary(context).withAlpha(30),
+                          checkmarkColor: GTheme.primary(context),
                           labelStyle: TextStyle(
                             color: isSelected
-                                ? GTheme.primary
+                                ? GTheme.primary(context)
                                 : Colors.grey[700],
                             fontWeight: isSelected
                                 ? FontWeight.bold
@@ -186,7 +186,7 @@ class _NavTripsState extends State<NavTrips> {
                             borderRadius: BorderRadius.circular(10),
                             side: BorderSide(
                               color: isSelected
-                                  ? GTheme.primary
+                                  ? GTheme.primary(context)
                                   : Colors.grey[300]!.withAlpha(20),
                             ),
                           ),
@@ -203,7 +203,7 @@ class _NavTripsState extends State<NavTrips> {
                 icon: Icon(
                   Icons.calendar_month,
                   color: _selectedDateRange != null
-                      ? GTheme.primary
+                      ? GTheme.primary(context)
                       : Colors.grey,
                 ),
                 tooltip: "Filter by Date",
@@ -221,7 +221,7 @@ class _NavTripsState extends State<NavTrips> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: GTheme.primary.withOpacity(0.1),
+                      color: GTheme.primary(context).withAlpha(20),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -230,7 +230,7 @@ class _NavTripsState extends State<NavTrips> {
                           "${_selectedDateRange!.start.day}/${_selectedDateRange!.start.month} - ${_selectedDateRange!.end.day}/${_selectedDateRange!.end.month}",
                           style: TextStyle(
                             fontSize: 12,
-                            color: GTheme.primary,
+                            color: GTheme.primary(context),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -241,7 +241,7 @@ class _NavTripsState extends State<NavTrips> {
                           child: Icon(
                             Icons.close,
                             size: 14,
-                            color: GTheme.primary,
+                            color: GTheme.primary(context),
                           ),
                         ),
                       ],

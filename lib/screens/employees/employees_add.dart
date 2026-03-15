@@ -30,7 +30,7 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GTheme.surface(),
+      backgroundColor: GTheme.surface(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -131,12 +131,12 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
                 child: ElevatedButton(
                   onPressed: _handleSubmit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: GTheme.primary,
+                    backgroundColor: GTheme.primary(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
                     elevation: 8,
-                    shadowColor: GTheme.primary.withAlpha(100),
+                    shadowColor: GTheme.primary(context).withAlpha(100),
                   ),
                   child: Obx(
                     () => _userController.registeringEmployee.value
@@ -169,7 +169,7 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
-            color: GTheme.primary,
+            color: GTheme.primary(context),
             letterSpacing: -0.5,
           ),
         ),
@@ -214,12 +214,12 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 4),
               padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
-                color: isSelected ? GTheme.primary : Colors.white,
+                color: isSelected ? GTheme.primary(context) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: GTheme.primary.withAlpha(70),
+                          color: GTheme.primary(context).withAlpha(70),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -232,7 +232,9 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
                         ),
                       ],
                 border: Border.all(
-                  color: isSelected ? GTheme.primary : Colors.grey.shade200,
+                  color: isSelected
+                      ? GTheme.primary(context)
+                      : Colors.grey.shade200,
                   width: 1.5,
                 ),
               ),
@@ -278,7 +280,7 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
               perm,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
-            activeColor: GTheme.primary,
+            activeColor: GTheme.primary(context),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),

@@ -116,7 +116,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Container(
           padding: const EdgeInsets.all(0),
           decoration: BoxDecoration(
-            color: GTheme.cardColor(),
+            color: GTheme.cardColor(context),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -149,7 +149,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: GTheme.cardColor(),
+            color: GTheme.cardColor(context),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -251,7 +251,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 height: 400,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: GTheme.cardColor(),
+                  color: GTheme.cardColor(context),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -280,7 +280,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: GTheme.cardColor(),
+                            color: GTheme.cardColor(context),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
@@ -310,7 +310,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 height: 400,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: GTheme.cardColor(),
+                  color: GTheme.cardColor(context),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -359,7 +359,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GTheme.cardColor(),
+        color: GTheme.cardColor(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

@@ -50,7 +50,7 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
   Widget build(BuildContext context) {
     final isDeskop = MediaQuery.of(context).size.width > ScreenSizes.DESKTOP_W;
     return Scaffold(
-      backgroundColor: GTheme.surface(),
+      backgroundColor: GTheme.surface(context),
       body: SmartRefresher(
         controller: _refreshController,
         onRefresh: () async {
@@ -116,7 +116,7 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: GTheme.cardColor(),
+                    color: GTheme.cardColor(context),
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(

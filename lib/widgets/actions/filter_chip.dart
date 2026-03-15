@@ -18,9 +18,9 @@ class GFilterChip extends StatelessWidget {
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: isSelected ? color : GTheme.color(),
+        color: isSelected ? color : GTheme.color(context),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: isSelected ? color : GTheme.color()),
+        border: Border.all(color: isSelected ? color : GTheme.color(context)),
         boxShadow: isSelected
             ? [
                 BoxShadow(

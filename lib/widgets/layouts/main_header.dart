@@ -19,7 +19,7 @@ class _GMainHeaderState extends State<GMainHeader> {
     return SafeArea(
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 2),
-        color: GTheme.surface(), // Matches background
+        color: GTheme.surface(context), // Matches background
         child: Row(
           children: [
             DrawerButton(),
@@ -28,7 +28,7 @@ class _GMainHeaderState extends State<GMainHeader> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: GTheme.color(),
+                  color: GTheme.color(context),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: const TextField(

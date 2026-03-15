@@ -67,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: GTheme.surface(),
+        backgroundColor: GTheme.surface(context),
         elevation: 0,
         leadingWidth: 70,
         leading: IconButton(
@@ -88,7 +88,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  backgroundColor: GTheme.primary,
+                  backgroundColor: GTheme.primary(context),
                 ),
                 Positioned(
                   right: 0,
@@ -99,7 +99,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     decoration: BoxDecoration(
                       color: Colors.green,
                       shape: BoxShape.circle,
-                      border: Border.all(color: GTheme.surface(), width: 2),
+                      border: Border.all(
+                        color: GTheme.surface(context),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -140,13 +143,13 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messagingController.messages.length,
               itemBuilder: (context, index) {
                 final msg = _messagingController.messages[index];
-                return _buildMessageBubble(msg, GTheme.primary);
+                return _buildMessageBubble(msg, GTheme.primary(context));
               },
             ),
           ).expanded1,
 
           // Input Area
-          _buildInputArea(GTheme.surface(), GTheme.primary),
+          _buildInputArea(GTheme.surface(context), GTheme.primary(context)),
         ],
       ),
     );

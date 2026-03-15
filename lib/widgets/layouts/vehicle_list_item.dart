@@ -24,7 +24,7 @@ class VehicleListItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: GTheme.surface(),
+              color: GTheme.surface(context),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

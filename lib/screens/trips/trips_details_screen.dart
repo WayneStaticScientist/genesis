@@ -282,7 +282,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: GTheme.surface(),
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -322,7 +322,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GTheme.surface(),
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -398,7 +398,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           padding: EdgeInsets.all(16),
           width: double.infinity,
           decoration: BoxDecoration(
-            color: GTheme.surface(),
+            color: GTheme.surface(context),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -479,7 +479,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.surface(context),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(30),

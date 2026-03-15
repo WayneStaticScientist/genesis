@@ -25,7 +25,7 @@ class ModernStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: GTheme.color(),
+        color: GTheme.color(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

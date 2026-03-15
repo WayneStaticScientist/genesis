@@ -72,18 +72,18 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GTheme.color(),
+      backgroundColor: GTheme.color(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.close, color: GTheme.reverse()),
+          icon: Icon(Icons.close, color: GTheme.reverse(context)),
           onPressed: () => Navigator.pop(context),
         ),
         title: "New Vehicle".text(
           style: TextStyle(
-            color: GTheme.reverse(),
+            color: GTheme.reverse(context),
             fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
           ),
@@ -284,7 +284,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w800,
-          color: GTheme.reverse().withAlpha(128),
+          color: GTheme.reverse(context).withAlpha(128),
           letterSpacing: 1.2,
         ),
       ),
@@ -305,7 +305,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.reverse().withAlpha(25),
+        color: GTheme.reverse(context).withAlpha(25),
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextFormField(
@@ -315,7 +315,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         onSaved: onSaved,
         validator: validator,
         keyboardType: keyboardType,
-        style: TextStyle(color: GTheme.reverse()),
+        style: TextStyle(color: GTheme.reverse(context)),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -331,7 +331,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
           ),
           labelStyle: const TextStyle(fontSize: 14),
           hintStyle: TextStyle(
-            color: GTheme.reverse().withAlpha(100),
+            color: GTheme.reverse(context).withAlpha(100),
             fontSize: 14,
           ),
         ),
@@ -351,7 +351,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: GTheme.reverse().withAlpha(25),
+            color: GTheme.reverse(context).withAlpha(25),
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonFormField<String>(
@@ -361,8 +361,8 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
               border: InputBorder.none,
               labelStyle: const TextStyle(fontSize: 14),
             ),
-            dropdownColor: GTheme.color(),
-            style: TextStyle(color: GTheme.reverse(), fontSize: 14),
+            dropdownColor: GTheme.color(context),
+            style: TextStyle(color: GTheme.reverse(context), fontSize: 14),
             items: items
                 .map((e) => DropdownMenuItem(value: e, child: e.text()))
                 .toList(),

@@ -157,7 +157,7 @@ class _PayrollHistoryState extends State<PayrollHistory> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: colorScheme.outlineVariant),
+                      side: BorderSide(color: Colors.grey.withAlpha(30)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),

@@ -10,7 +10,8 @@ import 'package:genesis/controllers/payroll_controller.dart';
 
 class PayrollUserHistory extends StatefulWidget {
   final User user;
-  const PayrollUserHistory({super.key, required this.user});
+  final GlobalKey<ScaffoldState>? triggerKey;
+  const PayrollUserHistory({super.key, required this.user, this.triggerKey});
 
   @override
   State<PayrollUserHistory> createState() => _PayrollUserHistoryState();
@@ -59,6 +60,13 @@ class _PayrollUserHistoryState extends State<PayrollUserHistory> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: widget.triggerKey != null
+            ? DrawerButton(
+                onPressed: () {
+                  widget.triggerKey!.currentState?.openDrawer();
+                },
+              )
+            : null,
         title: const Text(
           "Payroll History",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -209,8 +217,11 @@ class _PayrollCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         leading: CircleAvatar(
-          backgroundColor: theme.primaryColor.withAlpha(30),
-          child: Icon(Icons.payments_outlined, color: theme.primaryColor),
+          backgroundColor: theme.colorScheme.primary.withAlpha(30),
+          child: Icon(
+            Icons.payments_outlined,
+            color: theme.colorScheme.primary,
+          ),
         ),
         title: Text(
           GenesisDate.getInformalDate(payroll.createdAt),

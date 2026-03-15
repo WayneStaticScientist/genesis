@@ -33,7 +33,7 @@ class _GNavBarState extends State<GNavBar> {
         width: 280,
         height: double.infinity,
         decoration: BoxDecoration(
-          color: GTheme.cardColor(),
+          color: GTheme.cardColor(context),
           border: Border(
             right: BorderSide(
               color: theme.dividerColor.withAlpha(30),
@@ -221,7 +221,7 @@ class _GNavBarState extends State<GNavBar> {
                                   color: Colors.greenAccent,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: GTheme.cardColor(),
+                                    color: GTheme.cardColor(context),
                                     width: 2,
                                   ),
                                 ),

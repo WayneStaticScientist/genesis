@@ -27,7 +27,7 @@ class DefaultFormfield extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.reverse().withAlpha(25),
+        color: GTheme.reverse(context).withAlpha(25),
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextFormField(
@@ -36,7 +36,7 @@ class DefaultFormfield extends StatelessWidget {
         validator: validator,
         controller: controller,
         keyboardType: keyboardType,
-        style: TextStyle(color: GTheme.reverse()),
+        style: TextStyle(color: GTheme.reverse(context)),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -52,7 +52,7 @@ class DefaultFormfield extends StatelessWidget {
           ),
           labelStyle: const TextStyle(fontSize: 14),
           hintStyle: TextStyle(
-            color: GTheme.reverse().withAlpha(100),
+            color: GTheme.reverse(context).withAlpha(100),
             fontSize: 14,
           ),
         ),

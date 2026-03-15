@@ -1,5 +1,6 @@
 import 'package:exui/material.dart';
 import 'package:genesis/screens/payroll/payroll_user_history.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -264,7 +265,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

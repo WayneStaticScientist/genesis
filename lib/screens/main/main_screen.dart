@@ -38,7 +38,10 @@ class _MainScreenState extends State<MainScreen> {
     widgetTree = {
       "employees": AdminNavEmployees(triggerKey: _scaffoldKey),
       "settings": AdminSettingsScreen(triggerKey: _scaffoldKey),
-      "my_payments": PayrollUserHistory(user: _userController.user.value!),
+      "my_payments": PayrollUserHistory(
+        user: _userController.user.value!,
+        triggerKey: _scaffoldKey,
+      ),
       "trips": NavTrips(triggerKey: _scaffoldKey),
       "chats": NavChats(triggerKey: _scaffoldKey),
       "dashboard": AdminNavMain(triggerKey: _scaffoldKey),
@@ -60,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
       drawer: !isDeskop
           ? GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap)
           : null,
-      backgroundColor: GTheme.surface(),
+      backgroundColor: GTheme.surface(context),
       body: [
         if (isDeskop) ...[
           GNavBar(selectedIndex: _selectedIndex, ontap: _onNavTap),

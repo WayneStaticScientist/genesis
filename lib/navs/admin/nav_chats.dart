@@ -33,7 +33,7 @@ class _NavChatsState extends State<NavChats> {
         leading: DrawerButton(
           onPressed: () => widget.triggerKey?.currentState?.openDrawer(),
         ),
-        backgroundColor: GTheme.surface(),
+        backgroundColor: GTheme.surface(context),
         elevation: 0,
         title: const Text(
           'Messages',
@@ -62,7 +62,7 @@ class _NavChatsState extends State<NavChats> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: GTheme.surface().withAlpha(128),
+                color: GTheme.surface(context).withAlpha(128),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
@@ -79,7 +79,7 @@ class _NavChatsState extends State<NavChats> {
                       const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final chat = _messagesController.chatUsers[index];
-                    return _buildChatTile(chat, GTheme.primary);
+                    return _buildChatTile(chat, GTheme.primary(context));
                   },
                 );
               }),
@@ -100,7 +100,7 @@ class _NavChatsState extends State<NavChats> {
           });
         }
       },
-      tileColor: isInList ? GTheme.primary : null,
+      tileColor: isInList ? GTheme.primary(context) : null,
       onTap: () {
         if (selectedChats.isEmpty) {
           Get.to(() => ChatScreen(user: chat));

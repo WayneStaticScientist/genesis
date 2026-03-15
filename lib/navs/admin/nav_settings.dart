@@ -1,5 +1,9 @@
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/genesis_settings.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
@@ -12,16 +16,15 @@ class AdminSettingsScreen extends StatefulWidget {
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   // Local state for toggles (In a real app, these would be in a Controller)
-  bool _darkMode = false;
   bool _autoApproveMaintenance = true;
   bool _notificationsEnabled = true;
   bool _biometricAuth = false;
-  double _radiusAdjustment = 5.0;
 
   @override
   Widget build(BuildContext context) {
+    final settings = GenesisSettings.readSettings();
     return Scaffold(
-      backgroundColor: GTheme.surface(),
+      backgroundColor: GTheme.surface(context),
       appBar: AppBar(
         leading: DrawerButton(
           onPressed: () {
@@ -34,8 +37,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         ),
         centerTitle: false,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black87,
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -46,15 +47,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             _buildSectionHeader("Appearance"),
             _buildSettingCard(
               icon: LineIcons.moon,
+              color: Colors.pink,
+              title: "System Theme Mode",
+              subtitle: "use system dark/light mode",
+              trailing: Switch.adaptive(
+                value: settings.isSystemThemeMode,
+                activeThumbColor: GTheme.primary(context),
+                onChanged: (val) {
+                  settings.isSystemThemeMode = val;
+                  settings.writeSettings();
+                  _recalculateThemeSettings(settings);
+                  setState(() {});
+                },
+              ),
+            ),
+            _buildSettingCard(
+              icon: LineIcons.moon,
               color: Colors.purple,
               title: "Dark Theme",
               subtitle: "Adjust the interface for low light",
               trailing: Switch.adaptive(
-                value: _darkMode,
-                activeColor: GTheme.primary,
-                onChanged: (val) => setState(() => _darkMode = val),
+                value: settings.isDarkMode,
+                activeThumbColor: GTheme.primary(context),
+                onChanged: (val) {
+                  settings.isDarkMode = val;
+                  settings.writeSettings();
+                  _recalculateThemeSettings(settings);
+                  setState(() {});
+                },
               ),
-            ),
+            ).visibleIfNot(settings.isSystemThemeMode),
             const SizedBox(height: 25),
 
             _buildSectionHeader("Operations & Automation"),
@@ -65,7 +87,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Approve routine requests automatically",
               trailing: Switch.adaptive(
                 value: _autoApproveMaintenance,
-                activeColor: GTheme.primary,
+                activeThumbColor: GTheme.primary(context),
                 onChanged: (val) =>
                     setState(() => _autoApproveMaintenance = val),
               ),
@@ -77,14 +99,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Alerts for new trip assignments",
               trailing: Switch.adaptive(
                 value: _notificationsEnabled,
-                activeColor: GTheme.primary,
+                activeThumbColor: GTheme.primary(context),
                 onChanged: (val) => setState(() => _notificationsEnabled = val),
               ),
             ),
             const SizedBox(height: 25),
 
             _buildSectionHeader("User Adjustments"),
-            _buildAdjustmentSlider(),
+            // _buildAdjustmentSlider(),
             _buildSettingCard(
               icon: LineIcons.fingerprint,
               color: Colors.teal,
@@ -92,7 +114,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               subtitle: "Use FaceID or Fingerprint",
               trailing: Switch.adaptive(
                 value: _biometricAuth,
-                activeColor: GTheme.primary,
+                activeThumbColor: GTheme.primary(context),
                 onChanged: (val) => setState(() => _biometricAuth = val),
               ),
             ),
@@ -148,11 +170,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withAlpha(20),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -164,7 +186,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withAlpha(30),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 24),
@@ -184,55 +206,66 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  Widget _buildAdjustmentSlider() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Search Radius",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              Text(
-                "${_radiusAdjustment.toInt()} km",
-                style: TextStyle(
-                  color: GTheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Adjust the maximum distance for job matching",
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
-          Slider.adaptive(
-            value: _radiusAdjustment,
-            min: 1,
-            max: 50,
-            activeColor: GTheme.primary,
-            inactiveColor: Colors.grey.shade100,
-            onChanged: (val) => setState(() => _radiusAdjustment = val),
-          ),
-        ],
-      ),
+  void _recalculateThemeSettings(GenesisSettings settings) {
+    if (settings.isSystemThemeMode) {
+      Get.changeThemeMode(ThemeMode.system);
+      return;
+    }
+    Get.changeThemeMode(
+      settings.isDarkMode.lord(ThemeMode.dark, ThemeMode.dark),
     );
+    return;
   }
+
+  // Widget _buildAdjustmentSlider() {
+  //   return Container(
+  //     margin: const EdgeInsets.only(bottom: 12),
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.02),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             const Text(
+  //               "Search Radius",
+  //               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+  //             ),
+  //             Text(
+  //               "${_radiusAdjustment.toInt()} km",
+  //               style: TextStyle(
+  //                 color: GTheme.primary(context),
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           "Adjust the maximum distance for job matching",
+  //           style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+  //         ),
+  //         Slider.adaptive(
+  //           value: _radiusAdjustment,
+  //           min: 1,
+  //           max: 50,
+  //           activeColor: GTheme.primary(context),
+  //           inactiveColor: Colors.grey.shade100,
+  //           onChanged: (val) => setState(() => _radiusAdjustment = val),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

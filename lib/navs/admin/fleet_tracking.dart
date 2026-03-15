@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'package:genesis/screens/chats/chat_screen.dart';
-import 'package:genesis/utils/bool_utils.dart';
-import 'package:genesis/utils/string_utils.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
+import 'package:genesis/utils/vehicle_utlis.dart';
+import 'package:genesis/screens/chats/chat_screen.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -261,7 +261,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             builder: (context, scrollController) {
               return Container(
                 decoration: BoxDecoration(
-                  color: GTheme.surface(),
+                  color: GTheme.surface(context),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
                 child: SingleChildScrollView(

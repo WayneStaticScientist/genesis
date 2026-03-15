@@ -8,4 +8,8 @@ extension BoolUtils on bool {
   MaterialColor lorc(MaterialColor s, MaterialColor t) {
     return (this) ? s : t;
   }
+
+  T lord<T>(T s, T t) {
+    return (this) ? s : t;
+  }
 }

@@ -364,7 +364,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: selectedVehicle.value != null
-                    ? GTheme.color()
+                    ? GTheme.color(context)
                     : Colors.grey[200]!,
                 width: selectedVehicle.value != null ? 1.5 : 1,
               ),
@@ -374,7 +374,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 Icon(
                   Icons.directions_car_filled,
                   color: selectedVehicle.value != null
-                      ? GTheme.color()
+                      ? GTheme.color(context)
                       : Colors.grey[600],
                   size: 20,
                 ),
@@ -468,7 +468,10 @@ class _AssignTripModalState extends State<AssignTripModal> {
                       title: Text("${vehicle.carModel}"),
                       subtitle: Text("Plate: ${vehicle.licencePlate}"),
                       trailing: selectedVehicle.value?.id == vehicle.id
-                          ? Icon(Icons.check_circle, color: GTheme.color())
+                          ? Icon(
+                              Icons.check_circle,
+                              color: GTheme.color(context),
+                            )
                           : null,
                       onTap: () {
                         selectedVehicle.value = vehicle;
@@ -634,7 +637,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: GTheme.color(), width: 1.5),
+        borderSide: BorderSide(color: GTheme.color(context), width: 1.5),
       ),
     );
   }
@@ -757,7 +760,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             right: 30,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: GTheme.color(),
+                backgroundColor: GTheme.color(context),
                 padding: const EdgeInsets.symmetric(vertical: 15),
               ),
               onPressed: () => Get.back(result: _center),

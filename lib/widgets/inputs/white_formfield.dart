@@ -45,7 +45,7 @@ class WhiteFormfield extends StatelessWidget {
           labelText: label,
           labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           hintText: hint,
-          prefixIcon: Icon(icon, color: GTheme.primary),
+          prefixIcon: Icon(icon, color: GTheme.primary(context)),
           suffixIcon: suffix,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),

@@ -112,7 +112,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: GTheme.color(),
+      backgroundColor: GTheme.color(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -130,11 +130,11 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: GTheme.reverse(),
+                      color: GTheme.reverse(context),
                     ),
                   ),
                   TextButton.icon(
-                    icon: Icon(Icons.remove, color: GTheme.reverse()),
+                    icon: Icon(Icons.remove, color: GTheme.reverse(context)),
                     onPressed: () {
                       Navigator.pop(context);
                       setState(() {
@@ -144,7 +144,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                     label: "remove".text(),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: GTheme.reverse()),
+                    icon: Icon(Icons.close, color: GTheme.reverse(context)),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -177,7 +177,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                             .toString()
                             .text(
                               style: TextStyle(
-                                color: GTheme.reverse(),
+                                color: GTheme.reverse(context),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -211,17 +211,17 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GTheme.color(),
+      backgroundColor: GTheme.color(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: GTheme.reverse()),
+          icon: Icon(Icons.close, color: GTheme.reverse(context)),
           onPressed: () => Navigator.pop(context),
         ),
         title: "Edit Vehicle".text(
           style: TextStyle(
-            color: GTheme.reverse(),
+            color: GTheme.reverse(context),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -287,7 +287,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: GTheme.reverse().withAlpha(10),
+                  color: GTheme.reverse(context).withAlpha(10),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: Row(
@@ -307,13 +307,13 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                               .text(
                                 style: TextStyle(
                                   color: _assignedDriver != null
-                                      ? GTheme.reverse()
-                                      : GTheme.reverse().withAlpha(128),
+                                      ? GTheme.reverse(context)
+                                      : GTheme.reverse(context).withAlpha(128),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: GTheme.reverse()),
+                    Icon(Icons.arrow_drop_down, color: GTheme.reverse(context)),
                   ],
                 ),
               ),
@@ -449,7 +449,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.reverse().withAlpha(10),
+        color: GTheme.reverse(context).withAlpha(10),
         borderRadius: BorderRadius.circular(15),
       ),
       child: TextFormField(
@@ -459,7 +459,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         initialValue: initialValue,
         keyboardType: keyboardType,
         onChanged: onChanged,
-        style: TextStyle(color: GTheme.reverse()),
+        style: TextStyle(color: GTheme.reverse(context)),
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(
@@ -487,15 +487,15 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: GTheme.reverse().withAlpha(10),
+        color: GTheme.reverse(context).withAlpha(10),
         borderRadius: BorderRadius.circular(15),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          dropdownColor: GTheme.color(),
-          style: TextStyle(color: GTheme.reverse()),
+          dropdownColor: GTheme.color(context),
+          style: TextStyle(color: GTheme.reverse(context)),
           items: items
               .map((e) => DropdownMenuItem(value: e, child: e.text()))
               .toList(),

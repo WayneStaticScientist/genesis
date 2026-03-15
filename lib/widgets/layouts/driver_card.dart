@@ -16,7 +16,7 @@ class DriverCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.cardColor(),
+        color: GTheme.cardColor(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -40,7 +40,7 @@ class DriverCard extends StatelessWidget {
                   child: Text(
                     "${user.firstName[0]}${user.lastName[0]}",
                     style: TextStyle(
-                      color: GTheme.color(),
+                      color: GTheme.color(context),
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -130,11 +130,11 @@ class DriverCard extends StatelessWidget {
                       onTap: onAssign,
                       child: CircleAvatar(
                         radius: 18,
-                        backgroundColor: GTheme.color().withAlpha(30),
+                        backgroundColor: GTheme.color(context).withAlpha(30),
                         child: Icon(
                           Icons.add_road,
                           size: 18,
-                          color: GTheme.color(),
+                          color: GTheme.color(context),
                         ),
                       ),
                     ),

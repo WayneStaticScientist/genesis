@@ -21,9 +21,9 @@ class GMainStatCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: GTheme.color(),
+        color: GTheme.color(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: GTheme.color()),
+        border: Border.all(color: GTheme.color(context)),
         boxShadow: [
           BoxShadow(
             color: color.withAlpha(25),

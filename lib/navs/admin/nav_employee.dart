@@ -52,7 +52,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GTheme.surface(),
+      backgroundColor: GTheme.surface(context),
       body: SmartRefresher(
         controller: _refreshController,
         header: const WaterDropMaterialHeader(
@@ -79,7 +79,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Get.to(() => EmployeeAddScreen()),
-        backgroundColor: GTheme.primary,
+        backgroundColor: GTheme.primary(context),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
           "New Staff",
@@ -102,7 +102,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
           widget.triggerKey?.currentState?.openDrawer();
         },
       ),
-      backgroundColor: GTheme.primary,
+      backgroundColor: GTheme.primary(context),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: false,
         titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
@@ -119,7 +119,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [GTheme.primary, const Color(0xFF4F46E5)],
+              colors: [GTheme.primary(context), const Color(0xFF4F46E5)],
             ),
           ),
         ),
@@ -149,7 +149,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
           decoration: InputDecoration(
             hintText: "Find employee by name or email...",
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            prefixIcon: Icon(LineIcons.search, color: GTheme.primary),
+            prefixIcon: Icon(LineIcons.search, color: GTheme.primary(context)),
             suffixIcon: Icon(LineIcons.filter, color: Colors.grey.shade400),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 17),

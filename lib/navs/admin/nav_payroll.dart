@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:exui/material.dart';
 import 'package:genesis/screens/payroll/payroll_history.dart';
 import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/layouts/taxes_dialog.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
@@ -205,7 +206,7 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: GTheme.surface(context),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
