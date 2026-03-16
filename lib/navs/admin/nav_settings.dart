@@ -212,7 +212,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       return;
     }
     Get.changeThemeMode(
-      settings.isDarkMode.lord(ThemeMode.dark, ThemeMode.dark),
+      settings.isDarkMode.lord(ThemeMode.dark, ThemeMode.light),
     );
     return;
   }
