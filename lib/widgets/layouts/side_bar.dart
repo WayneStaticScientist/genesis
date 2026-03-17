@@ -103,6 +103,12 @@ class _GNavBarState extends State<GNavBar> {
                         "Dashboard",
                         Icons.grid_view_rounded,
                       ).visibleIf(!isDriver),
+                      _buildNavItem(
+                        context,
+                        'reports',
+                        "Reports",
+                        Icons.grid_view_rounded,
+                      ).visibleIf(!isDriver),
                       Obx(
                         () => _buildNavItem(
                           context,

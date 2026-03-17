@@ -1,320 +1,399 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:genesis/controllers/stats_controller.dart';
+import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/widgets/layouts/modern_date_range_2.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:get/get.dart';
+
+// --- MOCK MODELS ---
+
+class ReportTrip {
+  final String id;
+  final String date;
+  final String vehicle;
+  final String driver;
+  final double totalPayout;
+  final double vehiclePayout;
+
+  ReportTrip({
+    required this.id,
+    required this.date,
+    required this.vehicle,
+    required this.driver,
+    required this.totalPayout,
+    required this.vehiclePayout,
+  });
+}
+
+// --- MAIN SCREEN ---
 
 class AdminNavReports extends StatefulWidget {
-  const AdminNavReports({super.key});
+  final GlobalKey<ScaffoldState>? triggerKey;
+  const AdminNavReports({super.key, required this.triggerKey});
 
   @override
   State<AdminNavReports> createState() => _AdminNavReportsState();
 }
 
 class _AdminNavReportsState extends State<AdminNavReports> {
-  // Mock Report Data
-  final List<Map<String, dynamic>> reportCategories = [
-    {
-      "title": "Fuel Analysis",
-      "subtitle": "Efficiency and consumption trends",
-      "icon": LineIcons.gasPump,
-      "color": Colors.orange,
-      "trend": "+2.4%",
-      "isPositive": false,
-    },
-    {
-      "title": "Fleet Utilization",
-      "subtitle": "Active vs Idle asset hours",
-      "icon": LineIcons.pieChart,
-      "color": Colors.blue,
-      "trend": "+12.1%",
-      "isPositive": true,
-    },
-    {
-      "title": "Maintenance Costs",
-      "subtitle": "Monthly repair & service spend",
-      "icon": LineIcons.moneyBill,
-      "color": Colors.green,
-      "trend": "-5.2%",
-      "isPositive": true,
-    },
-    {
-      "title": "Incident Reports",
-      "subtitle": "Safety violations and accidents",
-      "icon": LineIcons.exclamationTriangle,
-      "color": Colors.red,
-      "trend": "0.0%",
-      "isPositive": true,
-    },
-  ];
+  DateTimeRange selectedDateRange = DateTimeRange(
+    start: DateTime.now().subtract(const Duration(days: 7)),
+    end: DateTime.now(),
+  );
+  final _navReports = Get.find<StatsController>();
+  String selectedPeriod = "Weekly";
+  @override
+  void initState() {
+    super.initState();
+    filter();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // === ANALYTICAL HEADER ===
-        SliverAppBar(
-          expandedHeight: 180,
-          floating: true,
-          pinned: true,
-          elevation: 0,
-          backgroundColor: const Color(0xFF1E293B),
-          flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            title: const Text(
-              "Fleet Intelligence",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-              ),
-            ),
-            background: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF334155)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverHeader(),
+          Obx(() {
+            if (_navReports.fetchingTripStatus.value) {
+              return SliverFillRemaining(child: MaterialLoader().center());
+            }
+            if (_navReports.fetchingTripStatsError.value.isNotEmpty ||
+                _navReports.tripsStatModel.value == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 10),
+                    Text("Error: ${_navReports.fetchingTripStatsError.value}"),
+                    TextButton(onPressed: filter, child: const Text("Retry")),
+                  ],
+                ),
+              );
+            }
+            return SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    _buildModernKPIs(),
+                    const SizedBox(height: 32),
+                    _buildChartSurface(),
+                    const SizedBox(height: 32),
+                    _buildActivitySection(),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-              child: Center(
-                child: Opacity(
-                  opacity: 0.1,
-                  child: Icon(
-                    LineIcons.barChartAlt,
-                    size: 150,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // --- 1. Modern Sliver Header with Glass Range Selector ---
+  Widget _buildSliverHeader() {
+    return SliverAppBar(
+      expandedHeight: 250,
+      floating: false,
+      pinned: true,
+      leading: DrawerButton(
+        color: Colors.white,
+        onPressed: () {
+          widget.triggerKey?.currentState?.openDrawer();
+        },
+      ).visibleIf(widget.triggerKey != null),
+      backgroundColor: GTheme.primary(context),
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [GTheme.primary(context), Colors.blueAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-        ),
-
-        // === KEY METRICS GRID ===
-        SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.only(left: 24, right: 24, top: 60),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Monthly Overview",
+                  "Performance Insights",
                   style: TextStyle(
-                    fontSize: 18,
+                    color: Colors.white,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _buildSummaryCard(
-                      "Total Spend",
-                      "\$42,850",
-                      LineIcons.wallet,
-                      Colors.blue,
+                const SizedBox(height: 20),
+                _buildDateRangeSelector(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateRangeSelector() {
+    return [
+      Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(35),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: ModernDateRange2(
+          selectedDateRange: selectedDateRange,
+          onSelect: _openTimeSelectRange,
+        ),
+      ).expanded1,
+    ].row(mainAxisAlignment: MainAxisAlignment.center);
+  }
+
+  // --- 2. Integrated KPI Row (Non-Card Style) ---
+  Widget _buildModernKPIs() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildMinimalStat(
+            "Revenue",
+            "245K",
+            Theme.of(context).colorScheme.tertiary,
+          ),
+          _buildVerticalDivider(),
+          _buildMinimalStat("Trips", "142", GTheme.primary(context)),
+          _buildVerticalDivider(),
+          _buildMinimalStat(
+            "Margin",
+            "32%",
+            Theme.of(context).colorScheme.error,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinimalStat(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 10,
+            letterSpacing: 1,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.north_east_rounded, color: color, size: 16),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(height: 30, width: 1, color: Colors.grey.withAlpha(30));
+  }
+
+  // --- 3. Unified Chart Surface ---
+  Widget _buildChartSurface() {
+    return Container(
+      height: 340,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: GTheme.surface(context),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Financial Flow",
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+          const SizedBox(height: 30),
+          Expanded(
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: [
+                      const FlSpot(0, 3),
+                      const FlSpot(2, 5),
+                      const FlSpot(4, 4),
+                      const FlSpot(6, 8),
+                    ],
+                    isCurved: true,
+                    color: GTheme.primary(context),
+                    barWidth: 4,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          GTheme.primary(context).withAlpha(70),
+                          GTheme.primary(context).withAlpha(0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    _buildSummaryCard(
-                      "Avg. Health",
-                      "92%",
-                      LineIcons.heartbeat,
-                      Colors.green,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- 4. Activity List (Limited to 5) ---
+  Widget _buildActivitySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Latest Settlements",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: Text(
+                "View All",
+                style: TextStyle(
+                  color: GTheme.primary(context),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: GTheme.surface(context),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _navReports.tripsStatModel.value!.vehicles.length,
+            separatorBuilder: (context, index) =>
+                Divider(height: 1, color: Colors.grey[100], indent: 70),
+            itemBuilder: (context, index) {
+              final trip = _navReports.tripsStatModel.value!.vehicles[index];
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long_outlined,
+                    color: GTheme.primary(context),
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  trip.model,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: Text("trip", style: const TextStyle(fontSize: 12)),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      NumberUtils.formatCurrency(trip.totalRevenue),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Text(
+                      "Settled",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
-
-        // === REPORT CATEGORIES LIST ===
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) =>
-                  _buildReportCategoryCard(reportCategories[index]),
-              childCount: reportCategories.length,
-            ),
-          ),
-        ),
-
-        // === RECENT DOWNLOADS SECTION ===
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Recent Generations",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                _buildRecentReportItem(
-                  "Q4_Fleet_Efficiency.pdf",
-                  "Generated 2 hours ago",
-                ),
-                _buildRecentReportItem(
-                  "Annual_Fuel_Tax_Log.xlsx",
-                  "Generated Yesterday",
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
-    ).expanded1;
-  }
-
-  Widget _buildSummaryCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-            ),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildReportCategoryCard(Map<String, dynamic> report) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: report['color'].withOpacity(0.1),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Icon(report['icon'], color: report['color']),
-        ),
-        title: Text(
-          report['title'],
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              report['subtitle'],
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-            ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Icon(LineIcons.angleRight, size: 16, color: Colors.grey),
-            const SizedBox(height: 4),
-            Text(
-              report['trend'],
-              style: TextStyle(
-                color: report['isPositive'] ? Colors.green : Colors.red,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        onTap: () {},
-      ),
+  void _openTimeSelectRange() async {
+    final dateRange = await showDateRangePicker(
+      initialDateRange: selectedDateRange,
+      context: context,
+      saveText: "Filter",
+      cancelText: "close",
+      currentDate: DateTime.now(),
+      firstDate: DateTime(2025),
+      lastDate: DateTime.now(),
     );
+    if (dateRange == null) return;
+    setState(() {
+      selectedDateRange = dateRange;
+    });
+    filter();
   }
 
-  Widget _buildRecentReportItem(String name, String date) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(LineIcons.fileAlt, color: Colors.grey, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  date,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
-                ),
-              ],
-            ),
-          ),
-          const Icon(LineIcons.download, size: 18, color: Colors.blue),
-        ],
-      ),
-    );
+  void filter() {
+    _navReports.fetchTripStats(selectedDateRange);
   }
 }
