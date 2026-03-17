@@ -51,18 +51,26 @@ class SummaryVehicle {
   String model;
   String driverName;
   double totalRevenue;
+  String driverId;
   SummaryVehicle({
     required this.totalRevenue,
     required this.model,
     required this.driverName,
+    required this.driverId,
   });
   factory SummaryVehicle.fromJSON(data) {
     if (data == null) {
-      return SummaryVehicle(totalRevenue: 0, model: '', driverName: '');
+      return SummaryVehicle(
+        totalRevenue: 0,
+        model: '',
+        driverName: '',
+        driverId: '',
+      );
     }
     return SummaryVehicle(
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
       model: data['model'] ?? "",
+      driverId: data['driverId'] ?? '',
       driverName: data['driverName'] ?? "",
     );
   }
