@@ -9,26 +9,6 @@ import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/widgets/layouts/modern_date_range_2.dart';
 
-// --- MOCK MODELS ---
-
-class ReportTrip {
-  final String id;
-  final String date;
-  final String vehicle;
-  final String driver;
-  final double totalPayout;
-  final double vehiclePayout;
-
-  ReportTrip({
-    required this.id,
-    required this.date,
-    required this.vehicle,
-    required this.driver,
-    required this.totalPayout,
-    required this.vehiclePayout,
-  });
-}
-
 // --- MAIN SCREEN ---
 
 class AdminNavReports extends StatefulWidget {
@@ -45,7 +25,6 @@ class _AdminNavReportsState extends State<AdminNavReports> {
     end: DateTime.now(),
   );
   final _navReports = Get.find<StatsController>();
-  String selectedPeriod = "Weekly";
   @override
   void initState() {
     super.initState();
@@ -64,19 +43,23 @@ class _AdminNavReportsState extends State<AdminNavReports> {
             }
             if (_navReports.fetchingTripStatsError.value.isNotEmpty ||
                 _navReports.tripsStatModel.value == null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 10),
-                    Text("Error: ${_navReports.fetchingTripStatsError.value}"),
-                    TextButton(onPressed: filter, child: const Text("Retry")),
-                  ],
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Error: ${_navReports.fetchingTripStatsError.value}",
+                      ),
+                      TextButton(onPressed: filter, child: const Text("Retry")),
+                    ],
+                  ),
                 ),
               );
             }
@@ -232,7 +215,7 @@ class _AdminNavReportsState extends State<AdminNavReports> {
   Widget _buildChartSurface() {
     return Container(
       height: 340,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
       decoration: BoxDecoration(
         color: GTheme.surface(context),
         borderRadius: BorderRadius.circular(32),
@@ -270,8 +253,8 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30, // Space for the labels
-                      interval: 2, // Show a label every 2 units on the X axis
+                      reservedSize: 40, // Space for the labels
+                      interval: 1, // Show a label every 2 units on the X axis
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
                         if (index < 0 ||
@@ -287,10 +270,21 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                             .tripsStatModel
                             .value!
                             .monthlyBreakdown[index];
-
-                        return Text(
-                          "${GenesisDate.getShortMonthName(data.date.month)}",
-                          style: TextStyle(fontSize: 12),
+                        return SideTitleWidget(
+                          space: 8.0,
+                          meta: meta,
+                          child: Transform.rotate(
+                            angle:
+                                -45 *
+                                0.0174533, // Converts -45 degrees to radians
+                            child: Text(
+                              "${GenesisDate.getShortMonthName(data.date.month)}",
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -301,7 +295,10 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                   ), // Hide right
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
-                  ), // Hide top
+                  ), // 'Hide top'
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 35),
+                  ),
                 ),
                 gridData: const FlGridData(show: false),
                 borderData: FlBorderData(show: false),
@@ -342,6 +339,11 @@ class _AdminNavReportsState extends State<AdminNavReports> {
 
   // --- 4. Activity List (Limited to 5) ---
   Widget _buildActivitySection() {
+    if (_navReports.tripsStatModel.value!.vehicles.isEmpty) {
+      return [
+        "No Settlements found".text(),
+      ].row(mainAxisAlignment: MainAxisAlignment.center);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

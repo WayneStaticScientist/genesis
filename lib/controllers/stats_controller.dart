@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/main_stats_model.dart';
@@ -38,6 +40,7 @@ class StatsController extends GetxController {
       '/stats/trips?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}',
     );
     fetchingTripStatus.value = false;
+    log("response ${response.response}");
     if (response.hasError) {
       fetchingTripStatsError.value = response.response;
       return;
