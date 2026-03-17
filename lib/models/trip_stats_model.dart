@@ -1,3 +1,16 @@
+class MonthlyBreakDown {
+  final double revenue;
+  final DateTime date;
+  MonthlyBreakDown({required this.date, required this.revenue});
+  factory MonthlyBreakDown.fromJSON(data) {
+    if (data == null) return MonthlyBreakDown(date: DateTime.now(), revenue: 0);
+    return MonthlyBreakDown(
+      date: DateTime.parse(data['date']).toLocal(),
+      revenue: (data['revenue'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
 class SummaryTile {
   double totalRevenue;
   int totalTrips;
@@ -36,15 +49,21 @@ class SummaryDriver {
 
 class SummaryVehicle {
   String model;
+  String driverName;
   double totalRevenue;
-  SummaryVehicle({required this.totalRevenue, required this.model});
+  SummaryVehicle({
+    required this.totalRevenue,
+    required this.model,
+    required this.driverName,
+  });
   factory SummaryVehicle.fromJSON(data) {
     if (data == null) {
-      return SummaryVehicle(totalRevenue: 0, model: '');
+      return SummaryVehicle(totalRevenue: 0, model: '', driverName: '');
     }
     return SummaryVehicle(
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
       model: data['model'] ?? "",
+      driverName: data['driverName'] ?? "",
     );
   }
 }
@@ -53,11 +72,13 @@ class TripStatsModel {
   SummaryTile summary;
   List<SummaryDriver> drivers;
   List<SummaryVehicle> vehicles;
+  List<MonthlyBreakDown> monthlyBreakdown;
 
   TripStatsModel({
     required this.summary,
     required this.drivers,
     required this.vehicles,
+    required this.monthlyBreakdown,
   });
   factory TripStatsModel.fromJSON(data) {
     return TripStatsModel(
@@ -70,6 +91,11 @@ class TripStatsModel {
       vehicles:
           (data['vehicles'] as List<dynamic>?)
               ?.map((e) => SummaryVehicle.fromJSON(e))
+              .toList() ??
+          const [],
+      monthlyBreakdown:
+          (data['monthlyBreakdown'] as List<dynamic>?)
+              ?.map((e) => MonthlyBreakDown.fromJSON(e))
               .toList() ??
           const [],
     );

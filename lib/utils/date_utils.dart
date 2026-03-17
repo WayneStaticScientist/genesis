@@ -17,7 +17,7 @@ class GenesisDate {
   }
 
   static String getInformalShortDate(DateTime dateTime) {
-    return "${_getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
+    return "${getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
   }
 
   static String getLastSeen(DateTime dateTime) {
@@ -32,7 +32,7 @@ class GenesisDate {
     } else if (difference.inDays < 2) {
       return "${difference.inDays} day(s)";
     }
-    return "${_getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
+    return "${getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
   }
 
   static int getDaysDifference(DateTime to) {
@@ -92,7 +92,7 @@ class GenesisDate {
     }
   }
 
-  static String _getShortMonthName(int month) {
+  static String getShortMonthName(int month) {
     switch (month) {
       case 1:
         return "Jan";
@@ -124,6 +124,6 @@ class GenesisDate {
   }
 
   static formatSortableDate(DateTime createdAt) {
-    return "${createdAt.year}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.day.toString().padLeft(2, '0')} ${getWeekDayName(createdAt)} ${createdAt.day} ${_getShortMonthName(createdAt.month)}";
+    return "${createdAt.year}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.day.toString().padLeft(2, '0')} ${getWeekDayName(createdAt)} ${createdAt.day} ${getShortMonthName(createdAt.month)}";
   }
 }

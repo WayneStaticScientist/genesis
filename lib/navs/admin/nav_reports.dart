@@ -1,12 +1,13 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:genesis/controllers/stats_controller.dart';
-import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/theme.dart';
-import 'package:genesis/widgets/layouts/modern_date_range_2.dart';
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
-import 'package:get/get.dart';
+import 'package:genesis/widgets/layouts/modern_date_range_2.dart';
 
 // --- MOCK MODELS ---
 
@@ -173,15 +174,21 @@ class _AdminNavReportsState extends State<AdminNavReports> {
         children: [
           _buildMinimalStat(
             "Revenue",
-            "245K",
+            NumberUtils.formatCurrency(
+              _navReports.tripsStatModel.value!.summary.totalRevenue,
+            ),
             Theme.of(context).colorScheme.tertiary,
           ),
           _buildVerticalDivider(),
-          _buildMinimalStat("Trips", "142", GTheme.primary(context)),
+          _buildMinimalStat(
+            "Trips",
+            _navReports.tripsStatModel.value!.summary.totalTrips.toString(),
+            GTheme.primary(context),
+          ),
           _buildVerticalDivider(),
           _buildMinimalStat(
             "Margin",
-            "32%",
+            "${_navReports.tripsStatModel.value!.summary.margin.toStringAsFixed(0)}%",
             Theme.of(context).colorScheme.error,
           ),
         ],
@@ -240,25 +247,74 @@ class _AdminNavReportsState extends State<AdminNavReports> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Financial Flow",
+          Text(
+            "Financial Flow  ${GenesisDate.getMonthName(selectedDateRange.end.subtract(Duration(days: 365)).month)} - ${GenesisDate.getMonthName(selectedDateRange.end.month)}",
             style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
           ),
           const SizedBox(height: 30),
           Expanded(
             child: LineChart(
               LineChartData(
+                maxX:
+                    (_navReports.tripsStatModel.value!.monthlyBreakdown.length -
+                            1)
+                        .toDouble(),
+                minX: 0,
+                minY: 0,
+                maxY: _navReports.tripsStatModel.value!.monthlyBreakdown.isEmpty
+                    ? 10.0
+                    : _navReports.tripsStatModel.value!.monthlyBreakdown
+                          .map((e) => e.revenue)
+                          .reduce((a, b) => a > b ? a : b),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30, // Space for the labels
+                      interval: 2, // Show a label every 2 units on the X axis
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 ||
+                            index >=
+                                _navReports
+                                    .tripsStatModel
+                                    .value!
+                                    .monthlyBreakdown
+                                    .length) {
+                          return const SizedBox.shrink(); // Return nothing if out of bounds
+                        }
+                        final data = _navReports
+                            .tripsStatModel
+                            .value!
+                            .monthlyBreakdown[index];
+
+                        return Text(
+                          "${GenesisDate.getShortMonthName(data.date.month)}",
+                          style: TextStyle(fontSize: 12),
+                        );
+                      },
+                    ),
+                  ),
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ), // Hide right
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ), // Hide top
+                ),
                 gridData: const FlGridData(show: false),
-                titlesData: const FlTitlesData(show: false),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: [
-                      const FlSpot(0, 3),
-                      const FlSpot(2, 5),
-                      const FlSpot(4, 4),
-                      const FlSpot(6, 8),
-                    ],
+                    spots: _navReports.tripsStatModel.value!.monthlyBreakdown
+                        .asMap()
+                        .entries
+                        .map(
+                          (entry) =>
+                              FlSpot(entry.key.toDouble(), entry.value.revenue),
+                        )
+                        .toList(),
                     isCurved: true,
                     color: GTheme.primary(context),
                     barWidth: 4,
@@ -295,16 +351,6 @@ class _AdminNavReportsState extends State<AdminNavReports> {
             const Text(
               "Latest Settlements",
               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                "View All",
-                style: TextStyle(
-                  color: GTheme.primary(context),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
           ],
         ),
@@ -347,7 +393,10 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                     fontSize: 14,
                   ),
                 ),
-                subtitle: Text("trip", style: const TextStyle(fontSize: 12)),
+                subtitle: Text(
+                  trip.driverName,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
