@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:genesis/models/user_trip_stats_model.dart';
+import 'package:genesis/models/vehicle_stats_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/main_stats_model.dart';
@@ -65,6 +66,27 @@ class StatsController extends GetxController {
       return;
     }
     userTripStats.value = UserTripStatsModel.fromJSON(response.body);
+    return;
+  }
+
+  RxBool fetchingVehicleTripStatus = false.obs;
+  RxString fetchingVehicleTripStatsError = ''.obs;
+  Rx<VehicleStatsModel?> vehicleTripStats = Rx<VehicleStatsModel?>(null);
+  Future<void> fetchVehicleTripStats(
+    String vehicleId,
+    DateTimeRange range,
+  ) async {
+    fetchingVehicleTripStatus.value = true;
+    fetchingVehicleTripStatsError.value = '';
+    final response = await Net.get(
+      '/stats/trips/vehicle?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}&vehicleId=$vehicleId',
+    );
+    fetchingVehicleTripStatus.value = false;
+    if (response.hasError) {
+      fetchingVehicleTripStatsError.value = response.response;
+      return;
+    }
+    vehicleTripStats.value = VehicleStatsModel.fromJSON(response.body);
     return;
   }
 }

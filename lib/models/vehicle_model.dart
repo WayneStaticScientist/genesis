@@ -1,3 +1,4 @@
+import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/models/licence_model.dart';
 import 'package:genesis/models/populated_driver_model.dart';
 
@@ -11,6 +12,7 @@ class VehicleModel {
   final String engineType;
   final String licencePlate;
   final PopulatedDriverModel? driver;
+  final List<DeductionItem> insurances;
   LicenceModel? licence;
 
   VehicleModel({
@@ -22,6 +24,7 @@ class VehicleModel {
     required this.carModel,
     required this.fuelLevel,
     required this.fuelRatio,
+    required this.insurances,
     required this.engineType,
     required this.licencePlate,
   });
@@ -33,8 +36,9 @@ class VehicleModel {
       "status": status,
       'licence': licence,
       "carModel": carModel,
-      'fuelLevel': fuelLevel,
       "fuelRatio": fuelRatio,
+      'fuelLevel': fuelLevel,
+      "insurances": insurances,
       'engineType': engineType,
       'driver': driver?.toJSON(),
       "licencePlate": licencePlate,
@@ -51,6 +55,11 @@ class VehicleModel {
           ? PopulatedDriverModel.fromJSON(data['driver'])
           : null,
       status: data['status'],
+      insurances:
+          (data['insurances'] as List<dynamic>?)
+              ?.map((e) => DeductionItem.fromJSON(e))
+              .toList() ??
+          [],
       carModel: data['carModel'],
       licencePlate: data['licencePlate'],
 

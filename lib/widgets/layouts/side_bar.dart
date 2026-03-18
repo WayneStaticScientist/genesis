@@ -106,8 +106,8 @@ class _GNavBarState extends State<GNavBar> {
                       _buildNavItem(
                         context,
                         'reports',
-                        "Reports",
-                        Icons.grid_view_rounded,
+                        "Revenue Reports",
+                        Icons.report_outlined,
                       ).visibleIf(!isDriver),
                       Obx(
                         () => _buildNavItem(

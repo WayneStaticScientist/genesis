@@ -106,7 +106,11 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                 vertical: 16,
               ),
               title: "Fleet Management".text(
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
               ),
             ),
             actions: [
