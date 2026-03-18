@@ -36,36 +36,10 @@ class _AdminNavMainState extends State<AdminNavMain> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Obx(() {
-        if (_statsController.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF6C5DD3)),
-          );
-        }
-        if (_statsController.errorState.value.isNotEmpty ||
-            _statsController.stats.value == null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 10),
-                Text("Error: ${_statsController.errorState.value}"),
-                TextButton(
-                  onPressed: () => _statsController.fetchStats(),
-                  child: const Text("Retry"),
-                ),
-              ],
-            ),
-          );
-        }
-        return _buildDashboardContent(context, _statsController.stats.value!);
-      }),
-    );
+    return Scaffold(body: _buildDashboardContent(context));
   }
 
-  Widget _buildDashboardContent(BuildContext context, MainStatsModel data) {
+  Widget _buildDashboardContent(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -80,7 +54,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
   Widget _buildMainSection() {
     return Obx(() {
       if (_statsController.isLoading.value) {
-        return CircularProgressIndicator(color: Color(0xFF6C5DD3));
+        return [CircularProgressIndicator(color: Color(0xFF6C5DD3))]
+            .row(mainAxisAlignment: MainAxisAlignment.center)
+            .padding(EdgeInsets.only(top: 40));
       }
       if (_statsController.errorState.value.isNotEmpty ||
           _statsController.stats.value == null) {
@@ -95,7 +71,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
               child: const Text("Retry"),
             ),
           ],
-        );
+        ).sizedBox(width: double.infinity).padding(EdgeInsets.only(top: 40));
       }
       return [
         const SizedBox(height: 30),

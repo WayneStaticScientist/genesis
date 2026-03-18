@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/src/services/system_chrome.dart';
+import 'package:genesis/utils/bool_utils.dart';
 
 class GTheme {
   static Color primary(BuildContext context) {
@@ -28,5 +30,26 @@ class GTheme {
     return (Theme.of(context).brightness == Brightness.dark)
         ? Colors.white
         : Colors.black;
+  }
+
+  static SystemUiOverlayStyle? copyOverlay(BuildContext context) {
+    return SystemUiOverlayStyle(
+      statusBarColor:
+          Colors.transparent, // Optional: makes status bar transparent
+      statusBarIconBrightness: (Theme.of(context).brightness == Brightness.dark)
+          .lord(Brightness.dark, Brightness.light), // For Android (dark icons)
+      statusBarBrightness: (Theme.of(context).brightness == Brightness.dark)
+          .lord(Brightness.dark, Brightness.light), // For iOS (dark icons)
+    );
+  }
+
+  static SystemUiOverlayStyle? materialOverlay(BuildContext context) {
+    return SystemUiOverlayStyle(
+      statusBarColor: Theme.of(
+        context,
+      ).colorScheme.primary, // Optional: makes status bar transparent
+      statusBarIconBrightness: Brightness.light, // For Android (dark icons)
+      statusBarBrightness: Brightness.light, // For iOS (dark icons)
+    );
   }
 }

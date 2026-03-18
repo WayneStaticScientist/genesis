@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +44,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
       setState(() {
         _selectedDateRange = picked;
       });
+      refresh();
     }
   }
 
@@ -51,6 +53,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        systemOverlayStyle: GTheme.copyOverlay(context),
         title: const Text(
           "Performance Insights",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),

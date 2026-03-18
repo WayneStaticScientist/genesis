@@ -549,11 +549,12 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   _buildDriverCard(dynamic driver) {
     if (driver == null || driver.runtimeType == String) {
-      "".text().center();
+      return "".text().center();
     }
     return ListTile(
-      title: "${driver['firstName']} ${driver['lastName']}".text(),
-      subtitle: "${driver['email']}".text(),
+      title: "${driver['firstName'] ?? 'N/A'} ${driver['lastName'] ?? 'N/A'}"
+          .text(),
+      subtitle: "${driver['email'] ?? "N/A"}".text(),
     );
   }
 }
