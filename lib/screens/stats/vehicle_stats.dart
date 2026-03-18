@@ -1,3 +1,4 @@
+import 'package:genesis/widgets/layouts/insurance_bottom_sheet.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -337,6 +338,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                 "${widget.vehicle.insurances.length.toString()} Covers",
                 Icons.shield,
                 Colors.purple,
+                ontap: () => _showBottomInsurances(),
               ),
             ],
           ),
@@ -345,7 +347,13 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
     );
   }
 
-  Widget _docCard(String title, String expiry, IconData icon, Color color) {
+  Widget _docCard(
+    String title,
+    String expiry,
+    IconData icon,
+    Color color, {
+    VoidCallback? ontap,
+  }) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(15),
@@ -366,7 +374,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
             ),
           ],
         ),
-      ),
+      ).onTap(() => ontap?.call()),
     );
   }
 
@@ -577,6 +585,23 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showBottomInsurances() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => InsuranceBottomSheet(
+        items: widget.vehicle.insurances,
+        onPayAll: () {
+          // Logic for payment processing
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Processing Insurance Payment...')),
+          );
+        },
       ),
     );
   }

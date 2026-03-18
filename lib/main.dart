@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/insurance_controller.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/genesis_settings.dart';
 import 'package:get/get.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
         Get.put(TripsController());
         Get.put(MessagingController());
         Get.put(PayrollController());
+        Get.put(InsuranceController());
       }),
       title: 'Genesis',
       theme: ThemeData(
