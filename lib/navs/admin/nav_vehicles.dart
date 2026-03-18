@@ -19,7 +19,9 @@ import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 
 class AdminNavVehicles extends StatefulWidget {
-  const AdminNavVehicles({super.key});
+  final GlobalKey<ScaffoldState>? triggerKey;
+
+  const AdminNavVehicles({super.key, this.triggerKey});
 
   @override
   State<AdminNavVehicles> createState() => _AdminNavVehiclesState();
@@ -76,6 +78,12 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
           SliverAppBar(
             expandedHeight: 120,
             floating: true,
+            leading: DrawerButton(
+              color: Colors.white,
+              onPressed: () {
+                widget.triggerKey?.currentState?.openDrawer();
+              },
+            ).visibleIf(widget.triggerKey != null),
             systemOverlayStyle: SystemUiOverlayStyle(
               statusBarColor: Theme.of(context).colorScheme.primary,
               statusBarBrightness: Brightness.light,
@@ -84,6 +92,15 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
             backgroundColor: GTheme.color(context),
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [GTheme.primary(context), Colors.blueAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
               titlePadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 16,
@@ -101,10 +118,7 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                   ).colorScheme.primary.withAlpha(25),
                   child: IconButton(
                     onPressed: () => Get.to(() => AdminAddVehicle()),
-                    icon: Icon(
-                      Icons.add,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                    icon: Icon(Icons.add, color: Colors.white),
                   ),
                 ),
               ),
