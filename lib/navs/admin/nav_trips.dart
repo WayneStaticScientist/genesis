@@ -62,31 +62,33 @@ class _NavTripsState extends State<NavTrips> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: GTheme.surface(context),
+        backgroundColor: GTheme.primary(context),
         leading: DrawerButton(
+          color: Colors.white,
           onPressed: () {
             widget.triggerKey?.currentState?.openDrawer();
           },
-        ),
+        ).visibleIf(widget.triggerKey != null),
         elevation: 0,
         title: const Text(
           "Trip Management",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSearchAndFilterHeader(),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              "Recent Trips",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSearchAndFilterHeader(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Text(
+                "Recent Trips",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          Expanded(
-            child: Obx(() {
+            Obx(() {
               if (_tripsController.trips.isEmpty &&
                   _tripsController.loadingTrips.value) {
                 return MaterialLoader().center();
@@ -94,8 +96,9 @@ class _NavTripsState extends State<NavTrips> {
               if (_tripsController.trips.isEmpty) {
                 return _buildEmptyState();
               }
-
               return ListView.builder(
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: _tripsController.trips.length,
                 itemBuilder: (context, index) {
@@ -109,8 +112,8 @@ class _NavTripsState extends State<NavTrips> {
                 },
               );
             }),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -171,7 +174,7 @@ class _NavTripsState extends State<NavTrips> {
                             setState(() => _selectedStatus = status);
                             filterResults();
                           },
-                          backgroundColor: Colors.transparent,
+                          backgroundColor: GTheme.cardColor(context),
                           selectedColor: GTheme.primary(context).withAlpha(30),
                           checkmarkColor: GTheme.primary(context),
                           labelStyle: TextStyle(

@@ -33,7 +33,7 @@ class TripCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.surface(context),
+        color: GTheme.cardColor(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -111,7 +111,7 @@ class TripCard extends StatelessWidget {
             // Route Section
             Container(
               padding: const EdgeInsets.all(16),
-              color: GTheme.surface(context),
+              color: GTheme.cardColor(context),
               child: Column(
                 children: [
                   _locationRow(

@@ -1,3 +1,5 @@
+import 'package:genesis/screens/stats/driver_stats.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +23,7 @@ class AdminNavReports extends StatefulWidget {
 
 class _AdminNavReportsState extends State<AdminNavReports> {
   DateTimeRange selectedDateRange = DateTimeRange(
-    start: DateTime.now().subtract(const Duration(days: 7)),
+    start: DateTime.now().subtract(const Duration(days: 30)),
     end: DateTime.now(),
   );
   final _navReports = Get.find<StatsController>();
@@ -372,8 +374,17 @@ class _AdminNavReportsState extends State<AdminNavReports> {
             itemBuilder: (context, index) {
               final trip = _navReports.tripsStatModel.value!.vehicles[index];
               return ListTile(
+                onTap: () {
+                  if (trip.driverId.isEmpty) {
+                    return Toaster.showErrorTop(
+                      "Driver",
+                      'Driver not found / May have been deleted',
+                    );
+                  }
+                  Get.to(() => DriverStatsScreen(userId: trip.driverId));
+                },
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: 2,
                   vertical: 8,
                 ),
                 leading: Container(
@@ -399,26 +410,30 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                   trip.driverName,
                   style: const TextStyle(fontSize: 12),
                 ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      NumberUtils.formatCurrency(trip.totalRevenue),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
+                trailing: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        NumberUtils.formatCurrency(trip.totalRevenue),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    const Text(
-                      "Settled",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                      const Text(
+                        "Settled",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  12.gapWidth,
+                  Icon(Icons.chevron_right, color: Colors.blue),
+                ].row().constrained(minWidth: 30, maxWidth: 100),
               );
             },
           ),

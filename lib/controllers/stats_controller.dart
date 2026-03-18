@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:genesis/models/user_trip_stats_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/main_stats_model.dart';
@@ -46,6 +47,24 @@ class StatsController extends GetxController {
       return;
     }
     tripsStatModel.value = TripStatsModel.fromJSON(response.body);
+    return;
+  }
+
+  RxBool fetchingUserTripStatus = false.obs;
+  RxString fetchingUserTripStatsError = ''.obs;
+  Rx<UserTripStatsModel?> userTripStats = Rx<UserTripStatsModel?>(null);
+  Future<void> fetchUSerTripStats(String userId, DateTimeRange range) async {
+    fetchingUserTripStatus.value = true;
+    fetchingUserTripStatsError.value = '';
+    final response = await Net.get(
+      '/stats/trips/user?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}&userId=$userId',
+    );
+    fetchingUserTripStatus.value = false;
+    if (response.hasError) {
+      fetchingUserTripStatsError.value = response.response;
+      return;
+    }
+    userTripStats.value = UserTripStatsModel.fromJSON(response.body);
     return;
   }
 }
