@@ -1,3 +1,6 @@
+import 'package:genesis/models/deducton_item.dart';
+import 'package:genesis/widgets/actions/deduction_tile.dart';
+import 'package:genesis/widgets/actions/section_header.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -86,6 +89,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
       "engineType": _selectedType,
       "fuelRatio": _fuelRation,
       // Add driver ID if selected
+      "insurances": widget.vehicle.insurances.map(((e) => e.toJson())).toList(),
       "driver": _assignedDriver?.id,
       "licence": expiryDate != null
           ? LicenceModel(
@@ -107,9 +111,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
 
   // New function to show driver selection
   void _showAssignDriverSheet() {
-    // MOCK DATA: Replace with your actual DriverController list
     _driversController.fetchDrivers();
-
     showModalBottomSheet(
       context: context,
       backgroundColor: GTheme.color(context),
@@ -213,6 +215,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     return Scaffold(
       backgroundColor: GTheme.color(context),
       appBar: AppBar(
+        systemOverlayStyle: GTheme.copyOverlay(context),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -397,9 +400,27 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                   .sizedBox(width: double.infinity),
             ],
 
+            const SizedBox(height: 20),
+            SectionHeader(
+              title: "Insurance",
+              icon: Icons.security,
+              onAdd: () {
+                _addDeduction();
+              },
+            ),
+            ...widget.vehicle.insurances.map(
+              (i) => DeductionTile(
+                item: i,
+                onRemove: () {
+                  setState(() {
+                    widget.vehicle.insurances.remove(i);
+                  });
+                },
+              ),
+            ),
+            // Delete Action
             const SizedBox(height: 40),
 
-            // Delete Action
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -530,5 +551,64 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         expiryDate = picked;
       });
     }
+  }
+
+  void _addDeduction() {
+    final nameController = TextEditingController();
+    final valController = TextEditingController();
+    DeductionType selectedType = DeductionType.percentage;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setInnerState) => AlertDialog(
+          title: const Text("New Deduction"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Name (e.g. VAT)"),
+              ),
+              TextField(
+                controller: valController,
+                decoration: const InputDecoration(labelText: "Value"),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10),
+              SegmentedButton<DeductionType>(
+                segments: const [
+                  ButtonSegment(value: DeductionType.fixed, label: Text("\$")),
+                ],
+                selected: {selectedType},
+                onSelectionChanged: (set) =>
+                    setInnerState(() => selectedType = set.first),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.vehicle.insurances.add(
+                    DeductionItem(
+                      name: nameController.text,
+                      value: double.tryParse(valController.text) ?? 0,
+                      deductionType: DeductionType.fixed,
+                    ),
+                  );
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

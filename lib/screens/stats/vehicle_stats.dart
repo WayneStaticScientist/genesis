@@ -1,14 +1,14 @@
-import 'package:genesis/controllers/stats_controller.dart';
-import 'package:genesis/utils/number_utils.dart';
-import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/models/vehicle_model.dart';
+import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/screens/vehicles/vehicle_edit.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 
 // --- CONTROLLER ---
 class VehicleStatsController extends GetxController {
@@ -18,8 +18,9 @@ class VehicleStatsController extends GetxController {
     end: DateTime.now(),
   ).obs;
 
-  void updateDateRange(DateTimeRange range) {
+  void updateDateRange(DateTimeRange range, String vehicleId) {
     dateRange.value = range;
+    getStatsForVehicle(vehicleId);
   }
 
   void getStatsForVehicle(String vehicleId) async {
@@ -43,7 +44,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   final _statsController = Get.find<StatsController>();
 
   var dateRange = DateTimeRange(
-    start: DateTime.now().subtract(const Duration(days: 100)),
+    start: DateTime.now().subtract(const Duration(days: 30)),
     end: DateTime.now(),
   );
 
@@ -67,6 +68,15 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
           SliverPersistentHeader(
             pinned: true,
             delegate: _SliverTabDelegate(child: _buildTabSwitcher(context)),
+          ),
+          Obx(
+            () => SliverToBoxAdapter(
+              child: [
+                "Date From ${GenesisDate.getInformalShortDate(controller.dateRange.value.start)} - "
+                        "${GenesisDate.getInformalShortDate(controller.dateRange.value.end)}"
+                    .text(style: TextStyle(color: GTheme.primary(context))),
+              ].row(mainAxisAlignment: MainAxisAlignment.center),
+            ),
           ),
           Obx(
             () => controller.selectedTab.value == 0
@@ -272,6 +282,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   Widget _statMiniCard(String label, String value, Color color) {
     return Container(
       width: Get.width * 0.28,
+      height: 80,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -279,16 +290,17 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
         border: Border.all(color: color.withAlpha(30)),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             value,
             style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 12,
               color: color,
             ),
           ),
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
         ],
       ),
     );
@@ -395,7 +407,8 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                   child: child!,
                 ),
               );
-              if (picked != null) controller.updateDateRange(picked);
+              if (picked != null)
+                controller.updateDateRange(picked, widget.vehicle.id ?? '');
             },
             child: Container(
               padding: const EdgeInsets.all(10),
@@ -444,22 +457,72 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
 
   // 6. HISTORY LIST (Service/Trips)
   Widget _buildHistoryList(BuildContext context, {required bool isService}) {
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => _historyItem(
-            title: isService ? "Full Engine Service" : "Nairobi - Mombasa",
-            subtitle: isService ? "Odometer: 40,000km" : "Payload: 24 Tons",
-            date: "14 Oct 2023",
-            amount: isService ? "-\$450.00" : "+\$1,200.00",
-            icon: isService ? Icons.webhook_rounded : Icons.pin_drop,
-            iconColor: isService ? Colors.orange : Colors.green,
+    return Obx(() {
+      if (_statsController.fetchingVehicleTripStatus.value) {
+        return SliverToBoxAdapter(
+          child: [
+            MaterialLoader(),
+          ].row(mainAxisAlignment: MainAxisAlignment.center),
+        );
+      }
+      if (_statsController.fetchingVehicleTripStatsError.value.isNotEmpty ||
+          _statsController.vehicleTripStats.value == null) {
+        return SliverToBoxAdapter(
+          child: [
+            _statsController.fetchingVehicleTripStatsError.value.text(),
+          ].row(mainAxisAlignment: MainAxisAlignment.center),
+        );
+      }
+      if (isService) {
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final item = _statsController
+                    .vehicleTripStats
+                    .value!
+                    .maintenances[index];
+                return _historyItem(
+                  title: item.issueDetails,
+                  subtitle: item.urgenceLevel.toUpperCase(),
+                  date: "",
+                  amount: '-${NumberUtils.formatCurrency(item.estimatedCosts)}',
+                  icon: Icons.webhook_rounded,
+                  iconColor: Colors.orange,
+                );
+              },
+              childCount:
+                  _statsController.vehicleTripStats.value!.maintenances.length,
+            ),
           ),
-          childCount: 10,
+        );
+      }
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final item =
+                  _statsController.vehicleTripStats.value!.trips[index];
+              return _historyItem(
+                title: "${item.origin}  ${item.destination}",
+                subtitle: "Payload: ${item.loadWeight} Tons",
+                date: item.startTime != null
+                    ? GenesisDate.getInformalShortDate(item.startTime!)
+                    : '',
+                amount: "+${NumberUtils.formatCurrency(item.tripPayout)}",
+                icon: Icons.pin_drop,
+                iconColor: Colors.green,
+              );
+            },
+            childCount: isService
+                ? _statsController.vehicleTripStats.value!.maintenances.length
+                : _statsController.vehicleTripStats.value!.trips.length,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _historyItem({

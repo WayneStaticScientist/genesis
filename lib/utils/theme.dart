@@ -37,9 +37,9 @@ class GTheme {
       statusBarColor:
           Colors.transparent, // Optional: makes status bar transparent
       statusBarIconBrightness: (Theme.of(context).brightness == Brightness.dark)
-          .lord(Brightness.dark, Brightness.light), // For Android (dark icons)
+          .lord(Brightness.light, Brightness.dark), // For Android (dark icons)
       statusBarBrightness: (Theme.of(context).brightness == Brightness.dark)
-          .lord(Brightness.dark, Brightness.light), // For iOS (dark icons)
+          .lord(Brightness.light, Brightness.dark), // For iOS (dark icons)
     );
   }
 
