@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/insurance_controller.dart';
 import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:get/get.dart';
 
-class InsuranceBottomSheet extends StatelessWidget {
+class InsuranceBottomSheet extends StatefulWidget {
   final List<DeductionItem> items;
   final VoidCallback onPayAll;
 
@@ -13,9 +16,18 @@ class InsuranceBottomSheet extends StatelessWidget {
   });
 
   @override
+  State<InsuranceBottomSheet> createState() => _InsuranceBottomSheetState();
+}
+
+class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
+  final _insurancesController = Get.find<InsuranceController>();
+  @override
   Widget build(BuildContext context) {
     // Calculate total deduction amount
-    final double totalAmount = items.fold(0, (sum, item) => sum + item.value);
+    final double totalAmount = widget.items.fold(
+      0,
+      (sum, item) => sum + item.value,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -59,10 +71,10 @@ class InsuranceBottomSheet extends StatelessWidget {
           Flexible(
             child: ListView.separated(
               shrinkWrap: true,
-              itemCount: items.length,
+              itemCount: widget.items.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final item = items[index];
+                final item = widget.items[index];
                 final calculatedValue = item.value;
                 return Container(
                   padding: const EdgeInsets.all(16),
@@ -152,8 +164,7 @@ class InsuranceBottomSheet extends StatelessWidget {
             height: 56,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
-                onPayAll();
+                widget.onPayAll();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[700],
@@ -163,9 +174,16 @@ class InsuranceBottomSheet extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Pay Now',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Obx(
+                () => _insurancesController.payingInsurances.value
+                    ? WhiteLoader()
+                    : const Text(
+                        'Pay Now',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ),

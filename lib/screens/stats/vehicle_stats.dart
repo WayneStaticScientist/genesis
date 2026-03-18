@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/insurance_controller.dart';
 import 'package:genesis/widgets/layouts/insurance_bottom_sheet.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
@@ -43,6 +44,7 @@ class VehicleDetailStatsScreen extends StatefulWidget {
 class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   // Pass your Vehicle model here
   final _statsController = Get.find<StatsController>();
+  final _insurancesController = Get.find<InsuranceController>();
 
   var dateRange = DateTimeRange(
     start: DateTime.now().subtract(const Duration(days: 30)),
@@ -597,12 +599,31 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
       builder: (context) => InsuranceBottomSheet(
         items: widget.vehicle.insurances,
         onPayAll: () {
-          // Logic for payment processing
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Processing Insurance Payment...')),
-          );
+          _proceedToInsurancePayment();
         },
       ),
+    );
+  }
+
+  void _proceedToInsurancePayment() {
+    final double totalAmount = widget.vehicle.insurances.fold(
+      0,
+      (sum, item) => sum + item.value,
+    );
+    Get.defaultDialog(
+      title: "Proceed Payment",
+      content:
+          "Proceed payment for ${widget.vehicle.carModel} for insurances payment for ${NumberUtils.formatCurrency(totalAmount)}"
+              .text(),
+      textCancel: "cancel",
+      textConfirm: "pay",
+      onConfirm: () {
+        Get.back();
+        _insurancesController.payInsurances(
+          widget.vehicle.id ?? '',
+          widget.vehicle.insurances,
+        );
+      },
     );
   }
 }
