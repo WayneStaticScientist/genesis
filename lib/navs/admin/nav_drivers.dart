@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:exui/exui.dart';
-import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:genesis/models/user_model.dart'; // Ensure this matches your project structure
 import 'package:genesis/utils/screen_sizes.dart';
@@ -245,11 +245,3 @@ class _AdminNavDriversState extends State<AdminNavDrivers> {
     _driverController.fetchDrivers(page: i, search: _searchKey);
   }
 }
-
-// ---------------------------------------------------------------------------
-// WIDGET: Driver Card
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// WIDGET: Assign Trip Modal
-// ---------------------------------------------------------------------------

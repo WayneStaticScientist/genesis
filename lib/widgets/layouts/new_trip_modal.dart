@@ -754,22 +754,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               child: Icon(Icons.location_pin, color: Colors.red, size: 45),
             ),
           ),
-          Positioned(
-            bottom: 30,
-            left: 30,
-            right: 30,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: GTheme.color(context),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-              ),
-              onPressed: () => Get.back(result: _center),
-              child: const Text(
-                "CONFIRM LOCATION",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
         ],
       ),
     );
