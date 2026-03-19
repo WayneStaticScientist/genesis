@@ -1,19 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:genesis/controllers/insurance_controller.dart';
-import 'package:genesis/models/deducton_item.dart';
-import 'package:genesis/screens/stats/vehicle_insurance_history.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
+import 'package:genesis/models/deducton_item.dart';
+import 'package:genesis/models/vehicle_model.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:genesis/controllers/insurance_controller.dart';
+import 'package:genesis/screens/stats/vehicle_insurance_history.dart';
 
 class InsuranceBottomSheet extends StatefulWidget {
   final List<DeductionItem> items;
+  final VehicleModel vehicleModel;
   final VoidCallback onPayAll;
 
   const InsuranceBottomSheet({
     super.key,
     required this.items,
     required this.onPayAll,
+    required this.vehicleModel,
   });
 
   @override
@@ -201,7 +204,11 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
                 height: 56,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    Get.to(() => VehicleInsuranceHistoryScreen());
+                    Get.to(
+                      () => VehicleInsuranceHistoryScreen(
+                        vehicleModel: widget.vehicleModel,
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.history_rounded, size: 20),
                   label: const Text(

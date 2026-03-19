@@ -601,6 +601,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
         onPayAll: () {
           _proceedToInsurancePayment();
         },
+        vehicleModel: widget.vehicle,
       ),
     );
   }

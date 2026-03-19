@@ -1,13 +1,16 @@
+import 'package:genesis/models/vehicle_model.dart';
+import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/models/deducton_item.dart';
-import 'package:genesis/models/insurance_model.dart';
-import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/theme.dart';
-
-// --- Screen Implementation ---
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/models/insurance_model.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/controllers/insurance_controller.dart';
 
 class VehicleInsuranceHistoryScreen extends StatefulWidget {
-  const VehicleInsuranceHistoryScreen({super.key});
+  final VehicleModel vehicleModel;
+  const VehicleInsuranceHistoryScreen({super.key, required this.vehicleModel});
 
   @override
   State<VehicleInsuranceHistoryScreen> createState() =>
@@ -16,40 +19,11 @@ class VehicleInsuranceHistoryScreen extends StatefulWidget {
 
 class _VehicleInsuranceHistoryScreenState
     extends State<VehicleInsuranceHistoryScreen> {
-  DateTimeRange? _selectedDateRange;
-  // Mock Data
-  final List<InsuranceModel> _payments = [
-    InsuranceModel(
-      total: 450.00,
-      vehicleId: "V-8829",
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      insurances: [
-        DeductionItem(
-          name: "Full Coverage",
-          value: 300,
-          deductionType: DeductionType.fixed,
-        ),
-        DeductionItem(
-          name: "Roadside Assist",
-          value: 150,
-          deductionType: DeductionType.fixed,
-        ),
-      ],
-    ),
-    InsuranceModel(
-      total: 120.50,
-      vehicleId: "V-1102",
-      createdAt: DateTime.now().subtract(const Duration(days: 32)),
-      insurances: [
-        DeductionItem(
-          name: "Third Party",
-          value: 120.50,
-          deductionType: DeductionType.fixed,
-        ),
-      ],
-    ),
-  ];
-
+  DateTimeRange _selectedDateRange = DateTimeRange(
+    start: DateTime.now().subtract(Duration(days: 30)),
+    end: DateTime.now(),
+  );
+  final _insuranceController = Get.find<InsuranceController>();
   Future<void> _selectDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
@@ -70,6 +44,13 @@ class _VehicleInsuranceHistoryScreenState
     if (picked != null) {
       setState(() => _selectedDateRange = picked);
     }
+  }
+
+  void refresh() {
+    _insuranceController.fetchInsurances(
+      widget.vehicleModel.id ?? '',
+      _selectedDateRange,
+    );
   }
 
   @override
@@ -101,31 +82,35 @@ class _VehicleInsuranceHistoryScreenState
       body: Column(
         children: [
           _buildDateRangeHeader(colorScheme, isDark),
-          Expanded(
-            child: _payments.isEmpty
-                ? _buildEmptyState(isDark)
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
+          Obx(() {
+            if (_insuranceController.findingInsurances.value) {
+              return MaterialLoader().center();
+            }
+            return Expanded(
+              child: _insuranceController.insuraceModel.isEmpty
+                  ? _buildEmptyState(isDark)
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      itemCount: _insuranceController.insuraceModel.length,
+                      itemBuilder: (context, index) => _buildPaymentCard(
+                        _insuranceController.insuraceModel[index],
+                        colorScheme,
+                        isDark,
+                      ),
                     ),
-                    itemCount: _payments.length,
-                    itemBuilder: (context, index) => _buildPaymentCard(
-                      _payments[index],
-                      colorScheme,
-                      isDark,
-                    ),
-                  ),
-          ),
+            );
+          }),
         ],
       ),
     );
   }
 
   Widget _buildDateRangeHeader(ColorScheme colorScheme, bool isDark) {
-    String rangeText = _selectedDateRange == null
-        ? "Showing all records"
-        : "${GenesisDate.getInformalDate(_selectedDateRange!.start)} - ${GenesisDate.getInformalDate(_selectedDateRange!.end)}";
+    String rangeText =
+        "${GenesisDate.getInformalDate(_selectedDateRange.start)} - ${GenesisDate.getInformalDate(_selectedDateRange.end)}";
 
     return Container(
       margin: const EdgeInsets.all(20),
@@ -169,11 +154,6 @@ class _VehicleInsuranceHistoryScreenState
               ],
             ),
           ),
-          if (_selectedDateRange != null)
-            IconButton(
-              onPressed: () => setState(() => _selectedDateRange = null),
-              icon: const Icon(Icons.close, size: 20),
-            ),
         ],
       ),
     );
