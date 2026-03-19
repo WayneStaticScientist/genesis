@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/insurance_controller.dart';
 import 'package:genesis/models/deducton_item.dart';
+import 'package:genesis/screens/stats/vehicle_insurance_history.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
@@ -21,6 +22,7 @@ class InsuranceBottomSheet extends StatefulWidget {
 
 class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
   final _insurancesController = Get.find<InsuranceController>();
+
   @override
   Widget build(BuildContext context) {
     // Calculate total deduction amount
@@ -32,7 +34,7 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
     return Container(
       decoration: BoxDecoration(
         color: GTheme.cardColor(context),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
@@ -61,7 +63,7 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Review your active insurance policies and total monthly cost.',
             style: TextStyle(fontSize: 14),
           ),
@@ -158,34 +160,64 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
             ],
           ),
           const SizedBox(height: 24),
-          // Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onPayAll();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+
+          // Action Buttons
+          Column(
+            children: [
+              // Primary Pay Now Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    widget.onPayAll();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Obx(
+                    () => _insurancesController.payingInsurances.value
+                        ? WhiteLoader()
+                        : const Text(
+                            'Pay Now',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
                 ),
-                elevation: 0,
               ),
-              child: Obx(
-                () => _insurancesController.payingInsurances.value
-                    ? WhiteLoader()
-                    : const Text(
-                        'Pay Now',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+              const SizedBox(height: 12),
+
+              // New Secondary Action Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Get.to(() => VehicleInsuranceHistoryScreen());
+                  },
+                  icon: const Icon(Icons.history_rounded, size: 20),
+                  label: const Text(
+                    'View Last Insurance Payments',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blue[700],
+                    side: BorderSide(color: Colors.blue[100]!, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 12),
         ],
