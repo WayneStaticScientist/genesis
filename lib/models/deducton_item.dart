@@ -23,7 +23,7 @@ class DeductionItem {
 
   factory DeductionItem.fromJSON(data) {
     return DeductionItem(
-      name: data['name'],
+      name: data['name'] ?? '',
       value: (data['value'] as num?)?.toDouble() ?? 0,
       deductionType: data['deductionType'] == 0
           ? DeductionType.percentage

@@ -17,7 +17,7 @@ class InsuranceModel {
       total: (data['total'] as num?)?.toDouble() ?? 0,
       insurances:
           (data['insurances'] as List<dynamic>?)
-              ?.map((e) => DeductionItem.fromJSON(data))
+              ?.map((e) => DeductionItem.fromJSON(e))
               .toList() ??
           [],
       vehicleId: data['vehicleId'],

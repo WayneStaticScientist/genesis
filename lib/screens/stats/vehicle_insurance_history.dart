@@ -210,7 +210,7 @@ class _VehicleInsuranceHistoryScreenState
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           subtitle: Text(
-            "Vehicle: ${payment.vehicleId}",
+            "Vehicle: ${widget.vehicleModel.carModel}",
             style: TextStyle(
               color: isDark ? Colors.grey[400] : Colors.grey[600],
             ),
