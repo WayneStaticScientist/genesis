@@ -43,7 +43,14 @@ class _VehicleInsuranceHistoryScreenState
     );
     if (picked != null) {
       setState(() => _selectedDateRange = picked);
+      refresh();
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    refresh();
   }
 
   void refresh() {
