@@ -1,12 +1,14 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
+import 'package:exui/exui.dart';
 import 'package:get/get.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/models/live_track_model.dart';
 import 'package:genesis/services/network_adapter.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketController extends GetxController {
@@ -47,6 +49,32 @@ class SocketController extends GetxController {
     socket.onDisconnect((_) {
       _statusTimer?.cancel(); // 5. Stop checking if disconnected
     });
+  }
+
+  void listenToUserSocket() {
+    final user = User.fromStorage();
+    if (user == null) return;
+    socket.on("${user.id}_trip_start", (data) {
+      Get.defaultDialog(
+        title: "Start Trip",
+        content: "Start A Given trip".text(),
+        textCancel: "close",
+        onConfirm: () {
+          Get.back();
+          _handleTripAction(true);
+        },
+      );
+    });
+  }
+
+  Future<void> _handleTripAction(bool starting) async {
+    final _userController = Get.find<UserController>();
+    final res = await _userController.confirmStartTrip();
+    if (res) {
+      Toaster.showSuccess("Tracking started");
+      listenId.value =
+          _userController.user.value?.currentVehicle?.carModel ?? '';
+    }
   }
 
   void transmitMessage({required String channel, required Map data}) {
@@ -231,7 +259,6 @@ class SocketController extends GetxController {
     if (response.hasError) {
       return;
     }
-    log("The response is ${response.body}");
     liveTrackDriver.value = User.fromJSON(response.body);
   }
 }

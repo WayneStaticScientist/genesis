@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:genesis/controllers/socket_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
@@ -44,6 +45,7 @@ class UserController extends GetxController {
     user.value = dataUser;
     dataUser.saveUser();
     tokens.saveToStorage();
+    validateUser();
     return true;
   }
 
@@ -68,16 +70,14 @@ class UserController extends GetxController {
     this.user.value = dataUser;
     dataUser.saveUser();
     tokens.saveToStorage();
+    await validateUser();
     return true;
   }
 
-  void validateUser() async {
+  Future<void> validateUser() async {
     if (user.value == null) return;
-    log("user is there");
     loading.value = true;
     final response = await AuthenticationInterceptor.requestToken();
-    log("user fetched response is ${response.statusCode}");
-
     loading.value = false;
     if (response.statusCode == 401) {
       user.value = null;
@@ -91,6 +91,8 @@ class UserController extends GetxController {
     if (!response.hasError) {
       user.value = User.fromJSON(response.body['user']);
       user.value!.saveUser();
+      final socket = Get.find<SocketController>();
+      socket.listenToUserSocket();
       FirebaseMessaging messaging = FirebaseMessaging.instance;
       String? token = await messaging.getToken();
       if (token != null && token != user.value!.chatToken) {

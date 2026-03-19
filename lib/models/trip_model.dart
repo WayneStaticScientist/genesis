@@ -18,6 +18,7 @@ class TripModel {
   final DateTime? estimatedEndTime;
   final CurrentVehicleModel vehicle;
   final PopulatedLocationModel? location;
+  final PopulatedLocationModel? locationOrigin;
 
   TripModel({
     required this.tolgateFees,
@@ -36,6 +37,7 @@ class TripModel {
     required this.estimatedEndTime,
     required this.vehicle,
     required this.location,
+    required this.locationOrigin,
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
@@ -61,10 +63,14 @@ class TripModel {
       location: json['location'] != null
           ? PopulatedLocationModel.fromJSON(json['location'])
           : null,
+      locationOrigin: json['locationOrigin'] != null
+          ? PopulatedLocationModel.fromJSON(json['locationOrigin'])
+          : null,
     );
   }
   Map<String, dynamic> toJson() {
     return {
+      'locationOrigin': locationOrigin,
       'tolgateFees': tolgateFees,
       'driver': driver,
       'status': status,
