@@ -1,9 +1,9 @@
-import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:genesis/screens/main/main_screen.dart';
