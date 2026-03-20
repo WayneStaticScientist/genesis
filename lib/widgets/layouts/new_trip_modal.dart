@@ -23,6 +23,10 @@ class _AssignTripModalState extends State<AssignTripModal> {
   final _userController = Get.find<UserController>();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _receiverController = TextEditingController();
+  final TextEditingController _distanceInKmController = TextEditingController(
+    text: "0",
+  );
   final TextEditingController _tolgateFees = TextEditingController(text: "0");
   final VehicleControler vehicleController = Get.find<VehicleControler>();
   final TextEditingController _loadTypeController = TextEditingController();
@@ -237,6 +241,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 // Destination Input
                 _buildInputLabel("DESTINATION"),
                 TextFormField(
+                  controller: _receiverController,
+                  decoration: _modernInputDecoration(
+                    Icons.commute_sharp,
+                    "Company Name/Client",
+                  ),
+                ),
+                12.gapHeight,
+                TextFormField(
                   controller: _destinationNameController,
                   decoration: _modernInputDecoration(
                     Icons.map,
@@ -259,7 +271,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
                         ),
                       ),
                 ),
-
+                12.gapHeight,
+                TextFormField(
+                  controller: _distanceInKmController,
+                  decoration: _modernInputDecoration(
+                    Icons.edit_road_sharp,
+                    "Distance in Km",
+                  ),
+                ),
                 const SizedBox(height: 20),
 
                 // Schedule Visualizer
@@ -653,10 +672,17 @@ class _AssignTripModalState extends State<AssignTripModal> {
     final loadType = _loadTypeController.text.trim();
     final loadWeight = double.tryParse(_loadWeightController.text.trim());
     final tripPrice = double.tryParse(_tripPaymentController.text.trim());
+    final distanceInKm = double.tryParse(_distanceInKmController.text.trim());
     if (tripPrice == null) {
       return Toaster.showErrorTop(
         "Invalid trip Amount",
-        "You have entered an invalid number on trip amound",
+        "You have entered an invalid number on trip amount",
+      );
+    }
+    if (distanceInKm == null) {
+      return Toaster.showErrorTop(
+        "Invalid Distance ",
+        "You have entered an invalid number on distance",
       );
     }
     final tolgateFees = double.tryParse(_tripPaymentController.text.trim());
@@ -688,11 +714,13 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "origin": origin,
         "loadType": loadType,
         "loadWeight": loadWeight,
+        "distance": distanceInKm,
         "tripPayout": tripPrice,
         "driver": widget.driver.id,
         "tolgateFees": tolgateFees,
         "destination": destinationName,
         "vehicle": selectedVehicle.value?.id,
+        "receiver": _receiverController.text.trim(),
         "startTime": departureDateTime.value.toIso8601String(),
         "estimatedEndTime": arrivalDateTime.value.toIso8601String(),
         "location": destinationCoords.value != null

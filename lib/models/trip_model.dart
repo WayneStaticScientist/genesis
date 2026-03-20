@@ -3,7 +3,7 @@ import 'package:genesis/models/populated_location_model.dart';
 
 class TripModel {
   final double tolgateFees;
-  final String status;
+  String status;
   final String id;
   final String origin;
   final dynamic driver;

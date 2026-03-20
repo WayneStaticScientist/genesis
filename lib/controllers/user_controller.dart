@@ -322,7 +322,6 @@ class UserController extends GetxController {
     final response = await Net.get("/trip/$id");
     fetchingTrip.value = false;
     if (response.hasError) {
-      log("The error is ${response.response}");
       return Future.value();
     }
     trip.value = TripModel.fromJson(response.body);

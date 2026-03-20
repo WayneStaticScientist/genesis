@@ -1,4 +1,4 @@
-import 'package:genesis/widgets/layouts/finalize_trip_dialog.dart';
+import 'package:genesis/utils/number_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -8,8 +8,9 @@ import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
-import 'package:genesis/controllers/user_controller.dart'; // Adjust path as necessary
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
+import 'package:genesis/widgets/layouts/finalize_trip_dialog.dart';
 
 class TripDetailsScreen extends StatefulWidget {
   final String tripId;
@@ -116,10 +117,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     SizedBox(height: 10),
                     _buildDriverCard(trip.driver),
                     ListTile(
-                      title: "\$${trip.tolgateFees.toString()}".text(),
-                      subtitle: "tolgate fees".text(),
-                    ),
-                    ListTile(
                       title: "${trip.vehicle.carModel}".text(),
                       subtitle: "Vehicle".text(),
                     ),
@@ -132,7 +129,41 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     SizedBox(height: 10),
                     _buildTimelineCard(trip, theme, primaryColor),
                     SizedBox(height: 20),
-                    _buildLocationDetails(trip, theme),
+                    _buildSectionTitle(
+                      theme,
+                      "Expenses (${NumberUtils.formatCurrency(NumberUtils.getTripExpenseTotal(trip))})",
+                    ),
+                    SizedBox(height: 10),
+                    _buildExpenseCard(
+                      title: "Tolgate Fees",
+                      icon: Icons.gas_meter_outlined,
+                      value: trip.tolgateExpense,
+                    ),
+                    _buildExpenseCard(
+                      title: "Food Expense",
+                      icon: Icons.food_bank,
+                      value: trip.foodExpense,
+                    ),
+                    _buildExpenseCard(
+                      title: "Fuel Expenses",
+                      icon: Icons.gas_meter_outlined,
+                      value: trip.fuelExpense,
+                    ),
+                    _buildExpenseCard(
+                      title: "Fines",
+                      icon: Icons.ev_station_sharp,
+                      value: trip.finesExpense,
+                    ),
+                    _buildExpenseCard(
+                      title: "Truck Shop",
+                      icon: Icons.local_shipping_outlined,
+                      value: trip.truckShopExpense,
+                    ),
+                    _buildExpenseCard(
+                      title: "Extras",
+                      icon: Icons.exposure,
+                      value: trip.extrasExpense,
+                    ),
                   ],
                 ),
               ),
@@ -168,12 +199,36 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildStatusBadge(trip.status),
-              Text(
-                "\$${trip.tripPayout.toStringAsFixed(2)}",
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              [
+                Text(
+                  "${NumberUtils.formatCurrency(trip.tripPayout)}",
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                Text(
+                  "-${NumberUtils.formatCurrency(NumberUtils.getTripExpenseTotal(trip))}",
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  "${NumberUtils.formatCurrency(trip.tripPayout - NumberUtils.getTripExpenseTotal(trip))}",
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ].column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
               ),
             ],
           ),
@@ -388,39 +443,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     );
   }
 
-  Widget _buildLocationDetails(TripModel trip, ThemeData theme) {
-    if (trip.location == null) return SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(theme, "Current Location"),
-        SizedBox(height: 10),
-        Container(
-          padding: EdgeInsets.all(16),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: GTheme.surface(context),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.location_on, color: Colors.blueGrey),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  trip.destination,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSectionTitle(ThemeData theme, String title) {
     return Text(
       title,
@@ -559,9 +581,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     );
   }
 
-  void _finalizeTripDialog() {
+  void _finalizeTripDialog() async {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setInnerState) => AlertDialog(
           content: FinalizeTripDialog(
@@ -570,6 +593,18 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  _buildExpenseCard({
+    required String title,
+    required IconData icon,
+    required double value,
+  }) {
+    return ListTile(
+      title: title.text(style: TextStyle(fontSize: 12)),
+      leading: Icon(icon),
+      subtitle: NumberUtils.formatCurrency(value).text(),
     );
   }
 }

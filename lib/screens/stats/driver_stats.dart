@@ -308,7 +308,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
                       const SizedBox(height: 8),
                       _detailRow(
                         "Load Weight",
-                        '${NumberUtils.formatNumber(trip.loadWeight)}Tonnes',
+                        '${NumberUtils.formatNumber(trip.loadWeight)}kg',
                       ),
                     ],
                   ),

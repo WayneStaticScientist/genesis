@@ -517,7 +517,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                   _statsController.vehicleTripStats.value!.trips[index];
               return _historyItem(
                 title: "${item.origin}  ${item.destination}",
-                subtitle: "Payload: ${item.loadWeight} Tons",
+                subtitle: "Payload: ${item.loadWeight} kgs",
                 date: item.startTime != null
                     ? GenesisDate.getInformalShortDate(item.startTime!)
                     : '',

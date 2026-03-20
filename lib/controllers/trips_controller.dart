@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/utils/toast.dart';
@@ -36,18 +37,20 @@ class TripsController extends GetxController {
   }
 
   RxBool processingTrip = RxBool(false);
-  Future<bool> finalizeTrip({dynamic data}) async {
+  Future<bool> finalizeTrip(String id, {dynamic data}) async {
     if (processingTrip.value) {
       Toaster.showError("loading please wait");
       return false;
     }
     processingTrip.value = true;
-    final response = await Net.put("/trip", data: data);
+    final response = await Net.put("/trip/$id", data: data);
     processingTrip.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);
       return false;
     }
+    final controller = Get.find<UserController>();
+    controller.fetchDrivers();
     return true;
   }
 }

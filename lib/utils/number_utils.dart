@@ -1,4 +1,5 @@
 import 'package:genesis/models/deducton_item.dart';
+import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/models/user_model.dart';
 
 class NumberUtils {
@@ -61,5 +62,14 @@ class NumberUtils {
           : 0.0 + prev,
     );
     return (totalPercent: totalTaxPercentage, totalValue: totalTaxValue);
+  }
+
+  static num getTripExpenseTotal(TripModel trip) {
+    return trip.extrasExpense +
+        trip.finesExpense +
+        trip.foodExpense +
+        trip.fuelExpense +
+        trip.truckShopExpense +
+        trip.tolgateExpense;
   }
 }

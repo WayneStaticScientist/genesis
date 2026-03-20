@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/toast.dart';
@@ -27,6 +28,7 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
   final _finesController = TextEditingController(text: '0');
   final _extraController = TextEditingController(text: '0');
   final _controller = Get.find<TripsController>();
+  final _userController = Get.find<UserController>();
   @override
   void initState() {
     super.initState();
@@ -156,7 +158,8 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
     if (extrasExpense == null)
       return Toaster.showErrorTop("Extras", "invalid number");
 
-    _controller.finalizeTrip(
+    final response = await _controller.finalizeTrip(
+      widget.trip.id,
       data: {
         'fuelExpense': fuelExpense,
         'foodExpense': foodExpense,
@@ -166,5 +169,13 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
         'extrasExpense': extrasExpense,
       },
     );
+    if (response && mounted) {
+      _userController.trip.value!.status = "Finalized";
+      _userController.trip.refresh();
+      Get.back(result: "Finalized");
+    }
+    if (response) {
+      Toaster.showSuccess2("trip", "Trip has been finalized succefull");
+    }
   }
 }
