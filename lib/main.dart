@@ -1,3 +1,4 @@
+import 'package:genesis/screens/auth/biometic_login.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -83,7 +84,12 @@ class MyApp extends StatelessWidget {
         ThemeMode.system,
         settings.isDarkMode.lord(ThemeMode.dark, ThemeMode.light),
       ),
-      home: user != null ? const MainScreen() : const LoginScreen(),
+      home: user != null
+          ? settings.biometricLockScreen.lord(
+              const BiometricLoginScreen(),
+              const MainScreen(),
+            )
+          : const LoginScreen(),
     );
   }
 }

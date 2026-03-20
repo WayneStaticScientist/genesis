@@ -18,7 +18,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   // Local state for toggles (In a real app, these would be in a Controller)
   bool _autoApproveMaintenance = true;
   bool _notificationsEnabled = true;
-  bool _biometricAuth = false;
 
   @override
   Widget build(BuildContext context) {
@@ -113,9 +112,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               title: "Biometric Login",
               subtitle: "Use FaceID or Fingerprint",
               trailing: Switch.adaptive(
-                value: _biometricAuth,
+                value: settings.biometricLockScreen,
                 activeThumbColor: GTheme.primary(context),
-                onChanged: (val) => setState(() => _biometricAuth = val),
+                onChanged: (val) {
+                  settings.biometricLockScreen = val;
+                  settings.writeSettings();
+                  _recalculateThemeSettings(settings);
+                  setState(() {});
+                },
               ),
             ),
             const SizedBox(height: 25),
