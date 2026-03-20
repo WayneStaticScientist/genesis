@@ -1,12 +1,12 @@
-import 'package:genesis/screens/stats/driver_stats.dart';
-import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/screens/stats/driver_stats.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/widgets/layouts/modern_date_range_2.dart';
@@ -299,7 +299,7 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                     sideTitles: SideTitles(showTitles: false),
                   ), // 'Hide top'
                   leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: true, reservedSize: 35),
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 55),
                   ),
                 ),
                 gridData: const FlGridData(show: false),

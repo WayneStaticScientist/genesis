@@ -19,7 +19,12 @@ class TripModel {
   final CurrentVehicleModel vehicle;
   final PopulatedLocationModel? location;
   final PopulatedLocationModel? locationOrigin;
-
+  final double fuelExpense;
+  final double foodExpense;
+  final double tolgateExpense;
+  final double truckShopExpense;
+  final double finesExpense;
+  final double extrasExpense;
   TripModel({
     required this.tolgateFees,
     required this.driver,
@@ -38,6 +43,12 @@ class TripModel {
     required this.vehicle,
     required this.location,
     required this.locationOrigin,
+    required this.fuelExpense,
+    required this.foodExpense,
+    required this.tolgateExpense,
+    required this.truckShopExpense,
+    required this.finesExpense,
+    required this.extrasExpense,
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
@@ -66,6 +77,12 @@ class TripModel {
       locationOrigin: json['locationOrigin'] != null
           ? PopulatedLocationModel.fromJSON(json['locationOrigin'])
           : null,
+      fuelExpense: (json['fuelExpense'] as num?)?.toDouble() ?? 0,
+      foodExpense: (json['foodExpense'] as num?)?.toDouble() ?? 0,
+      tolgateExpense: (json['tolgateExpense'] as num?)?.toDouble() ?? 0,
+      truckShopExpense: (json['truckShopExpense'] as num?)?.toDouble() ?? 0,
+      finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
+      extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
     );
   }
   Map<String, dynamic> toJson() {
@@ -85,6 +102,12 @@ class TripModel {
       'estimatedEndTime': estimatedEndTime?.toIso8601String(),
       'vehicle': vehicle.toJson(),
       'location': location?.toJson(),
+      'fuelExpense': fuelExpense,
+      'foodExpense': foodExpense,
+      'tolgateExpense': tolgateExpense,
+      'truckShopExpense': truckShopExpense,
+      'finesExpense': finesExpense,
+      'extrasExpense': extrasExpense,
     };
   }
 }

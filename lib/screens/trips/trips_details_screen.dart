@@ -1,3 +1,4 @@
+import 'package:genesis/widgets/layouts/finalize_trip_dialog.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -448,7 +449,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       label = "End Trip";
       icon = Icons.flag;
       onTap = () async {
-        _showActionDialog("Mark trip as succefull ", "finalize");
+        _finalizeTripDialog();
       };
     } else if (status == 'active') {
       label = "Cancel Trip";
@@ -555,6 +556,20 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       title: "${driver['firstName'] ?? 'N/A'} ${driver['lastName'] ?? 'N/A'}"
           .text(),
       subtitle: "${driver['email'] ?? "N/A"}".text(),
+    );
+  }
+
+  void _finalizeTripDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setInnerState) => AlertDialog(
+          content: FinalizeTripDialog(
+            trip: userController.trip.value!,
+            setDialogState: setInnerState,
+          ),
+        ),
+      ),
     );
   }
 }

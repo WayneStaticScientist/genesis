@@ -1,5 +1,6 @@
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/services/network_adapter.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 
 class TripsController extends GetxController {
@@ -32,5 +33,21 @@ class TripsController extends GetxController {
         trips.addAll(data.map((e) => TripModel.fromJson(e)).toList());
       }
     }
+  }
+
+  RxBool processingTrip = RxBool(false);
+  Future<bool> finalizeTrip({dynamic data}) async {
+    if (processingTrip.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    processingTrip.value = true;
+    final response = await Net.put("/trip", data: data);
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    return true;
   }
 }
