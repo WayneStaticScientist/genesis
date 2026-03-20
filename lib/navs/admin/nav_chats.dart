@@ -73,7 +73,6 @@ class _NavChatsState extends State<NavChats> {
                   return "No chats , start conversation".text().center();
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
                   itemCount: _messagesController.chatUsers.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 8),

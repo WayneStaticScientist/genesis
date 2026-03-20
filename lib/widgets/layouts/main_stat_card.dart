@@ -21,16 +21,9 @@ class GMainStatCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: GTheme.color(context),
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: GTheme.color(context)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withAlpha(25),
-            blurRadius: 3,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,4 +1,5 @@
 import 'package:genesis/models/deducton_item.dart';
+import 'package:genesis/models/main_stats_model.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/models/user_model.dart';
 
@@ -71,5 +72,14 @@ class NumberUtils {
         trip.fuelExpense +
         trip.truckShopExpense +
         trip.tolgateExpense;
+  }
+
+  static num getStatsTotalExpenses(MainStatsModel model) {
+    return model.extrasExpense +
+        model.finesExpense +
+        model.foodExpense +
+        model.fuelExpense +
+        model.truckShopExpense +
+        model.tolgateExpense;
   }
 }

@@ -123,7 +123,7 @@ class _NavTripsState extends State<NavTrips> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
       decoration: BoxDecoration(
-        color: GTheme.surface(context),
+        color: GTheme.cardColor(context),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -147,7 +147,7 @@ class _NavTripsState extends State<NavTrips> {
                     )
                   : null,
               filled: true,
-              fillColor: GTheme.cardColor(context),
+              fillColor: Colors.grey.withAlpha(30),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,

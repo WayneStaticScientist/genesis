@@ -26,15 +26,17 @@ class WhiteFormfield extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: GTheme.isDark(context)
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withAlpha(20),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
       ),
       child: TextFormField(
         validator: validator,
@@ -52,7 +54,7 @@ class WhiteFormfield extends StatelessWidget {
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: GTheme.emmense(context),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 18,

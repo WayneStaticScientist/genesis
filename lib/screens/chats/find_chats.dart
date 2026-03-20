@@ -99,7 +99,6 @@ class _FindChatsScreenState extends State<FindChatsScreen> {
                   return "No users found".text().center();
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
                   itemCount: _userController.foundChats.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 8),

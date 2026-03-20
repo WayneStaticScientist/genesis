@@ -130,7 +130,6 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.black87,
                         ),
                       ),
                     ],
@@ -141,7 +140,7 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
           ),
 
           const SizedBox(height: 24),
-          const Divider(),
+          Divider(color: Colors.grey.withAlpha(50)),
           const SizedBox(height: 16),
 
           // Summary Section
@@ -217,7 +216,7 @@ class _InsuranceBottomSheetState extends State<InsuranceBottomSheet> {
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.blue[700],
-                    side: BorderSide(color: Colors.blue[100]!, width: 1.5),
+                    side: BorderSide(color: Colors.blue, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

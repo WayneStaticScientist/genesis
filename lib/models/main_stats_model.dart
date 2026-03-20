@@ -23,6 +23,12 @@ class MainStatsModel {
   double totalMaintainanceCost;
   int totalVehiclesInSystem;
   int numberOfVehiclesWithMaintenance;
+  double fuelExpense;
+  double foodExpense;
+  double tolgateExpense;
+  double finesExpense;
+  double extrasExpense;
+  double truckShopExpense;
   List<VehicleDetails> vehicleDetails;
   MainStatsModel({
     required this.idleVehicles,
@@ -35,6 +41,13 @@ class MainStatsModel {
     required this.totalMaintainanceCost,
     required this.vehicleDetails,
     required this.numberOfVehiclesWithMaintenance,
+
+    required this.fuelExpense,
+    required this.foodExpense,
+    required this.tolgateExpense,
+    required this.finesExpense,
+    required this.extrasExpense,
+    required this.truckShopExpense,
   });
   factory MainStatsModel.fromJson(Map<String, dynamic> json) {
     return MainStatsModel(
@@ -58,6 +71,12 @@ class MainStatsModel {
             ),
           )
           .toList(),
+      fuelExpense: (json['fuelExpense'] as num?)?.toDouble() ?? 0,
+      foodExpense: (json['foodExpense'] as num?)?.toDouble() ?? 0,
+      tolgateExpense: (json['tolgateExpense'] as num?)?.toDouble() ?? 0,
+      finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
+      extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
+      truckShopExpense: (json['truckShopExpense'] as num?)?.toDouble() ?? 0,
     );
   }
 }

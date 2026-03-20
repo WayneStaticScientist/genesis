@@ -1,3 +1,4 @@
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -81,6 +82,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
               ].row(mainAxisAlignment: MainAxisAlignment.center),
             ),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
           Obx(
             () => controller.selectedTab.value == 0
                 ? _buildHistoryList(context, isService: true)
@@ -98,22 +100,20 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
       expandedHeight: 0,
       pinned: true,
       elevation: 0,
-      backgroundColor: Colors.white,
       leading: IconButton(
-        icon: const Icon(Icons.chevron_left, color: Colors.black),
+        icon: const Icon(Icons.chevron_left),
         onPressed: () => Get.back(),
       ),
       title: Text(
         "Vehicle Profile",
         style: GoogleFonts.plusJakartaSans(
-          color: Colors.black,
           fontWeight: FontWeight.bold,
           fontSize: 18,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.edit, color: Colors.blueAccent),
+          icon: const Icon(Icons.edit),
           onPressed: () =>
               Get.to(() => AdminEditVehicle(vehicle: widget.vehicle)),
         ),
@@ -163,7 +163,6 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.green,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: Text(
                         widget.vehicle.status.toUpperCase(),
@@ -187,7 +186,6 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -235,9 +233,9 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   Widget _infoChip(IconData icon, String label) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
+        Icon(icon, size: 14),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }
@@ -288,7 +286,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
       height: 80,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withAlpha(30)),
       ),
@@ -383,7 +381,6 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   // 5. TAB SWITCHER + DATE PICKER
   Widget _buildTabSwitcher(BuildContext context) {
     return Container(
-      color: const Color(0xFFF8FAFC),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
@@ -392,7 +389,9 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
               height: 45,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: GTheme.isDark(
+                  context,
+                ).lord(Colors.grey.withAlpha(30), Colors.grey[200]),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Obx(
@@ -423,9 +422,8 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: GTheme.emmense(context),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
               ),
               child: const Icon(
                 Icons.calendar_month,
@@ -547,7 +545,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

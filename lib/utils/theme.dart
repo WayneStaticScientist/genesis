@@ -19,6 +19,12 @@ class GTheme {
         : Colors.white;
   }
 
+  static Color emmense(BuildContext context) {
+    return (Theme.of(context).brightness == Brightness.dark)
+        ? Colors.grey.withAlpha(20)
+        : Colors.white;
+  }
+
   //Returns actual Color : White or Black depending on context
   static Color color(BuildContext context) {
     return (Theme.of(context).brightness == Brightness.dark)
@@ -51,5 +57,9 @@ class GTheme {
       statusBarIconBrightness: Brightness.light, // For Android (dark icons)
       statusBarBrightness: Brightness.light, // For iOS (dark icons)
     );
+  }
+
+  static bool isDark(BuildContext context) {
+    return (Theme.of(context).brightness == Brightness.dark);
   }
 }

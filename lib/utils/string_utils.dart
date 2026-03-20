@@ -8,6 +8,14 @@ extension StringOptionalUtils on String? {
     return this!;
   }
 
+  String plus(String plus) {
+    return "$this$plus";
+  }
+
+  String rplus(String plus) {
+    return "$plus$this";
+  }
+
   String from(String? firstString, String? secondString) {
     if (firstString == null || secondString == null) {
       return this!;

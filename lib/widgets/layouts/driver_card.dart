@@ -16,15 +16,8 @@ class DriverCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.cardColor(context),
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withAlpha(27),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -126,18 +119,6 @@ class DriverCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     // Quick Icon Button for Assignment
-                    InkWell(
-                      onTap: onAssign,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: GTheme.color(context).withAlpha(30),
-                        child: Icon(
-                          Icons.add_road,
-                          size: 18,
-                          color: GTheme.color(context),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ],

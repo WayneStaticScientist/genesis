@@ -369,8 +369,11 @@ class _AdminNavReportsState extends State<AdminNavReports> {
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _navReports.tripsStatModel.value!.vehicles.length,
-            separatorBuilder: (context, index) =>
-                Divider(height: 1, color: Colors.grey[100], indent: 70),
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: Colors.grey.withAlpha(50),
+              indent: 70,
+            ),
             itemBuilder: (context, index) {
               final trip = _navReports.tripsStatModel.value!.vehicles[index];
               return ListTile(

@@ -55,7 +55,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
         systemOverlayStyle: GTheme.copyOverlay(context),
         title: const Text(
           "Performance Insights",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [],
       ),
@@ -85,11 +85,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
                 const SizedBox(height: 32),
                 const Text(
                   "Recent Trip History",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 _buildTripList(),
@@ -231,7 +227,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
       decoration: BoxDecoration(
         color: GTheme.cardColor(context),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Colors.grey.withAlpha(50)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +268,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
           decoration: BoxDecoration(
             color: GTheme.cardColor(context),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade50),
+            border: Border.all(color: Colors.grey.withAlpha(50)),
           ),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

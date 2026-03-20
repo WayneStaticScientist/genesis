@@ -2,12 +2,15 @@ import 'package:genesis/models/current_vehicle_model.dart';
 import 'package:genesis/models/populated_location_model.dart';
 
 class TripModel {
-  final double tolgateFees;
   String status;
   final String id;
   final String origin;
   final dynamic driver;
   final String loadType;
+  final double distance;
+  final String receiver;
+  final dynamic finalizer;
+  final dynamic initiater;
   final DateTime? endTime;
   final double loadWeight;
   final double tripPayout;
@@ -26,7 +29,6 @@ class TripModel {
   final double finesExpense;
   final double extrasExpense;
   TripModel({
-    required this.tolgateFees,
     required this.driver,
     required this.id,
     required this.origin,
@@ -49,11 +51,17 @@ class TripModel {
     required this.truckShopExpense,
     required this.finesExpense,
     required this.extrasExpense,
+    required this.finalizer,
+    required this.distance,
+    required this.receiver,
+    required this.initiater,
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
       driver: json['driver'],
-      tolgateFees: (json['tolgateFees'] as num?)?.toDouble() ?? 0,
+      distance: (json['distance'] as num?)?.toDouble() ?? 0,
+      finalizer: (json['finalizer']),
+      receiver: (json['receiver']) ?? '',
       id: json['_id'] ?? '',
       origin: json['origin'] ?? '',
       status: json['status'],
@@ -83,12 +91,16 @@ class TripModel {
       truckShopExpense: (json['truckShopExpense'] as num?)?.toDouble() ?? 0,
       finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
       extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
+      initiater: json['initiater'],
     );
   }
   Map<String, dynamic> toJson() {
     return {
+      'initiater': initiater,
+      'distance': distance,
       'locationOrigin': locationOrigin,
-      'tolgateFees': tolgateFees,
+      'finalizer': finalizer,
+      'receiver': receiver,
       'driver': driver,
       'status': status,
       'loadType': loadType,

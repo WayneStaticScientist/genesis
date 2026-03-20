@@ -36,15 +36,14 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
     return Scaffold(
       backgroundColor: GTheme.surface(context),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LineIcons.arrowLeft, color: Colors.black87),
+          icon: const Icon(LineIcons.arrowLeft),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           "Edit Employee",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -186,11 +185,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 16),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }

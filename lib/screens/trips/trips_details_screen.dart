@@ -1,4 +1,4 @@
-import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/utils/string_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -7,6 +7,7 @@ import 'package:genesis/utils/toast.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/trip_model.dart';
+import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
@@ -120,6 +121,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       title: "${trip.vehicle.carModel}".text(),
                       subtitle: "Vehicle".text(),
                     ),
+                    ListTile(
+                      title: "${trip.receiver.empty("Not specified")}".text(),
+                      subtitle: "Company Name or Client".text(),
+                    ),
                     SizedBox(height: 20),
                     _buildSectionTitle(theme, "Load & Vehicle"),
                     SizedBox(height: 10),
@@ -164,6 +169,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       icon: Icons.exposure,
                       value: trip.extrasExpense,
                     ),
+                    _buildInitiatorCard(theme, trip.initiater),
+                    _buildFinalizerCard(theme, trip.finalizer),
                   ],
                 ),
               ),
@@ -222,7 +229,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   textAlign: TextAlign.end,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.green,
+                    color: Colors.lightGreenAccent,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -578,6 +585,46 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       title: "${driver['firstName'] ?? 'N/A'} ${driver['lastName'] ?? 'N/A'}"
           .text(),
       subtitle: "${driver['email'] ?? "N/A"}".text(),
+    );
+  }
+
+  _buildInitiatorCard(ThemeData theme, dynamic user) {
+    if (user == null || user.runtimeType == String) {
+      return "".text().center();
+    }
+    return [
+      Divider(color: Colors.grey.withAlpha(50)),
+
+      _buildSectionTitle(theme, "Trip starter"),
+
+      ListTile(
+        title: "${user['firstName'] ?? 'N/A'} ${user['lastName'] ?? 'N/A'}"
+            .text(),
+        subtitle: "${user['email'] ?? "N/A"}".text(),
+      ),
+    ].column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  _buildFinalizerCard(ThemeData theme, dynamic user) {
+    if (user == null || user.runtimeType == String) {
+      return "".text().center();
+    }
+    return [
+      Divider(color: Colors.grey.withAlpha(50)),
+
+      _buildSectionTitle(theme, "Trip Finalizer"),
+
+      ListTile(
+        title: "${user['firstName'] ?? 'N/A'} ${user['lastName'] ?? 'N/A'}"
+            .text(),
+        subtitle: "${user['email'] ?? "N/A"}".text(),
+      ),
+    ].column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
     );
   }
 

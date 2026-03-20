@@ -203,6 +203,30 @@ class _AdminNavMainState extends State<AdminNavMain> {
                   .map((e) => e.revenue.toDouble())
                   .toList(),
             ),
+            _buildSophisticatedCard(
+              "Total Expenses",
+              NumberUtils.formatCurrency(
+                NumberUtils.getStatsTotalExpenses(data),
+              ),
+              "Expenses",
+              Icons.monetization_on_rounded,
+              Colors.red,
+              null,
+              fillColor: Colors.red,
+            ),
+            _buildSophisticatedCard(
+              "Gross Profit",
+              NumberUtils.formatCurrency(
+                data.totalRevenue -
+                    NumberUtils.getStatsTotalExpenses(data) -
+                    data.totalMaintainanceCost,
+              ),
+              "Gross Profit",
+              Icons.monetization_on_rounded,
+              Colors.green,
+              null,
+              fillColor: Colors.green,
+            ),
           ],
         );
       },
@@ -330,8 +354,9 @@ class _AdminNavMainState extends State<AdminNavMain> {
     String subtext,
     IconData icon,
     Color color,
-    List<double> chartData,
-  ) {
+    List<double>? chartData, {
+    Color? fillColor,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -365,7 +390,11 @@ class _AdminNavMainState extends State<AdminNavMain> {
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: fillColor,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
@@ -374,40 +403,41 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 subtext,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[500],
+                  color: fillColor ?? Colors.grey[500],
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const Spacer(),
               // Tiny sparkline
-              SizedBox(
-                width: 60,
-                height: 30,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(show: false),
-                    borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: chartData
-                            .asMap()
-                            .entries
-                            .map((e) => FlSpot(e.key.toDouble(), e.value))
-                            .toList(),
-                        isCurved: true,
-                        color: color,
-                        barWidth: 2,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: color.withAlpha(40),
+              if (chartData != null)
+                SizedBox(
+                  width: 60,
+                  height: 30,
+                  child: LineChart(
+                    LineChartData(
+                      gridData: FlGridData(show: false),
+                      titlesData: FlTitlesData(show: false),
+                      borderData: FlBorderData(show: false),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: chartData
+                              .asMap()
+                              .entries
+                              .map((e) => FlSpot(e.key.toDouble(), e.value))
+                              .toList(),
+                          isCurved: true,
+                          color: color,
+                          barWidth: 2,
+                          dotData: FlDotData(show: false),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: color.withAlpha(40),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],

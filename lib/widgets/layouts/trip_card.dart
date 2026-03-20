@@ -1,7 +1,10 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/trip_model.dart';
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/utils/theme.dart';
 
 /// --- TRIP CARD COMPONENT ---
@@ -29,11 +32,11 @@ class TripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(trip.status, context);
-
+    final expenses = NumberUtils.getTripExpenseTotal(trip);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: GTheme.cardColor(context),
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -91,15 +94,18 @@ class TripCard extends StatelessWidget {
                 child: Row(
                   children: [
                     _logisticsInfo(
-                      "Weight",
-                      "${NumberUtils.formatNumber(trip.loadWeight)} kg",
-                    ),
-                    const VerticalDivider(indent: 5, endIndent: 5),
-                    _logisticsInfo("Type", trip.loadType),
-                    const VerticalDivider(indent: 5, endIndent: 5),
-                    _logisticsInfo(
                       "Payout",
                       "${NumberUtils.formatCurrency(trip.tripPayout)}",
+                    ),
+                    const VerticalDivider(indent: 5, endIndent: 5),
+                    _logisticsInfo(
+                      "Expenses",
+                      "${NumberUtils.formatCurrency(expenses)}",
+                    ),
+                    const VerticalDivider(indent: 5, endIndent: 5),
+                    _logisticsInfo(
+                      "Gross Profit",
+                      "${NumberUtils.formatCurrency(trip.tripPayout - expenses)}",
                     ),
                   ],
                 ),
@@ -111,22 +117,22 @@ class TripCard extends StatelessWidget {
             // Route Section
             Container(
               padding: const EdgeInsets.all(16),
-              color: GTheme.cardColor(context),
-              child: Column(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _locationRow(
                     Icons.radio_button_checked,
                     "Origin",
                     trip.origin.isEmpty ? 'Not specified' : trip.origin,
                     GTheme.primary(context),
-                  ),
+                  ).constrained(maxWidth: 20).expanded1,
                   _locationConnector(),
                   _locationRow(
                     Icons.location_on,
                     "Destination",
                     trip.destination,
                     Colors.redAccent,
-                  ),
+                  ).expanded1,
                 ],
               ),
             ),
@@ -141,21 +147,28 @@ class TripCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.local_gas_station,
+                          Icons.front_loader,
                           size: 16,
                           color: Colors.grey,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          "${(trip.startFuelLevel! * 100).toInt()}% Fuel",
+                          "${trip.loadType}",
                           style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
                   Text(
-                    trip.startTime != null
-                        ? "Started: ${_formatDate(trip.startTime!)}"
-                        : "Scheduled",
+                    (trip.status == "Finalized").lors(
+                      trip.endTime != null
+                          ? GenesisDate.getInformalShortDate(
+                              trip.endTime!,
+                            ).rplus("Ended on ")
+                          : '',
+                      trip.startTime != null
+                          ? "Started: ${_formatDate(trip.startTime!)}"
+                          : "Scheduled",
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -215,12 +228,14 @@ class TripCard extends StatelessWidget {
           children: [
             Text(
               label,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.grey, fontSize: 10),
-            ),
+            ).constrained(maxWidth: 90),
             Text(
               value,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
+            ).constrained(maxWidth: 90),
           ],
         ),
       ],

@@ -28,7 +28,7 @@ class GVehicleCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: GTheme.color(context),
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -138,7 +138,6 @@ class GVehicleCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black54,
                 ),
               ),
             ],
@@ -167,7 +166,7 @@ class GVehicleCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: GTheme.surface(context),
+                  color: GTheme.emmense(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(

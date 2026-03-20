@@ -194,7 +194,7 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: GTheme.color(context),
+                        color: GTheme.emmense(context),
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
@@ -218,7 +218,7 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: GTheme.color(context),
+                      color: GTheme.emmense(context),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Icon(

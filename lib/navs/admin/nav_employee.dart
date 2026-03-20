@@ -133,7 +133,7 @@ class _AdminNavEmployeesState extends State<AdminNavEmployees> {
       child: Container(
         height: 55,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: GTheme.emmense(context),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(

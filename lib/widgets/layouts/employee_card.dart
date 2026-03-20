@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/screens/employees/employees_edit.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 
@@ -18,16 +19,18 @@ class EmployeeCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.withAlpha(30)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: GTheme.isDark(context)
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withAlpha(35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: InkWell(
         onTap: () => Get.to(() => EmployeesEditScreen(user: user)),

@@ -1,3 +1,4 @@
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,6 @@ class _AssignTripModalState extends State<AssignTripModal> {
   final TextEditingController _distanceInKmController = TextEditingController(
     text: "0",
   );
-  final TextEditingController _tolgateFees = TextEditingController(text: "0");
   final VehicleControler vehicleController = Get.find<VehicleControler>();
   final TextEditingController _loadTypeController = TextEditingController();
   final TextEditingController originController = TextEditingController();
@@ -139,8 +139,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: GTheme.isDark(context).lord(Colors.grey[900], Colors.white),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
@@ -203,15 +203,6 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 _buildInputLabel("SELECT VEHICLE *"),
                 Obx(() => _buildVehicleSelector()),
 
-                const SizedBox(height: 20),
-                _buildInputLabel("FEES/COSTS"),
-                TextFormField(
-                  controller: _tolgateFees,
-                  decoration: _modernInputDecoration(
-                    Icons.monetization_on,
-                    "Tolgate Fees",
-                  ),
-                ),
                 12.gapHeight,
                 const SizedBox(height: 20),
                 _buildInputLabel("ORIGIN"),
@@ -379,12 +370,11 @@ class _AssignTripModalState extends State<AssignTripModal> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: selectedVehicle.value != null
-                    ? GTheme.color(context)
-                    : Colors.grey[200]!,
+                    ? GTheme.primary(context)
+                    : GTheme.emmense(context),
                 width: selectedVehicle.value != null ? 1.5 : 1,
               ),
             ),
@@ -393,7 +383,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 Icon(
                   Icons.directions_car_filled,
                   color: selectedVehicle.value != null
-                      ? GTheme.color(context)
+                      ? GTheme.primary(context)
                       : Colors.grey[600],
                   size: 20,
                 ),
@@ -405,7 +395,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                         : "Select available vehicle",
                     style: TextStyle(
                       color: selectedVehicle.value != null
-                          ? Colors.black
+                          ? null
                           : Colors.grey[600],
                       fontWeight: selectedVehicle.value != null
                           ? FontWeight.bold
@@ -413,7 +403,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                     ),
                   ),
                 ),
-                const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                const Icon(Icons.arrow_drop_down),
               ],
             ),
           ),
@@ -427,8 +417,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
       Container(
         height: MediaQuery.of(context).size.height * 0.7,
         padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: GTheme.isDark(context).lord(Colors.grey[900], Colors.blue[50]),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -468,7 +458,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
                               vehicleController.totalPages.value
                           ? 1
                           : 0),
-                  separatorBuilder: (_, __) => const Divider(),
+                  separatorBuilder: (_, __) =>
+                      Divider(color: Colors.grey.withAlpha(50)),
                   itemBuilder: (context, index) {
                     if (index == vehicleController.vehicles.length) {
                       return const Center(
@@ -487,10 +478,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                       title: Text("${vehicle.carModel}"),
                       subtitle: Text("Plate: ${vehicle.licencePlate}"),
                       trailing: selectedVehicle.value?.id == vehicle.id
-                          ? Icon(
-                              Icons.check_circle,
-                              color: GTheme.color(context),
-                            )
+                          ? Icon(Icons.check_circle)
                           : null,
                       onTap: () {
                         selectedVehicle.value = vehicle;
@@ -512,9 +500,9 @@ class _AssignTripModalState extends State<AssignTripModal> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: Colors.grey.withAlpha(50)),
       ),
       child: Row(
         children: [
@@ -550,7 +538,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                     ),
                   ),
                 ),
-                const Divider(),
+                Divider(color: Colors.grey.withAlpha(50)),
                 Text(
                   "Est. Arrival",
                   style: TextStyle(color: Colors.grey[500], fontSize: 12),
@@ -646,13 +634,13 @@ class _AssignTripModalState extends State<AssignTripModal> {
   InputDecoration _modernInputDecoration(IconData icon, String hint) {
     return InputDecoration(
       filled: true,
-      fillColor: Colors.grey[50],
+      fillColor: GTheme.emmense(context),
       prefixIcon: Icon(icon, color: Colors.grey[600], size: 20),
       hintText: hint,
       contentPadding: const EdgeInsets.symmetric(vertical: 16),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[200]!),
+        borderSide: BorderSide(color: GTheme.emmense(context)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
