@@ -1,4 +1,3 @@
-import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import 'package:genesis/utils/genesis_settings.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/profile_screen.dart';
 import 'package:genesis/controllers/company_controller.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -112,8 +112,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
               ),
               _buildSettingCard(
-                icon: LineIcons.tools,
-                color: Colors.orange,
+                icon: LineIcons.userAlt,
+                color: Colors.green,
                 title: "Driver managed Maintainances",
                 subtitle:
                     "Allow driver add maintainances issue to his/her vehicle",

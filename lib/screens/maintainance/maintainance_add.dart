@@ -36,7 +36,9 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
 
       final newTask = {
         "urgenceLevel": _urgency,
-        "dueDays": _daysLeft,
+        "dueDate": DateTime.now()
+            .add(Duration(days: _daysLeft))
+            .toIso8601String(),
         "issueDetails": _issue,
         "estimatedCosts": _cost,
         "currentHealth": _health,
@@ -122,6 +124,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
 
               const SizedBox(height: 16),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: _buildDropdown(
@@ -365,7 +368,6 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
     FormFieldValidator<String>? validator,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(25),
         borderRadius: BorderRadius.circular(12),
