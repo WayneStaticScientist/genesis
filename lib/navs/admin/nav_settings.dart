@@ -1,3 +1,4 @@
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +6,9 @@ import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/genesis_settings.dart';
-import 'package:genesis/screens/auth/profile_screen.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/screens/auth/profile_screen.dart';
+import 'package:genesis/controllers/company_controller.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -18,6 +20,7 @@ class AdminSettingsScreen extends StatefulWidget {
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final _userController = Get.find<UserController>();
+  final _companyController = Get.find<CompanyController>();
   @override
   Widget build(BuildContext context) {
     final settings = GenesisSettings.readSettings();
@@ -75,20 +78,67 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 },
               ),
             ).visibleIfNot(settings.isSystemThemeMode),
-            if (_userController.user.value!.role != "driver") ...[
+            if (_userController.user.value!.role != "driver" &&
+                _companyController.company.value?.settings != null) ...[
               const SizedBox(height: 25),
-
               _buildSectionHeader("Operations & Automation"),
               _buildSettingCard(
                 icon: LineIcons.tools,
                 color: Colors.orange,
                 title: "Auto-Approve Maintenance",
                 subtitle: "Approve routine requests automatically",
-                trailing: Switch.adaptive(
-                  value: _autoApproveMaintenance,
-                  activeThumbColor: GTheme.primary(context),
-                  onChanged: (val) =>
-                      setState(() => _autoApproveMaintenance = val),
+                trailing: Obx(
+                  () => _companyController.updatingCompanySettings.value
+                      ? MaterialLoader()
+                      : Switch.adaptive(
+                          value: _companyController
+                              .company
+                              .value!
+                              .settings
+                              .autoApproveMaintainances,
+                          activeThumbColor: GTheme.primary(context),
+                          onChanged: (val) {
+                            final map = _companyController
+                                .company
+                                .value!
+                                .settings
+                                .toJson();
+                            map['autoApproveMaintainances'] = val;
+                            _companyController.updateCompanySettings(map);
+                            _companyController.company.value!.saveToStorage();
+                            setState(() {});
+                          },
+                        ),
+                ),
+              ),
+              _buildSettingCard(
+                icon: LineIcons.tools,
+                color: Colors.orange,
+                title: "Driver managed Maintainances",
+                subtitle:
+                    "Allow driver add maintainances issue to his/her vehicle",
+                trailing: Obx(
+                  () => _companyController.updatingCompanySettings.value
+                      ? MaterialLoader()
+                      : Switch.adaptive(
+                          value: _companyController
+                              .company
+                              .value!
+                              .settings
+                              .driverManagedMaintainances,
+                          activeThumbColor: GTheme.primary(context),
+                          onChanged: (val) {
+                            final map = _companyController
+                                .company
+                                .value!
+                                .settings
+                                .toJson();
+                            map['driverManagedMaintainances'] = val;
+                            _companyController.updateCompanySettings(map);
+                            _companyController.company.value!.saveToStorage();
+                            setState(() {});
+                          },
+                        ),
                 ),
               ),
             ],

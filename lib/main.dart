@@ -1,4 +1,3 @@
-import 'package:genesis/screens/auth/biometic_login.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -10,11 +9,13 @@ import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/screens/main/main_screen.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/screens/auth/biometic_login.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/controllers/trips_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:genesis/controllers/company_controller.dart';
 import 'package:genesis/controllers/payroll_controller.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
 import 'package:genesis/controllers/insurance_controller.dart';
@@ -71,6 +72,7 @@ class MyApp extends StatelessWidget {
         Get.put(MessagingController());
         Get.put(PayrollController());
         Get.put(InsuranceController());
+        Get.put(CompanyController());
       }),
       title: 'Genesis',
       theme: ThemeData(

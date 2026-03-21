@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:genesis/controllers/socket_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:genesis/utils/toast.dart';
@@ -13,6 +12,8 @@ import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/screens/auth/login_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:genesis/controllers/socket_controller.dart';
+import 'package:genesis/controllers/company_controller.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
 
 class UserController extends GetxController {
@@ -93,6 +94,8 @@ class UserController extends GetxController {
       user.value!.saveUser();
       final socket = Get.find<SocketController>();
       socket.listenToUserSocket();
+      final company = Get.find<CompanyController>();
+      company.fetchCompany();
       FirebaseMessaging messaging = FirebaseMessaging.instance;
       String? token = await messaging.getToken();
       if (token != null && token != user.value!.chatToken) {
