@@ -5,7 +5,7 @@ class MaintainanceModel {
   final String? carModel;
   final String issueDetails;
   final String urgenceLevel;
-  final int dueDays;
+  final DateTime dueDate;
   final double currentHealth;
   final double estimatedCosts;
   MaintainanceModel({
@@ -15,7 +15,7 @@ class MaintainanceModel {
     required this.vehicleId,
     required this.issueDetails,
     required this.urgenceLevel,
-    required this.dueDays,
+    required this.dueDate,
     required this.currentHealth,
     required this.estimatedCosts,
   });
@@ -23,7 +23,9 @@ class MaintainanceModel {
     return MaintainanceModel(
       id: data['_id'],
       carModel: data['carModel'],
-      dueDays: data['dueDays'],
+      dueDate: data['dueDate'] != null
+          ? DateTime.parse(data['dueDate'])
+          : DateTime.now(),
       vehicleId: data['vehicleId'],
       issueDetails: data['issueDetails'],
       licencePlate: data['licencePlate'],
