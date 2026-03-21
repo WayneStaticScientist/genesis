@@ -8,6 +8,7 @@ class MaintainanceModel {
   final DateTime dueDate;
   final double currentHealth;
   final double estimatedCosts;
+  final String status;
   MaintainanceModel({
     this.id,
     this.carModel,
@@ -18,18 +19,20 @@ class MaintainanceModel {
     required this.dueDate,
     required this.currentHealth,
     required this.estimatedCosts,
+    required this.status,
   });
   factory MaintainanceModel.fromJSON(dynamic data) {
     return MaintainanceModel(
       id: data['_id'],
-      carModel: data['carModel'],
+      status: data['status'] ?? '',
+      carModel: data['carModel'] ?? '',
       dueDate: data['dueDate'] != null
           ? DateTime.parse(data['dueDate'])
           : DateTime.now(),
       vehicleId: data['vehicleId'],
-      issueDetails: data['issueDetails'],
-      licencePlate: data['licencePlate'],
-      urgenceLevel: data['urgenceLevel'],
+      issueDetails: data['issueDetails'] ?? '',
+      licencePlate: data['licencePlate'] ?? '',
+      urgenceLevel: data['urgenceLevel'] ?? '',
       currentHealth: (data['currentHealth'] as num?)?.toDouble() ?? 0.00,
       estimatedCosts: (data['estimatedCosts'] as num?)?.toDouble() ?? 0.0,
     );

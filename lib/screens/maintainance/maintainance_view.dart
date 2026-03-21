@@ -1,0 +1,385 @@
+import 'package:exui/exui.dart';
+import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:genesis/models/maintainance_model.dart';
+import 'package:genesis/controllers/maintainance_controller.dart';
+
+class MaintenanceDetailScreen extends StatefulWidget {
+  final String maintainance_id;
+  const MaintenanceDetailScreen({super.key, required this.maintainance_id});
+
+  @override
+  State<MaintenanceDetailScreen> createState() =>
+      _MaintenanceDetailScreenState();
+}
+
+class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
+  final _maintainanceController = Get.find<MaintainanceController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _maintainanceController.getMantainance(widget.maintainance_id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200,
+            pinned: true,
+            backgroundColor: const Color(0xFF1E293B),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Obx(
+                () => _maintainanceController.maintainance.value != null
+                    ? Text(
+                        _maintainanceController.maintainance.value!.carModel ??
+                            'Vehicle Maintenance',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.blue.withAlpha(50),
+                      const Color(0xFF0F172A),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.directions_car_filled_outlined,
+                    size: 80,
+                    color: Colors.white.withAlpha(30),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Obx(() {
+            if (_maintainanceController.gettingMaintainance.value) {
+              return const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (_maintainanceController.maintainance.value == null) {
+              return SliverToBoxAdapter(
+                child: Center(
+                  child: "Maintainance failed to fetch please try again".text(),
+                ),
+              );
+            }
+            final maintenance = _maintainanceController.maintainance.value!;
+
+            return SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHealthSection(maintenance),
+                    const SizedBox(height: 24),
+                    _buildInfoCard(maintenance),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Service Description",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E293B),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        maintenance.issueDetails,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          height: 1.6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Conditional Action Buttons
+                    if (maintenance.status == "Submitted") ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                // Handle Reject Logic
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.redAccent),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                "Reject",
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                // Handle Confirm Logic
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.greenAccent,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                "Confirm Maintenance",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      // Generic Action for other statuses if needed
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getUrgencyColor(
+                              maintenance.urgenceLevel,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Text(
+                            "View Status Details",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHealthSection(MaintainanceModel data) {
+    final color = _getHealthColor(data.currentHealth);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Row(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 70,
+                height: 70,
+                child: CircularProgressIndicator(
+                  value: data.currentHealth,
+                  strokeWidth: 8,
+                  backgroundColor: Colors.white10,
+                  color: color,
+                ),
+              ),
+              Text(
+                "${(data.currentHealth * 100).toInt()}%",
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "System Health",
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                Text(
+                  _getHealthStatus(data.currentHealth),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _getUrgencyColor(data.urgenceLevel).withAlpha(50),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  data.urgenceLevel,
+                  style: TextStyle(
+                    color: _getUrgencyColor(data.urgenceLevel),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data.status,
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(MaintainanceModel data) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          _buildDetailRow(
+            Icons.pin_drop_outlined,
+            "License Plate",
+            data.licencePlate,
+          ),
+          const Divider(color: Colors.white10, height: 32),
+          _buildDetailRow(
+            Icons.fingerprint,
+            "Vehicle ID",
+            data.vehicleId ?? 'N/A',
+          ),
+          const Divider(color: Colors.white10, height: 32),
+          _buildDetailRow(
+            Icons.calendar_today_outlined,
+            "Due Date",
+            "${data.dueDate.day}/${data.dueDate.month}/${data.dueDate.year}",
+          ),
+          const Divider(color: Colors.white10, height: 32),
+          _buildDetailRow(
+            Icons.payments_outlined,
+            "Est. Cost",
+            "\$${data.estimatedCosts.toStringAsFixed(2)}",
+            isHighlight: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.blueAccent, size: 20),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 14),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            color: isHighlight ? Colors.greenAccent : Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getHealthColor(double health) {
+    if (health > 0.7) return Colors.greenAccent;
+    if (health > 0.4) return Colors.orangeAccent;
+    return Colors.redAccent;
+  }
+
+  String _getHealthStatus(double health) {
+    if (health > 0.7) return "Excellent";
+    if (health > 0.4) return "Fair Condition";
+    return "Critical State";
+  }
+
+  Color _getUrgencyColor(String level) {
+    switch (level.toLowerCase()) {
+      case 'high':
+        return Colors.redAccent;
+      case 'medium':
+        return Colors.orangeAccent;
+      default:
+        return Colors.blueAccent;
+    }
+  }
+}

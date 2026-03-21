@@ -20,6 +20,19 @@ class GenesisDate {
     return "${getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
   }
 
+  static String getDays(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = dateTime.difference(now);
+    if (difference.inSeconds < 60) {
+      return "${difference.inSeconds} s";
+    } else if (difference.inMinutes < 60) {
+      return "${difference.inMinutes} min";
+    } else if (difference.inHours < 24) {
+      return "${difference.inHours} hrs";
+    }
+    return "${difference.inDays} day(s)";
+  }
+
   static String getLastSeen(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);

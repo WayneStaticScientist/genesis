@@ -2,6 +2,7 @@ import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/screens/maintainance/maintainance_edit.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
@@ -67,7 +68,9 @@ class GMaintananceCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      isCritical ? "IMMEDIATE" : "IN ${task.dueDays} DAYS",
+                      isCritical
+                          ? "IMMEDIATE"
+                          : "IN ${GenesisDate.getDays(task.dueDate)} ",
                       style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.w900,

@@ -4,8 +4,10 @@ class GenesisSettings {
   bool isDarkMode;
   bool isSystemThemeMode;
   bool biometricLockScreen;
+  List<String> subscriptions;
   GenesisSettings({
     required this.isDarkMode,
+    required this.subscriptions,
     required this.isSystemThemeMode,
     required this.biometricLockScreen,
   });
@@ -14,11 +16,17 @@ class GenesisSettings {
       isDarkMode: data['isDarkMode'] ?? false,
       isSystemThemeMode: data['isSystemThemeMode'] ?? true,
       biometricLockScreen: data['biometricLockScreen'] ?? false,
+      subscriptions:
+          ((data['subscriptions'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          []),
     );
   }
   toMap() {
     return {
       'isDarkMode': isDarkMode,
+      'subscriptions': subscriptions,
       'isSystemThemeMode': isSystemThemeMode,
       'biometricLockScreen': biometricLockScreen,
     };

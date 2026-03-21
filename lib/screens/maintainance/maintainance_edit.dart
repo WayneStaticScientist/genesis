@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
 import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/utils/toast.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 
@@ -31,7 +32,7 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
     _urgency = widget.task.urgenceLevel;
     _cost = widget.task.estimatedCosts;
     _health = widget.task.currentHealth;
-    _daysLeft = widget.task.dueDays;
+    _daysLeft = widget.task.dueDate.difference(DateTime.now()).inDays;
   }
 
   void _submit() async {
@@ -42,7 +43,9 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
         "urgenceLevel": _urgency,
         "estimatedCosts": _cost,
         "currentHealth": _health.toInt(),
-        "dueDays": _daysLeft,
+        "dueDate": DateTime.now()
+            .add(Duration(days: _daysLeft))
+            .toIso8601String(),
       };
       final response = await _maintainanceController.updateMantainance(
         updatedTask,
@@ -246,14 +249,17 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
               Center(
                 child: TextButton.icon(
                   onPressed: () {
-                    // Handle delete logic
+                    _showCompletionDialog();
                   },
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: Colors.red.withAlpha(210),
-                  ),
-                  label: "Mark as Completed / Archive".text(
-                    style: TextStyle(color: Colors.red.withAlpha(210)),
+                  icon: Icon(Icons.check, color: Colors.green.withAlpha(210)),
+                  label: Obx(
+                    () => _maintainanceController.updatingMaintainance.value
+                        ? MaterialLoader()
+                        : "Mark as Completed".text(
+                            style: TextStyle(
+                              color: Colors.green.withAlpha(210),
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -287,7 +293,6 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
     FormFieldValidator<String>? validator,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(25),
         borderRadius: BorderRadius.circular(12),
@@ -357,6 +362,28 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
             .toList(),
         onChanged: onChanged,
       ),
+    );
+  }
+
+  void _handleMaintainanceCompleted() async {
+    final response = await _maintainanceController.markAsCompleted(
+      widget.task.id ?? '',
+    );
+    if (response) {
+      Toaster.showSuccess("mantainance updated success");
+    }
+  }
+
+  void _showCompletionDialog() {
+    Get.defaultDialog(
+      title: "Complete",
+      content: "Mark maintainance as completed".text(),
+      textCancel: "close",
+      textConfirm: "yes",
+      onConfirm: () {
+        Get.back();
+        _handleMaintainanceCompleted();
+      },
     );
   }
 }

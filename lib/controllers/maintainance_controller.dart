@@ -60,13 +60,41 @@ class MaintainanceController extends GetxController {
   Future<bool> updateMantainance(dynamic data, String id) async {
     if (addingMaintainance.value) return false;
     addingMaintainance.value = true;
-    final response = await Net.put("/maintainance/$id", data: data);
+    final response = await Net.put("/maintainance/structure/$id", data: data);
     addingMaintainance.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);
       return false;
     }
     fetchAllMaintainances();
+    return true;
+  }
+
+  RxBool updatingMaintainance = RxBool(false);
+  Future<bool> markAsCompleted(String id) async {
+    if (addingMaintainance.value) return false;
+    updatingMaintainance.value = true;
+    final response = await Net.put("/maintainance/status/$id");
+    updatingMaintainance.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    fetchAllMaintainances();
+    return true;
+  }
+
+  RxBool gettingMaintainance = RxBool(false);
+  Rx<MaintainanceModel?> maintainance = Rx<MaintainanceModel?>(null);
+  Future<bool> getMantainance(String id) async {
+    if (gettingMaintainance.value) return false;
+    final response = await Net.get("/maintainance/$id");
+    gettingMaintainance.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    maintainance.value = MaintainanceModel.fromJSON(response.body);
     return true;
   }
 }

@@ -1,9 +1,14 @@
+import 'dart:developer';
+
+import 'package:genesis/controllers/notifications_controller.dart';
 import 'package:get/get.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/models/messsage_model.dart';
+import 'package:genesis/utils/genesis_settings.dart';
 import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/services/network_adapter.dart';
 import 'package:genesis/controllers/user_controller.dart';
@@ -54,11 +59,13 @@ class MessagingController extends GetxController {
       badge: true,
       sound: true,
     );
-    subribeToAdmin();
+    subribeToTopics();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (message.data['type'] == "message") {
         return await _decodeMessage(message.data, message);
       }
+      final controller = Get.find<NotificationsController>();
+      controller.addNotification(message.data);
       GenesisNotificationHandler.showNotification(message);
     });
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {});
@@ -257,6 +264,44 @@ class MessagingController extends GetxController {
     } catch (e) {
       Toaster.showError("Error : $e");
       return false;
+    }
+  }
+
+  void subribeToTopics() {
+    final user = User.fromStorage();
+    if (user == null) return;
+    final settings = GenesisSettings.readSettings();
+    //remove unwanted subsriptions'
+    settings.subscriptions.removeWhere((topic) {
+      final shouldRemove =
+          !topic.contains(user.companyId!) || user.role == "driver";
+      if (shouldRemove) {
+        FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+      }
+      return shouldRemove;
+    });
+    settings.writeSettings();
+    addSubcription(user, settings, "admin", notforDriver: true);
+  }
+
+  void addSubcription(
+    User user,
+    GenesisSettings settings,
+    String s, {
+    required bool notforDriver,
+  }) {
+    if (notforDriver && user.role == "driver") return;
+    if (settings.subscriptions.contains(s.rplus(user.companyId.plus("_"))))
+      return;
+
+    try {
+      FirebaseMessaging.instance.subscribeToTopic(
+        s.rplus(user.companyId.plus("_")),
+      );
+      settings.subscriptions.add(s.rplus(user.companyId.plus("_")));
+      settings.writeSettings();
+    } catch (e) {
+      log("subsription error $e");
     }
   }
 }

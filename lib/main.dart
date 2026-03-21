@@ -1,3 +1,4 @@
+import 'package:genesis/controllers/notifications_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -73,6 +74,7 @@ class MyApp extends StatelessWidget {
         Get.put(PayrollController());
         Get.put(InsuranceController());
         Get.put(CompanyController());
+        Get.put(NotificationsController());
       }),
       title: 'Genesis',
       theme: ThemeData(

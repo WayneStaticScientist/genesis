@@ -1,7 +1,10 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/controllers/notifications_controller.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/models/main_stats_model.dart';
+import 'package:genesis/screens/notifications/notification_list.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/theme.dart';
@@ -23,6 +26,7 @@ class AdminNavMain extends StatefulWidget {
 class _AdminNavMainState extends State<AdminNavMain> {
   // Inject controller if not already in memory
   final _statsController = Get.find<StatsController>();
+  final _notificationsController = Get.find<NotificationsController>();
 
   // Colors
   final Color primaryColor = const Color(0xFF2A2D3E);
@@ -135,11 +139,22 @@ class _AdminNavMainState extends State<AdminNavMain> {
               ),
             ],
           ),
-          child: Icon(
-            Icons.notifications_outlined,
-            color: Get.isDarkMode ? Colors.white : Colors.black87,
+          child: Obx(
+            () => (_notificationsController.notificationSize.value > 0).lord(
+              Badge.count(
+                count: _notificationsController.notificationSize.value,
+                child: Icon(
+                  Icons.notifications_outlined,
+                  color: Get.isDarkMode ? Colors.white : Colors.black87,
+                ),
+              ),
+              Icon(
+                Icons.notifications_outlined,
+                color: Get.isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
           ),
-        ),
+        ).onTap(() => Get.to(() => NotificationListScreen())),
       ],
     );
   }
