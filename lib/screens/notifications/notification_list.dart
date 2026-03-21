@@ -1,9 +1,10 @@
-import 'package:exui/exui.dart';
+import 'package:genesis/models/notification_model.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
-import 'package:genesis/controllers/notifications_controller.dart';
 import 'package:genesis/widgets/layouts/notifications_card.dart';
+import 'package:genesis/controllers/notifications_controller.dart';
 
 // Assuming your NotificationModel is available in your project.
 // This UI implementation uses a simulated list of that model.
@@ -37,7 +38,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              _controller.markAllAsRead();
+            },
             icon: const Icon(Icons.done_all, color: Colors.blueAccent),
             tooltip: 'Mark all as read',
           ),
@@ -56,6 +59,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 itemBuilder: (context, index) {
                   return NotificationCard(
                     notification: _controller.notifications[index],
+                    onLongPress: () =>
+                        _openDialog(context, _controller.notifications[index]),
                   ).onTap(() {
                     _controller.routeNotification(
                       _controller.notifications[index],
@@ -64,6 +69,21 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 },
               ),
       ),
+    );
+  }
+
+  _openDialog(BuildContext context, NotificationModel notification) {
+    Get.defaultDialog(
+      title: "Delete Notification",
+      content: Text(
+        "Are you sure you want to delete this notification? ${notification.title}",
+      ),
+      textCancel: "close",
+      textConfirm: "Delete",
+      onConfirm: () {
+        _controller.deleteNotification(notification);
+        Get.back();
+      },
     );
   }
 }

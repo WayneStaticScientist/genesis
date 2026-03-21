@@ -90,7 +90,10 @@ class _PayrollUserHistoryState extends State<PayrollUserHistory> {
               decoration: BoxDecoration(
                 color: theme.primaryColor.withAlpha(30),
                 border: Border(
-                  bottom: BorderSide(color: theme.dividerColor, width: 0.5),
+                  bottom: BorderSide(
+                    color: Colors.grey.withAlpha(50),
+                    width: 0.5,
+                  ),
                 ),
               ),
               child: Column(
@@ -230,11 +233,7 @@ class _PayrollCard extends StatelessWidget {
         subtitle: Text(GenesisDate.getInformalDate(payroll.createdAt)),
         trailing: Text(
           NumberUtils.formatCurrency(payroll.netPayment),
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: theme.primaryColor,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         children: [
           Padding(

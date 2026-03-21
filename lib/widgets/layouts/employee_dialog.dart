@@ -87,14 +87,17 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 .outlinedButton(
                   onPressed: () =>
                       Get.to(() => PayrollUserHistory(user: widget.emp)),
+
                   style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.withAlpha(50)),
                     shape: RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.grey.withAlpha(50)),
                       borderRadius: BorderRadiusGeometry.circular(3),
                     ),
                   ),
                 )
                 .sizedBox(width: double.infinity),
-            const Divider(height: 32),
+            Divider(height: 32, color: Colors.grey.withAlpha(50)),
             DefaultFormfield(
               keyboardType: TextInputType.number,
               controller: _paymentController,
@@ -104,7 +107,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             ),
             "Leaving 0 or empty for payment will not generate payslip for the member"
                 .text(style: TextStyle(fontSize: 10)),
-            const Divider(height: 32),
+            Divider(height: 32, color: Colors.grey.withAlpha(50)),
 
             const SizedBox(height: 20),
             _sectionHeader("Insurance", Icons.security, () {
@@ -124,7 +127,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             _sectionHeader("Taxes", Icons.security, null),
             6.gapHeight,
             ..._payrollController.taxes.map((i) => _deductionTile(i, null)),
-            const Divider(height: 40),
+            Divider(height: 32, color: Colors.grey.withAlpha(50)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

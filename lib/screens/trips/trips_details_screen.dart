@@ -1,3 +1,4 @@
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/string_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
@@ -250,7 +251,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             ),
           ),
           SizedBox(height: 5),
-          "-".text(),
+          ""
+              .plus(
+                (trip.distance > 0).lors(
+                  "${NumberUtils.formatNumber(trip.distance)}KM",
+                  '-',
+                ),
+              )
+              .text(),
           SizedBox(height: 5),
           Text(
             trip.destination,

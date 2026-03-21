@@ -14,10 +14,12 @@ class StatsController extends GetxController {
   RxString errorState = ''.obs;
   Rx<MainStatsModel?> stats = Rx<MainStatsModel?>(null);
   RxList<SevenDaysTotal> sevenDaysTotals = RxList<SevenDaysTotal>([]);
-  Future<void> fetchStats() async {
+  Future<void> fetchStats(DateTimeRange? range) async {
     isLoading.value = true;
     errorState.value = '';
-    final response = await Net.get('/stats/main');
+    final response = await Net.get(
+      '/stats/main?startDate=${range?.start.toIso8601String() ?? ''}&endDate=${range?.end.toIso8601String() ?? ''}',
+    );
     isLoading.value = false;
     if (response.hasError) {
       errorState.value = response.response;

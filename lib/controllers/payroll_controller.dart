@@ -161,7 +161,7 @@ class PayrollController extends GetxController {
   RxBool fetchingUserPayrollHistory = false.obs;
   void fetchUserPayRowHistory(DateTimeRange range, String userId) async {
     payrollHistory.clear();
-    fetchingPayrollHistory.value = true;
+    fetchingUserPayrollHistory.value = true;
     final response = await Net.get(
       "/payroll/user-range?userId=$userId&startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}",
     );

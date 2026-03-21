@@ -97,4 +97,26 @@ class MaintainanceController extends GetxController {
     maintainance.value = MaintainanceModel.fromJSON(response.body);
     return true;
   }
+
+  void updateMaintainanceStatus({
+    required String id,
+    required bool accepted,
+  }) async {
+    if (updatingMaintainance.value) return;
+    updatingMaintainance.value = true;
+    final response = await Net.put(
+      "/maintainance/complete/$id",
+      data: {"accepted": accepted},
+    );
+    updatingMaintainance.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return;
+    }
+    getMantainance(id);
+    Toaster.showSuccess2(
+      "Mantainance Alert",
+      "Maintainance has been succefully ${accepted ? "accepted" : "rejected"}",
+    );
+  }
 }

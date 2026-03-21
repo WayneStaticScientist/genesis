@@ -1,7 +1,8 @@
-import 'package:exui/exui.dart';
 import 'package:get/get.dart';
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/maintainance_model.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
 
 class MaintenanceDetailScreen extends StatefulWidget {
@@ -111,42 +112,59 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                           height: 1.6,
                         ),
                       ),
-                    ),
+                    ).sizedBox(width: double.infinity),
                     const SizedBox(height: 40),
 
                     // Conditional Action Buttons
                     if (maintenance.status == "Submitted") ...[
                       Row(
                         children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                // Handle Reject Logic
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.redAccent),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
+                          Obx(
+                            () =>
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      _maintainanceController
+                                          .updateMaintainanceStatus(
+                                            id: widget.maintainance_id,
+                                            accepted: false,
+                                          );
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Colors.redAccent,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      "Reject",
+                                      style: TextStyle(
+                                        color: Colors.redAccent,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ).visibleIfNot(
+                                  _maintainanceController
+                                      .updatingMaintainance
+                                      .value,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: const Text(
-                                "Reject",
-                                style: TextStyle(
-                                  color: Colors.redAccent,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             flex: 2,
                             child: ElevatedButton(
                               onPressed: () {
-                                // Handle Confirm Logic
+                                _maintainanceController
+                                    .updateMaintainanceStatus(
+                                      id: widget.maintainance_id,
+                                      accepted: true,
+                                    );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.greenAccent,
@@ -159,38 +177,22 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                                 ),
                                 elevation: 0,
                               ),
-                              child: const Text(
-                                "Confirm Maintenance",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              child: Obx(
+                                () =>
+                                    _maintainanceController
+                                        .updatingMaintainance
+                                        .value
+                                    ? WhiteLoader()
+                                    : const Text(
+                                        "Confirm Maintenance",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
                         ],
-                      ),
-                    ] else ...[
-                      // Generic Action for other statuses if needed
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getUrgencyColor(
-                              maintenance.urgenceLevel,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            "View Status Details",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
                       ),
                     ],
                     const SizedBox(height: 40),
@@ -222,14 +224,14 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                 width: 70,
                 height: 70,
                 child: CircularProgressIndicator(
-                  value: data.currentHealth,
+                  value: data.currentHealth / 100,
                   strokeWidth: 8,
                   backgroundColor: Colors.white10,
                   color: color,
                 ),
               ),
               Text(
-                "${(data.currentHealth * 100).toInt()}%",
+                "${(data.currentHealth).toInt()}%",
                 style: TextStyle(
                   color: color,
                   fontWeight: FontWeight.bold,
@@ -312,8 +314,8 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
           const Divider(color: Colors.white10, height: 32),
           _buildDetailRow(
             Icons.fingerprint,
-            "Vehicle ID",
-            data.vehicleId ?? 'N/A',
+            "Vehicle ",
+            data.carModel ?? 'N/A',
           ),
           const Divider(color: Colors.white10, height: 32),
           _buildDetailRow(
@@ -355,7 +357,7 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
-        ),
+        ).constrained(maxWidth: 100),
       ],
     );
   }

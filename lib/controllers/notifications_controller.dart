@@ -1,8 +1,9 @@
-import 'package:genesis/screens/trips/trips_details_screen.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/models/notification_model.dart';
+import 'package:genesis/screens/trips/trips_details_screen.dart';
 import 'package:genesis/screens/maintainance/maintainance_view.dart';
 
 class NotificationsController extends GetxController {
@@ -13,7 +14,7 @@ class NotificationsController extends GetxController {
     initNotifications();
   }
 
-  void initNotifications() async {
+  Future<void> initNotifications() async {
     final isar = IsarStatic.isar;
     if (isar == null) return;
     notificationSize.value = isar.notificationModels
@@ -23,13 +24,14 @@ class NotificationsController extends GetxController {
   }
 
   RxList<NotificationModel> notifications = RxList<NotificationModel>();
-  void getNotifications({String search = ''}) async {
+  Future<void> getNotifications({String search = ''}) async {
     final isar = IsarStatic.isar;
     if (isar == null) return;
     notifications.value = await isar.notificationModels
         .where()
         .titleContains(search, caseSensitive: false)
         .contentContains(search, caseSensitive: false)
+        .sortByDateDesc()
         .findAll();
   }
 
@@ -64,5 +66,30 @@ class NotificationsController extends GetxController {
       await Get.to(() => TripDetailsScreen(tripId: notification.channenId));
     }
     getNotifications();
+  }
+
+  void markAllAsRead() async {
+    final isar = IsarStatic.isar;
+    if (isar == null) return;
+    await isar.write((isar) async {
+      await isar.notificationModels
+          .where()
+          .isReadEqualTo(false)
+          .updateAll(isRead: true);
+    });
+    await initNotifications();
+    await getNotifications();
+    Toaster.showSuccess("success set on read");
+  }
+
+  void deleteNotification(NotificationModel notification) async {
+    final isar = IsarStatic.isar;
+    if (isar == null) return;
+    await isar.write((isar) async {
+      isar.notificationModels.delete(notification.id);
+    });
+    await initNotifications();
+    await getNotifications();
+    Toaster.showSuccess("success delete");
   }
 }

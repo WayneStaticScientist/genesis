@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'package:exui/material.dart';
-import 'package:genesis/screens/payroll/payroll_history.dart';
-import 'package:genesis/utils/date_utils.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:genesis/widgets/layouts/taxes_dialog.dart';
-import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
+import 'package:exui/material.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/widgets/layouts/taxes_dialog.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
+import 'package:genesis/screens/payroll/payroll_history.dart';
 import 'package:genesis/controllers/payroll_controller.dart';
 import 'package:genesis/widgets/layouts/employee_dialog.dart';
 

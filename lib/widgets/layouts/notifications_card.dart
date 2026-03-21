@@ -1,11 +1,17 @@
+import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/models/notification_model.dart';
 import 'package:genesis/utils/theme.dart';
 
 class NotificationCard extends StatelessWidget {
+  final Function() onLongPress;
   final NotificationModel notification;
 
-  const NotificationCard({super.key, required this.notification});
+  const NotificationCard({
+    super.key,
+    required this.notification,
+    required this.onLongPress,
+  });
 
   // Helper to determine icon and color based on type
   Map<String, dynamic> _getTypeAttributes() {
@@ -136,6 +142,6 @@ class NotificationCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ).onLongPress(onLongPress);
   }
 }

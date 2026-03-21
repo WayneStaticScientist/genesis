@@ -1,19 +1,16 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/controllers/notifications_controller.dart';
-import 'package:genesis/controllers/stats_controller.dart';
-import 'package:genesis/models/main_stats_model.dart';
-import 'package:genesis/screens/notifications/notification_list.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
-import 'package:genesis/utils/theme.dart';
-import 'package:get/get.dart';
-import 'package:fl_chart/fl_chart.dart'; // REQUIRED: Add fl_chart to pubspec.yaml
-
-// --- 1. MOCK MODELS & CONTROLLER (Replace with your actual Genesis logic) ---
-
-// --- 2. MAIN DASHBOARD SCREEN ---
+import 'package:genesis/models/main_stats_model.dart';
+import 'package:genesis/controllers/stats_controller.dart';
+import 'package:genesis/widgets/layouts/modern_date_range.dart';
+import 'package:genesis/controllers/notifications_controller.dart';
+import 'package:genesis/screens/notifications/notification_list.dart';
 
 class AdminNavMain extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -27,7 +24,10 @@ class _AdminNavMainState extends State<AdminNavMain> {
   // Inject controller if not already in memory
   final _statsController = Get.find<StatsController>();
   final _notificationsController = Get.find<NotificationsController>();
-
+  DateTimeRange? selectedDateRange = DateTimeRange(
+    start: DateTime.now().subtract(const Duration(days: 7)),
+    end: DateTime.now(),
+  );
   // Colors
   final Color primaryColor = const Color(0xFF2A2D3E);
   final Color secondaryColor = const Color(0xFF212332);
@@ -35,7 +35,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
   // Light mode background
   initState() {
     super.initState();
-    _statsController.fetchStats();
+    refresh();
   }
 
   @override
@@ -49,7 +49,15 @@ class _AdminNavMainState extends State<AdminNavMain> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [_buildHeader(), _buildMainSection()],
+          children: [
+            _buildHeader(),
+            ModernDateRangeDisplay(
+              startDate: selectedDateRange?.start,
+              endDate: selectedDateRange?.end,
+              onTap: _pickDate,
+            ),
+            _buildMainSection(),
+          ],
         ),
       ),
     );
@@ -70,10 +78,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 10),
             Text("Error: ${_statsController.errorState.value}"),
-            TextButton(
-              onPressed: () => _statsController.fetchStats(),
-              child: const Text("Retry"),
-            ),
+            TextButton(onPressed: () => refresh(), child: const Text("Retry")),
           ],
         ).sizedBox(width: double.infinity).padding(EdgeInsets.only(top: 40));
       }
@@ -664,5 +669,48 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
       ],
     );
+  }
+
+  void _pickDate() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: selectedDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: Theme.of(context).colorScheme.primary,
+              onPrimary: Colors.white,
+              surface: Theme.of(context).colorScheme.surface,
+              onSurface: Theme.of(context).colorScheme.onSurface,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+              child: child!,
+            ),
+          ),
+        );
+      },
+    );
+    if (picked != null && picked != selectedDateRange) {
+      setState(() {
+        selectedDateRange = picked;
+      });
+      refresh();
+    }
+  }
+
+  void refresh() {
+    _statsController.fetchStats(selectedDateRange);
   }
 }

@@ -74,7 +74,7 @@ class _PayrollHistoryState extends State<PayrollHistory> {
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer.withAlpha(100),
                 border: Border(
-                  bottom: BorderSide(color: colorScheme.outlineVariant),
+                  bottom: BorderSide(color: Colors.grey.withAlpha(30)),
                 ),
               ),
               child: Column(

@@ -263,6 +263,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                       ),
                 ),
                 12.gapHeight,
+                _buildInputLabel("Distance In KM"),
                 TextFormField(
                   controller: _distanceInKmController,
                   decoration: _modernInputDecoration(

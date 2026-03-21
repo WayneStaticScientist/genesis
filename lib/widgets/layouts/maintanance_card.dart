@@ -1,11 +1,12 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/models/maintainance_model.dart';
-import 'package:genesis/screens/maintainance/maintainance_edit.dart';
-import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/theme.dart';
-import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/models/maintainance_model.dart';
+import 'package:genesis/screens/maintainance/maintainance_view.dart';
+import 'package:genesis/screens/maintainance/maintainance_edit.dart';
 
 class GMaintananceCard extends StatelessWidget {
   final MaintainanceModel task;
@@ -145,7 +146,7 @@ class GMaintananceCard extends StatelessWidget {
                   child: TextButton.icon(
                     onPressed: () {},
                     icon: const Icon(LineIcons.fileInvoice, size: 18),
-                    label: const Text("View History"),
+                    label: task.status.text(),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.grey.shade700,
                     ),
@@ -154,7 +155,13 @@ class GMaintananceCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Get.to(
+                        () => MaintenanceDetailScreen(
+                          maintainance_id: task.id ?? '',
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isCritical ? Colors.red : Colors.white,
                       foregroundColor: isCritical
@@ -173,12 +180,20 @@ class GMaintananceCard extends StatelessWidget {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
+                ).visibleIf(task.status == 'Submitted'),
               ],
             ),
           ),
         ],
       ),
-    ).onTap(() => Get.to(() => AdminEditMaintenance(task: task)));
+    ).onTap(() {
+      if (task.status == 'Submitted' ||
+          task.status == 'Approved' ||
+          task.status == "Rejected") {
+        Get.to(() => MaintenanceDetailScreen(maintainance_id: task.id ?? ''));
+        return;
+      }
+      Get.to(() => AdminEditMaintenance(task: task));
+    });
   }
 }

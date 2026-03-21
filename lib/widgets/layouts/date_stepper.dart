@@ -40,10 +40,10 @@ class GenesisDateRangeStepper extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: Colors.grey.withAlpha(50)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withAlpha(20),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
