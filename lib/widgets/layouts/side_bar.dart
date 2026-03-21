@@ -165,8 +165,8 @@ class _GNavBarState extends State<GNavBar> {
                         Icons.account_balance,
                       ),
 
-                      const SizedBox(height: 24),
-                      _sectionHeader("OPERATIONS"),
+                      const SizedBox(height: 24).visibleIf(!isDriver),
+                      _sectionHeader("OPERATIONS").visibleIf(!isDriver),
                       _buildNavItem(
                         context,
                         'employees',

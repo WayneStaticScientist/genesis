@@ -5,6 +5,8 @@ import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/genesis_settings.dart';
+import 'package:genesis/screens/auth/profile_screen.dart';
+import 'package:genesis/controllers/user_controller.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
@@ -15,10 +17,7 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  // Local state for toggles (In a real app, these would be in a Controller)
-  bool _autoApproveMaintenance = true;
-  bool _notificationsEnabled = true;
-
+  final _userController = Get.find<UserController>();
   @override
   Widget build(BuildContext context) {
     final settings = GenesisSettings.readSettings();
@@ -76,34 +75,25 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 },
               ),
             ).visibleIfNot(settings.isSystemThemeMode),
-            const SizedBox(height: 25),
+            if (_userController.user.value!.role != "driver") ...[
+              const SizedBox(height: 25),
 
-            _buildSectionHeader("Operations & Automation"),
-            _buildSettingCard(
-              icon: LineIcons.tools,
-              color: Colors.orange,
-              title: "Auto-Approve Maintenance",
-              subtitle: "Approve routine requests automatically",
-              trailing: Switch.adaptive(
-                value: _autoApproveMaintenance,
-                activeThumbColor: GTheme.primary(context),
-                onChanged: (val) =>
-                    setState(() => _autoApproveMaintenance = val),
+              _buildSectionHeader("Operations & Automation"),
+              _buildSettingCard(
+                icon: LineIcons.tools,
+                color: Colors.orange,
+                title: "Auto-Approve Maintenance",
+                subtitle: "Approve routine requests automatically",
+                trailing: Switch.adaptive(
+                  value: _autoApproveMaintenance,
+                  activeThumbColor: GTheme.primary(context),
+                  onChanged: (val) =>
+                      setState(() => _autoApproveMaintenance = val),
+                ),
               ),
-            ),
-            _buildSettingCard(
-              icon: LineIcons.bell,
-              color: Colors.blue,
-              title: "Push Notifications",
-              subtitle: "Alerts for new trip assignments",
-              trailing: Switch.adaptive(
-                value: _notificationsEnabled,
-                activeThumbColor: GTheme.primary(context),
-                onChanged: (val) => setState(() => _notificationsEnabled = val),
-              ),
-            ),
-            const SizedBox(height: 25),
+            ],
 
+            const SizedBox(height: 25),
             _buildSectionHeader("User Adjustments"),
             // _buildAdjustmentSlider(),
             _buildSettingCard(
@@ -128,10 +118,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             _buildSettingCard(
               icon: LineIcons.alternateSignOut,
               color: Colors.redAccent,
-              title: "Logout",
-              subtitle: "End current session safely",
+              title: "Account Management",
+              subtitle: "view your account",
               onTap: () {
-                // Handle logout logic
+                Get.to(() => ProfileScreen());
               },
             ),
             const SizedBox(height: 40),

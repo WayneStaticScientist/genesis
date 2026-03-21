@@ -183,7 +183,7 @@ class UserController extends GetxController {
     return true;
   }
 
-  Future<bool> updateMyStatus({
+  Future<bool> updateUser({
     required Map<String, dynamic> data,
     required String id,
     bool updateCurrent = false,
@@ -193,7 +193,7 @@ class UserController extends GetxController {
       return false;
     }
     registeringDriver.value = true;
-    final response = await Net.put("/user/$id", data: data);
+    final response = await Net.put("/user/profile/$id", data: data);
     registeringDriver.value = false;
     if (response.hasError) {
       Toaster.showError(response.response);
@@ -222,12 +222,6 @@ class UserController extends GetxController {
     }
     return User.fromJSON(response.body);
   }
-
-  Future updateUser({
-    required String firstName,
-    required String lastName,
-    String? password,
-  }) async {}
 
   void logout() {
     user.value = null;

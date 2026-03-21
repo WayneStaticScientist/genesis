@@ -1,12 +1,12 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/toast.dart';
+import 'package:genesis/screens/main/main_screen.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/create_account.dart';
-import 'package:genesis/screens/main/main_screen.dart';
-import 'package:genesis/utils/toast.dart';
 import 'package:genesis/widgets/actions/form_button.dart';
 import 'package:genesis/widgets/actions/form_input.dart';
-import 'package:get/get.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -175,10 +175,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       isPasswordField: true,
                     ),
                     32.gapHeight,
-                    GFormButton(
-                      label: 'Sign In',
-                      onPress: _login,
-                      isLoading: _userController.loading.value,
+                    Obx(
+                      () => GFormButton(
+                        label: 'Sign In',
+                        onPress: _login,
+                        isLoading: _userController.loading.value,
+                      ),
                     ),
                     24.gapHeight,
                     Center(

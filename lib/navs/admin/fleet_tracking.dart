@@ -144,7 +144,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                   ),
                 if (origin != null)
                   Marker(
-                    markerId: const MarkerId('green_marker_1'),
+                    markerId: const MarkerId('red_marker_1'),
                     position: LatLng(origin.lat, origin.lng),
                     infoWindow: InfoWindow(
                       title: 'origin',

@@ -21,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Controllers for editable fields
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
+  late TextEditingController _emailController;
   final TextEditingController _passwordController = TextEditingController();
 
   @override
@@ -30,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = _userController.user.value;
     _firstNameController = TextEditingController(text: user?.firstName ?? "");
     _lastNameController = TextEditingController(text: user?.lastName ?? "");
+    _emailController = TextEditingController(text: user?.email ?? "");
   }
 
   @override
@@ -203,7 +205,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       label: "First Name",
                       controller: _firstNameController,
                       validator: (value) =>
-                          value == null || value.isEmpty ? "Required" : null,
+                          value == null || value.trim().isEmpty
+                          ? "Required"
+                          : null,
                     ),
                     20.gapHeight,
 
@@ -211,10 +215,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       label: "Last Name",
                       controller: _lastNameController,
                       validator: (value) =>
-                          value == null || value.isEmpty ? "Required" : null,
+                          value == null || value.trim().isEmpty
+                          ? "Required"
+                          : null,
                     ),
                     20.gapHeight,
-
+                    GFormInput(
+                      label: "Email",
+                      controller: _emailController,
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? "Required"
+                          : null,
+                    ),
+                    20.gapHeight,
                     GFormInput(
                       label: "New Password (Leave blank to keep current)",
                       controller: _passwordController,
@@ -222,10 +236,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     32.gapHeight,
 
-                    GFormButton(
-                      label: 'Update Profile',
-                      onPress: _updateProfile,
-                      isLoading: _userController.loading.value,
+                    Obx(
+                      () => GFormButton(
+                        label: 'Update Profile',
+                        onPress: _updateProfile,
+                        isLoading: _userController.registeringDriver.value,
+                      ),
                     ),
 
                     40.gapHeight,
@@ -280,15 +296,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _updateProfile() async {
-    if (_formKey.currentState?.validate() != true) return;
-
-    // Logic to call controller update
+    if (_formKey.currentState?.validate() != true)
+      return Toaster.showErrorTop(
+        "Input Error",
+        "Please fill down the fields correctly",
+      );
+    if (_passwordController.text.trim().isNotEmpty &&
+        _passwordController.text.length < 3) {
+      return Toaster.showErrorTop(
+        "Password Error",
+        "Password should contain at least 4 characters",
+      );
+    }
     final success = await _userController.updateUser(
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      password: _passwordController.text.isEmpty
-          ? null
-          : _passwordController.text,
+      data: {
+        "email": _emailController.text.trim(),
+        "firstName": _firstNameController.text,
+        "lastName": _lastNameController.text,
+        "password": _passwordController.text.isEmpty
+            ? null
+            : _passwordController.text,
+      },
+      id: _userController.user.value!.id,
     );
 
     if (success) {
