@@ -21,8 +21,11 @@ class AdminSettingsScreen extends StatefulWidget {
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   final _userController = Get.find<UserController>();
   final _companyController = Get.find<CompanyController>();
+
   @override
   Widget build(BuildContext context) {
+    final isMaintainer = _userController.user.value?.role == "maintainer";
+
     final settings = GenesisSettings.readSettings();
     return Scaffold(
       backgroundColor: GTheme.surface(context),
@@ -79,7 +82,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ),
             ).visibleIfNot(settings.isSystemThemeMode),
             if (_userController.user.value!.role != "driver" &&
-                _companyController.company.value?.settings != null) ...[
+                _companyController.company.value?.settings != null &&
+                !isMaintainer) ...[
               const SizedBox(height: 25),
               _buildSectionHeader("Operations & Automation"),
               _buildSettingCard(

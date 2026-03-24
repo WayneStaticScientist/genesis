@@ -1,4 +1,5 @@
 import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/widgets/displays/error_widget.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
@@ -19,6 +20,7 @@ class AdminNavMaintenance extends StatefulWidget {
 
 class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
   final _maintainanceController = Get.find<MaintainanceController>();
+  final _userController = Get.find<UserController>();
   String _status = '';
   @override
   void initState() {
@@ -251,6 +253,7 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: GMaintananceCard(
                       task: _maintainanceController.maintainances[index],
+                      user: _userController.user.value!,
                     ),
                   ),
                   childCount: _maintainanceController.maintainances.length,

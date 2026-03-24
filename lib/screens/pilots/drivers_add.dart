@@ -171,7 +171,7 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
                 },
               ),
               _buildField(
-                label: "Eamil",
+                label: "Email",
                 hint: "Enter legal name",
                 icon: Icons.email,
                 controller: _email,

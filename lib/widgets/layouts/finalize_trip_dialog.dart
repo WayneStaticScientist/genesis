@@ -94,7 +94,7 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
             DefaultFormfield(
               keyboardType: TextInputType.number,
               controller: _truckShopExpensesController,
-              label: "Truck Shop",
+              label: "Truck Stop",
               hint: "enter amount",
               icon: Icons.car_rental,
             ),

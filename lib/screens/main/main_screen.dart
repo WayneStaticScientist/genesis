@@ -1,6 +1,7 @@
 import 'package:genesis/navs/admin/nav_employee.dart';
 import 'package:genesis/navs/admin/nav_settings.dart';
 import 'package:genesis/screens/payroll/payroll_user_history.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -32,9 +33,13 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = _userController.user.value?.role == "driver"
-        ? "tracking"
-        : "dashboard";
+    _selectedIndex = (_userController.user.value?.role == "driver").lors(
+      "tracking",
+      (_userController.user.value?.role == "maintainer").lors(
+        'maintanance',
+        "dashboard",
+      ),
+    );
     widgetTree = {
       "employees": AdminNavEmployees(triggerKey: _scaffoldKey),
       "settings": AdminSettingsScreen(triggerKey: _scaffoldKey),

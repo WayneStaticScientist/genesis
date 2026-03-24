@@ -1,3 +1,5 @@
+import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ class MaintenanceDetailScreen extends StatefulWidget {
 
 class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
   final _maintainanceController = Get.find<MaintainanceController>();
+  final _userController = Get.find<UserController>();
 
   @override
   void initState() {
@@ -97,6 +100,7 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -113,10 +117,39 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                         ),
                       ),
                     ).sizedBox(width: double.infinity),
+                    const SizedBox(height: 24),
+
+                    const Text(
+                      "Maintainer",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    _buildMantainerId(maintenance.maintainerId),
+                    if (maintenance.approverId != null) ...[
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Approver",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      _buildMantainerId(maintenance.approverId),
+                    ],
                     const SizedBox(height: 40),
 
                     // Conditional Action Buttons
-                    if (maintenance.status == "Submitted") ...[
+                    if (maintenance.status == "Submitted" &&
+                        (_userController.user.value?.role == 'manager' ||
+                            _userController.user.value?.role == 'admin')) ...[
                       Row(
                         children: [
                           Obx(
@@ -185,6 +218,47 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                                     ? WhiteLoader()
                                     : const Text(
                                         "Confirm Maintenance",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (maintenance.status == "Approved" &&
+                        (_userController.user.value?.role == 'manager' ||
+                            _userController.user.value?.role == 'maintainer' ||
+                            _userController.user.value?.role == 'admin')) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                _showCompletionDialog();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.greenAccent,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Obx(
+                                () =>
+                                    _maintainanceController
+                                        .updatingMaintainance
+                                        .value
+                                    ? WhiteLoader()
+                                    : const Text(
+                                        "Mark As Completed",
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -335,6 +409,39 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
     );
   }
 
+  Widget _buildMantainerId(dynamic data) {
+    if (data == null || data.runtimeType == String) return Container();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          _buildDetailRow(
+            Icons.person_4_outlined,
+            "FirstName",
+            data['firstName'] ?? '',
+          ),
+          const Divider(color: Colors.white10, height: 32),
+          _buildDetailRow(
+            Icons.person_4_outlined,
+            "LastName",
+            data['lastName'] ?? '',
+          ),
+          const Divider(color: Colors.white10, height: 32),
+          _buildDetailRow(
+            Icons.person_4_outlined,
+            "Email",
+            data['email'] ?? "",
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDetailRow(
     IconData icon,
     String label,
@@ -383,5 +490,27 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
       default:
         return Colors.blueAccent;
     }
+  }
+
+  void _handleMaintainanceCompleted() async {
+    final response = await _maintainanceController.markAsCompleted(
+      _maintainanceController.maintainance.value?.id ?? '',
+    );
+    if (response) {
+      Toaster.showSuccess("mantainance updated success");
+    }
+  }
+
+  void _showCompletionDialog() {
+    Get.defaultDialog(
+      title: "Complete",
+      content: "Mark maintainance as completed".text(),
+      textCancel: "close",
+      textConfirm: "yes",
+      onConfirm: () {
+        Get.back();
+        _handleMaintainanceCompleted();
+      },
+    );
   }
 }

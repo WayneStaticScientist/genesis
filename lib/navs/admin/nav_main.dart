@@ -51,6 +51,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
+            20.gapHeight,
             ModernDateRangeDisplay(
               startDate: selectedDateRange?.start,
               endDate: selectedDateRange?.end,

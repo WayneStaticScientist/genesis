@@ -1,3 +1,4 @@
+import 'package:genesis/models/user_model.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,8 @@ import 'package:genesis/screens/maintainance/maintainance_edit.dart';
 
 class GMaintananceCard extends StatelessWidget {
   final MaintainanceModel task;
-  const GMaintananceCard({super.key, required this.task});
+  final User user;
+  const GMaintananceCard({super.key, required this.task, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -187,9 +189,12 @@ class GMaintananceCard extends StatelessWidget {
         ],
       ),
     ).onTap(() {
-      if (task.status == 'Submitted' ||
-          task.status == 'Approved' ||
-          task.status == "Rejected") {
+      if (task.status == 'Approved' || task.status == "Rejected") {
+        Get.to(() => MaintenanceDetailScreen(maintainance_id: task.id ?? ''));
+        return;
+      }
+      if (task.status == 'Submitted' &&
+          (user.role == 'manager' || user.role == 'admim')) {
         Get.to(() => MaintenanceDetailScreen(maintainance_id: task.id ?? ''));
         return;
       }

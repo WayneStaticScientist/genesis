@@ -161,7 +161,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       value: trip.finesExpense,
                     ),
                     _buildExpenseCard(
-                      title: "Truck Shop",
+                      title: "Truck Stop",
                       icon: Icons.local_shipping_outlined,
                       value: trip.truckShopExpense,
                     ),

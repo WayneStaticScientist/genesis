@@ -72,7 +72,7 @@ class MaintainanceController extends GetxController {
 
   RxBool updatingMaintainance = RxBool(false);
   Future<bool> markAsCompleted(String id) async {
-    if (addingMaintainance.value) return false;
+    if (updatingMaintainance.value) return false;
     updatingMaintainance.value = true;
     final response = await Net.put("/maintainance/status/$id");
     updatingMaintainance.value = false;
@@ -80,6 +80,9 @@ class MaintainanceController extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
+    maintainance.value = MaintainanceModel.fromJSON(
+      response.body['maintainance'],
+    );
     fetchAllMaintainances();
     return true;
   }

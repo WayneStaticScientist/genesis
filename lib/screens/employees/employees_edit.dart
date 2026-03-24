@@ -195,6 +195,7 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
       {'id': 'admin', 'label': 'Admin', 'icon': LineIcons.userShield},
       {'id': 'manager', 'label': 'Manager', 'icon': LineIcons.users},
       {'id': 'driver', 'label': 'Driver', 'icon': LineIcons.car},
+      {'id': 'maintainer', 'label': 'Maintainer', 'icon': LineIcons.cog},
     ];
 
     return Row(

@@ -1,11 +1,10 @@
+import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/controllers/maintainance_controller.dart';
-import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/utils/toast.dart';
-import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
-import 'package:get/get.dart';
+import 'package:genesis/controllers/maintainance_controller.dart';
 
 class AdminEditMaintenance extends StatefulWidget {
   final MaintainanceModel task;
@@ -246,23 +245,10 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
               const SizedBox(height: 40),
 
               // Delete Action
-              Center(
-                child: TextButton.icon(
-                  onPressed: () {
-                    _showCompletionDialog();
-                  },
-                  icon: Icon(Icons.check, color: Colors.green.withAlpha(210)),
-                  label: Obx(
-                    () => _maintainanceController.updatingMaintainance.value
-                        ? MaterialLoader()
-                        : "Mark as Completed".text(
-                            style: TextStyle(
-                              color: Colors.green.withAlpha(210),
-                            ),
-                          ),
-                  ),
-                ),
-              ),
+              if (widget.task.status == "Submitted")
+                [
+                  "Waiting Approval".text(),
+                ].row(crossAxisAlignment: CrossAxisAlignment.center),
             ],
           ),
         ),
@@ -362,28 +348,6 @@ class _AdminEditMaintenanceState extends State<AdminEditMaintenance> {
             .toList(),
         onChanged: onChanged,
       ),
-    );
-  }
-
-  void _handleMaintainanceCompleted() async {
-    final response = await _maintainanceController.markAsCompleted(
-      widget.task.id ?? '',
-    );
-    if (response) {
-      Toaster.showSuccess("mantainance updated success");
-    }
-  }
-
-  void _showCompletionDialog() {
-    Get.defaultDialog(
-      title: "Complete",
-      content: "Mark maintainance as completed".text(),
-      textCancel: "close",
-      textConfirm: "yes",
-      onConfirm: () {
-        Get.back();
-        _handleMaintainanceCompleted();
-      },
     );
   }
 }

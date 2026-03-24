@@ -1,5 +1,7 @@
 class MaintainanceModel {
   final String? id;
+  final dynamic maintainerId;
+  final dynamic approverId;
   final String licencePlate;
   final String? vehicleId;
   final String? carModel;
@@ -20,6 +22,8 @@ class MaintainanceModel {
     required this.currentHealth,
     required this.estimatedCosts,
     required this.status,
+    required this.maintainerId,
+    required this.approverId,
   });
   factory MaintainanceModel.fromJSON(dynamic data) {
     return MaintainanceModel(
@@ -35,6 +39,8 @@ class MaintainanceModel {
       urgenceLevel: data['urgenceLevel'] ?? '',
       currentHealth: (data['currentHealth'] as num?)?.toDouble() ?? 0.00,
       estimatedCosts: (data['estimatedCosts'] as num?)?.toDouble() ?? 0.0,
+      maintainerId: data['maintainerId'],
+      approverId: data['approverId'],
     );
   }
 }

@@ -28,6 +28,7 @@ class _GNavBarState extends State<GNavBar> {
       final user = _userController.user.value;
       final role = user?.role ?? "driver";
       final isDriver = role == "driver";
+      final isMaintainer = role == "maintainer";
 
       return Container(
         width: 280,
@@ -102,13 +103,13 @@ class _GNavBarState extends State<GNavBar> {
                         'dashboard',
                         "Dashboard",
                         Icons.grid_view_rounded,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isMaintainer),
                       _buildNavItem(
                         context,
                         'reports',
                         "Revenue Reports",
                         Icons.report_outlined,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isMaintainer),
                       Obx(
                         () => _buildNavItem(
                           context,
@@ -124,13 +125,13 @@ class _GNavBarState extends State<GNavBar> {
                         'trips',
                         "Trips",
                         Icons.route_outlined,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isMaintainer),
                       _buildNavItem(
                         context,
                         'vehicles',
                         "Vehicles",
                         Icons.local_shipping_outlined,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isMaintainer),
                       _buildNavItem(
                         context,
                         'drivers',
@@ -157,7 +158,7 @@ class _GNavBarState extends State<GNavBar> {
                         'payrolls',
                         "Payroll",
                         Icons.account_balance_wallet_outlined,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isMaintainer),
                       _buildNavItem(
                         context,
                         'my_payments',
@@ -165,14 +166,18 @@ class _GNavBarState extends State<GNavBar> {
                         Icons.account_balance,
                       ),
 
-                      const SizedBox(height: 24).visibleIf(!isDriver),
-                      _sectionHeader("OPERATIONS").visibleIf(!isDriver),
+                      const SizedBox(
+                        height: 24,
+                      ).visibleIf(!isDriver && !isMaintainer),
+                      _sectionHeader(
+                        "OPERATIONS",
+                      ).visibleIf(!isDriver && !isMaintainer),
                       _buildNavItem(
                         context,
                         'employees',
                         "Employees",
                         Icons.people_alt,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isMaintainer),
                       const SizedBox(height: 24),
                       _sectionHeader("SYSTEM"),
                       _buildNavItem(
