@@ -1,3 +1,5 @@
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -25,12 +27,14 @@ class _AdminNavMainState extends State<AdminNavMain> {
   final _statsController = Get.find<StatsController>();
   final _notificationsController = Get.find<NotificationsController>();
   DateTimeRange? selectedDateRange;
+  bool _isPrinting = false;
   // Colors
   final Color primaryColor = const Color(0xFF2A2D3E);
   final Color secondaryColor = const Color(0xFF212332);
   final Color accentColor = const Color(0xFF6C5DD3);
-  // Light mode background
-  initState() {
+
+  @override
+  void initState() {
     super.initState();
     refresh();
   }
@@ -64,29 +68,156 @@ class _AdminNavMainState extends State<AdminNavMain> {
   Widget _buildMainSection() {
     return Obx(() {
       if (_statsController.isLoading.value) {
-        return [CircularProgressIndicator(color: Color(0xFF6C5DD3))]
+        return [const CircularProgressIndicator(color: Color(0xFF6C5DD3))]
             .row(mainAxisAlignment: MainAxisAlignment.center)
-            .padding(EdgeInsets.only(top: 40));
+            .padding(const EdgeInsets.only(top: 40));
       }
       if (_statsController.errorState.value.isNotEmpty ||
           _statsController.stats.value == null) {
         return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 10),
-            Text("Error: ${_statsController.errorState.value}"),
-            TextButton(onPressed: () => refresh(), child: const Text("Retry")),
-          ],
-        ).sizedBox(width: double.infinity).padding(EdgeInsets.only(top: 40));
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 10),
+                Text("Error: ${_statsController.errorState.value}"),
+                TextButton(
+                  onPressed: () => refresh(),
+                  child: const Text("Retry"),
+                ),
+              ],
+            )
+            .sizedBox(width: double.infinity)
+            .padding(const EdgeInsets.only(top: 40));
       }
       return [
         const SizedBox(height: 30),
         _buildQuickStatsGrid(_statsController.stats.value!),
         const SizedBox(height: 30),
+        _buildExpenseBreakdownSection(
+          _statsController.stats.value!,
+        ), // NEW SECTION
+        const SizedBox(height: 30),
         _buildAnalyticsSection(_statsController.stats.value!),
       ].column(mainAxisSize: MainAxisSize.min);
     });
+  }
+
+  // --- NEW: Detailed Expense Breakdown Section ---
+  Widget _buildExpenseBreakdownSection(MainStatsModel data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Expense Breakdown",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ).padding(const EdgeInsets.only(bottom: 16)),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            int crossAxisCount = constraints.maxWidth > 1100
+                ? 3
+                : (constraints.maxWidth > 600 ? 2 : 1);
+            return GridView.count(
+              crossAxisCount: crossAxisCount,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 2.5,
+              children: [
+                _buildExpenseTile(
+                  "Fuel",
+                  data.fuelExpense,
+                  Icons.local_gas_station_rounded,
+                  Colors.orange,
+                ),
+                _buildExpenseTile(
+                  "Tollgate",
+                  data.tolgateExpense,
+                  Icons.toll_rounded,
+                  Colors.blue,
+                ),
+                _buildExpenseTile(
+                  "TruckStop",
+                  data.truckShopExpense,
+                  Icons.handyman_rounded,
+                  Colors.red,
+                ),
+                _buildExpenseTile(
+                  "Food/Subsistence",
+                  data.foodExpense,
+                  Icons.restaurant_rounded,
+                  Colors.green,
+                ),
+                _buildExpenseTile(
+                  "Fines",
+                  data.finesExpense,
+                  Icons.gavel_rounded,
+                  Colors.purple,
+                ),
+                _buildExpenseTile(
+                  "Extras",
+                  data.extrasExpense,
+                  Icons.more_horiz_rounded,
+                  Colors.blueGrey,
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpenseTile(
+    String title,
+    double amount,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: GTheme.cardColor(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(30)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  NumberUtils.formatCurrency(amount),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // --- Header ---
@@ -115,7 +246,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
           ),
         ).visibleIfNot(isDeskop),
         12.gapWidth,
-        Column(
+        const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -128,7 +259,24 @@ class _AdminNavMainState extends State<AdminNavMain> {
             ),
           ],
         ),
-        Spacer(),
+        const Spacer(),
+        Obx(
+          () => IconButton(
+            icon: _isPrinting.lord(MaterialLoader(), const Icon(Icons.print)),
+            onPressed: () async {
+              if (_isPrinting) return;
+              setState(() {
+                _isPrinting = true;
+              });
+              await GenisisPrinter.printMainStatsReports(
+                _statsController.stats.value!,
+              );
+              setState(() {
+                _isPrinting = false;
+              });
+            },
+          ).visibleIf(_statsController.stats.value != null),
+        ),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -255,14 +403,12 @@ class _AdminNavMainState extends State<AdminNavMain> {
   Widget _buildAnalyticsSection(MainStatsModel data) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive switch for graph layout
         bool isWide = constraints.maxWidth > 900;
 
         return Flex(
           direction: isWide ? Axis.horizontal : Axis.vertical,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Main Line Chart
             Expanded(
               flex: isWide ? 2 : 0,
               child: Container(
@@ -288,10 +434,10 @@ class _AdminNavMainState extends State<AdminNavMain> {
                         const Text(
                           "Operations & Expenses",
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
-                        ).constrained(maxWidth: 120),
+                        ).constrained(maxWidth: 180),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -321,7 +467,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
               const SizedBox(width: 24)
             else
               const SizedBox(height: 24),
-            // Donut Chart
             Expanded(
               flex: isWide ? 1 : 0,
               child: Container(
@@ -361,10 +506,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
       },
     );
   }
-
-  // --- List Section ---
-
-  // --- Sub-Widgets & Helpers ---
 
   Widget _buildSophisticatedCard(
     String title,
@@ -426,15 +567,14 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 ),
               ),
               const Spacer(),
-              // Tiny sparkline
               if (chartData != null)
                 SizedBox(
                   width: 60,
                   height: 30,
                   child: LineChart(
                     LineChartData(
-                      gridData: FlGridData(show: false),
-                      titlesData: FlTitlesData(show: false),
+                      gridData: const FlGridData(show: false),
+                      titlesData: const FlTitlesData(show: false),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
@@ -446,7 +586,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                           isCurved: true,
                           color: color,
                           barWidth: 2,
-                          dotData: FlDotData(show: false),
+                          dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(
                             show: true,
                             color: color.withAlpha(40),
@@ -474,8 +614,12 @@ class _AdminNavMainState extends State<AdminNavMain> {
               FlLine(color: Colors.grey[100]!, strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -500,26 +644,27 @@ class _AdminNavMainState extends State<AdminNavMain> {
               interval: 1,
               getTitlesWidget: (value, meta) {
                 return Text(
-                  NumberUtils.formatCurrency(value), // Scale back for labels
+                  NumberUtils.formatCurrency(value * 1000), // Scale back
                   style: const TextStyle(color: Colors.grey, fontSize: 10),
                 );
               },
-              reservedSize: 32,
+              reservedSize: 45,
             ),
           ),
         ),
         borderData: FlBorderData(show: false),
         minX: 0,
-        maxX: 7,
+        maxX: 6,
         minY: 0,
         lineBarsData: [
-          // Expenses Line
           LineChartBarData(
             spots: _statsController.sevenDaysTotals
+                .asMap()
+                .entries
                 .map(
                   (e) => FlSpot(
-                    _statsController.sevenDaysTotals.indexOf(e).toDouble(),
-                    e.maintenanceCost.toDouble() / 1000, // Scale for demo
+                    e.key.toDouble(),
+                    e.value.maintenanceCost.toDouble() / 1000,
                   ),
                 )
                 .toList(),
@@ -527,19 +672,20 @@ class _AdminNavMainState extends State<AdminNavMain> {
             color: const Color(0xFF6C5DD3),
             barWidth: 4,
             isStrokeCapRound: true,
-            dotData: FlDotData(show: false),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
               color: const Color(0xFF6C5DD3).withAlpha(30),
             ),
           ),
-          // Revenue Line
           LineChartBarData(
             spots: _statsController.sevenDaysTotals
+                .asMap()
+                .entries
                 .map(
                   (e) => FlSpot(
-                    _statsController.sevenDaysTotals.indexOf(e).toDouble(),
-                    e.revenue.toDouble() / 1000, // Scale for demo
+                    e.key.toDouble(),
+                    e.value.revenue.toDouble() / 1000,
                   ),
                 )
                 .toList(),
@@ -547,7 +693,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
             color: const Color(0xFF4CA6EA),
             barWidth: 4,
             isStrokeCapRound: true,
-            dotData: FlDotData(show: false),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
               color: const Color(0xFF4CA6EA).withAlpha(30),
@@ -562,7 +708,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
     final total =
         data.activeVehicles + data.inServiceVehicles + data.idleVehicles;
     if (total == 0) {
-      return Container(
+      return SizedBox(
         height: 200,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -584,13 +730,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
         sections: [
           PieChartSectionData(
             color: const Color(0xFF33D69F),
-            value:
-                ((_statsController.stats.value?.activeVehicles.toDouble() ??
-                        0) /
-                    total) *
-                100,
-            title:
-                _statsController.stats.value?.activeVehicles.toString() ?? "0",
+            value: (data.activeVehicles / total) * 100,
+            title: data.activeVehicles.toInt().toString(),
             radius: 50,
             titleStyle: const TextStyle(
               fontSize: 16,
@@ -600,14 +741,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
           ),
           PieChartSectionData(
             color: const Color(0xFFFF8F6B),
-            value:
-                ((_statsController.stats.value?.inServiceVehicles.toDouble() ??
-                        0) /
-                    total) *
-                100,
-            title:
-                _statsController.stats.value?.inServiceVehicles.toString() ??
-                "0",
+            value: (data.inServiceVehicles / total) * 100,
+            title: data.inServiceVehicles.toInt().toString(),
             radius: 50,
             titleStyle: const TextStyle(
               fontSize: 16,
@@ -617,11 +752,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
           ),
           PieChartSectionData(
             color: const Color(0xFF4CA6EA),
-            value:
-                ((_statsController.stats.value?.idleVehicles.toDouble() ?? 0) /
-                    total) *
-                100,
-            title: _statsController.stats.value?.idleVehicles.toString() ?? "0",
+            value: (data.idleVehicles / total) * 100,
+            title: data.idleVehicles.toInt().toString(),
             radius: 50,
             titleStyle: const TextStyle(
               fontSize: 16,
@@ -635,21 +767,22 @@ class _AdminNavMainState extends State<AdminNavMain> {
   }
 
   Widget _buildPieLegend() {
+    final stats = _statsController.stats.value;
     return Column(
       children: [
         _legendItem(
           const Color(0xFF33D69F),
-          "Active ${"(${_statsController.stats.value?.activeVehicles.toInt() ?? 0})"}",
+          "Active (${stats?.activeVehicles.toInt() ?? 0})",
         ),
         const SizedBox(height: 8),
         _legendItem(
           const Color(0xFFFF8F6B),
-          "Maintenance ${"(${_statsController.stats.value?.inServiceVehicles.toInt() ?? 0})"}",
+          "Maintenance (${stats?.inServiceVehicles.toInt() ?? 0})",
         ),
         const SizedBox(height: 8),
         _legendItem(
           const Color(0xFF4CA6EA),
-          "Idle / Garage ${"(${_statsController.stats.value?.idleVehicles.toInt() ?? 0})"}",
+          "Idle / Garage (${stats?.idleVehicles.toInt() ?? 0})",
         ),
       ],
     );
@@ -683,12 +816,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
               onPrimary: Colors.white,
               surface: Theme.of(context).colorScheme.surface,
               onSurface: Theme.of(context).colorScheme.onSurface,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
             ),
           ),
           child: Center(

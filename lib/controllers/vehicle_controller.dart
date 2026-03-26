@@ -105,4 +105,18 @@ class VehicleControler extends GetxController {
     Toaster.showSuccess("fuel updated");
     return VehicleModel.fromJSON(response.body);
   }
+
+  RxString vehicleInSearch = ''.obs;
+  Rx<VehicleModel?> selectedVehicle = Rx<VehicleModel?>(null);
+  Future<bool> fetchVehicle({required String id}) async {
+    vehicleInSearch.value = id;
+    final response = await Net.get("/vehicle/$id");
+    vehicleInSearch.value = "";
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    selectedVehicle.value = VehicleModel.fromJSON(response.body);
+    return true;
+  }
 }

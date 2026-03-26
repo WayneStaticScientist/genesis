@@ -1,4 +1,6 @@
+import 'package:genesis/screens/stats/vehicle_mantainance_history.dart';
 import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/widgets/layouts/foot_note.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ import 'package:genesis/screens/vehicles/vehicle_edit.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/controllers/insurance_controller.dart';
 import 'package:genesis/widgets/layouts/insurance_bottom_sheet.dart';
+import 'package:line_icons/line_icons.dart';
 
 // --- CONTROLLER ---
 class VehicleStatsController extends GetxController {
@@ -67,12 +70,37 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
         slivers: [
           _buildAppBar(context),
           SliverToBoxAdapter(child: _buildHeaderInfo(context)),
+          SliverToBoxAdapter(
+            child: FootNote(
+              iconData: LineIcons.cog,
+              description:
+                  'Tap on maintainances to view all mantainances for that vehicle',
+            ).padding(const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+          ),
           SliverToBoxAdapter(child: _buildQuickActions(context)),
+
           SliverToBoxAdapter(child: _buildDocumentSection(context)),
+          SliverToBoxAdapter(
+            child:
+                FootNote(
+                  iconData: LineIcons.moneyBill,
+                  iconColor: Colors.purple,
+                  description:
+                      'You can tap on insurances to pay insurance for the vehicle  or view its history',
+                ).padding(
+                  const EdgeInsets.only(
+                    top: 10,
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                  ),
+                ),
+          ),
           SliverPersistentHeader(
             pinned: true,
             delegate: _SliverTabDelegate(child: _buildTabSwitcher(context)),
           ),
+
           Obx(
             () => SliverToBoxAdapter(
               child: [
@@ -273,6 +301,10 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
               "Maintainances",
               "${NumberUtils.formatCurrency(_statsController.vehicleTripStats.value!.totalMaintenanceCosts)}",
               Colors.orange,
+            ).onTap(
+              () => Get.to(
+                () => MaintenanceHistoryScreen(vehicle: widget.vehicle),
+              ),
             ),
           ],
         ),
@@ -310,7 +342,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   // 4. DOCUMENTS (License & Permits)
   Widget _buildDocumentSection(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

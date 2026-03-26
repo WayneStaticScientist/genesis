@@ -37,11 +37,11 @@ class StatsController extends GetxController {
   RxBool fetchingTripStatus = false.obs;
   RxString fetchingTripStatsError = ''.obs;
   Rx<TripStatsModel?> tripsStatModel = Rx<TripStatsModel?>(null);
-  Future<void> fetchTripStats(DateTimeRange range) async {
+  Future<void> fetchTripStats(DateTimeRange range, String plan) async {
     fetchingTripStatus.value = true;
     fetchingTripStatsError.value = '';
     final response = await Net.get(
-      '/stats/trips?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}',
+      '/stats/trips?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}&plan=$plan',
     );
     fetchingTripStatus.value = false;
     log("response ${response.response}");

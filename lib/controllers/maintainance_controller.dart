@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/models/maintainance_model.dart';
@@ -121,5 +122,32 @@ class MaintainanceController extends GetxController {
       "Mantainance Alert",
       "Maintainance has been succefully ${accepted ? "accepted" : "rejected"}",
     );
+  }
+
+  RxBool findingMaintainancesForVehicle = false.obs;
+  RxList<MaintainanceModel> maintainancesForVehicle =
+      RxList<MaintainanceModel>();
+  void findMaintainanceForVehicle(
+    String vehicleId,
+    DateTimeRange dateRange,
+  ) async {
+    if (findingMaintainancesForVehicle.value) return;
+    findingMaintainancesForVehicle.value = true;
+    final response = await Net.get(
+      "/maintainances/vehicle/$vehicleId?start=${dateRange.start.toIso8601String()}&end=${dateRange.end.toIso8601String()}",
+    );
+    findingMaintainancesForVehicle.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return;
+    }
+    maintainancesForVehicle.clear();
+    maintainancesForVehicle.addAll(
+      (response.body as List<dynamic>?)
+              ?.map((e) => MaintainanceModel.fromJSON(e))
+              .toList() ??
+          [],
+    );
+    return;
   }
 }

@@ -35,20 +35,31 @@ class SummaryTile {
 class SummaryDriver {
   String name;
   double totalRevenue;
-  SummaryDriver({required this.totalRevenue, required this.name});
+
+  String driverId;
+  String email;
+  SummaryDriver({
+    required this.totalRevenue,
+    required this.name,
+    required this.email,
+    required this.driverId,
+  });
   factory SummaryDriver.fromJSON(data) {
     if (data == null) {
-      return SummaryDriver(totalRevenue: 0, name: '');
+      return SummaryDriver(totalRevenue: 0, name: '', driverId: '', email: '');
     }
     return SummaryDriver(
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
       name: data['name'] ?? "",
+      driverId: data['driverId'] ?? '',
+      email: data['email'] ?? '',
     );
   }
 }
 
 class SummaryVehicle {
   String model;
+  String id;
   String driverName;
   double totalRevenue;
   String driverId;
@@ -57,6 +68,7 @@ class SummaryVehicle {
     required this.model,
     required this.driverName,
     required this.driverId,
+    required this.id,
   });
   factory SummaryVehicle.fromJSON(data) {
     if (data == null) {
@@ -65,11 +77,13 @@ class SummaryVehicle {
         model: '',
         driverName: '',
         driverId: '',
+        id: '',
       );
     }
     return SummaryVehicle(
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
       model: data['model'] ?? "",
+      id: data['vehicleId'] ?? "",
       driverId: data['driverId'] ?? '',
       driverName: data['driverName'] ?? "",
     );

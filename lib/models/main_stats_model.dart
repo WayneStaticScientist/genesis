@@ -56,7 +56,8 @@ class MainStatsModel {
       totalDriversInSystem: json['totalDriversInSystem'] ?? 0,
       totalVehiclesInSystem: json['totalVehicles'] ?? 0,
       totalMaintenanceCount: json['totalMaintenanceCount'] ?? 0,
-      totalMaintainanceCost: (json['totalCosts'] as num?)?.toDouble() ?? 0,
+      totalMaintainanceCost:
+          (json['totalMaintenanceCosts'] as num?)?.toDouble() ?? 0,
       numberOfVehiclesWithMaintenance:
           json['numberOfVehiclesWithMaintenance'] ?? 0,
 
