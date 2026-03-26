@@ -29,7 +29,6 @@ class MainStatsModel {
   double finesExpense;
   double extrasExpense;
   double truckShopExpense;
-  List<VehicleDetails> vehicleDetails;
   MainStatsModel({
     required this.idleVehicles,
     required this.activeVehicles,
@@ -39,7 +38,6 @@ class MainStatsModel {
     required this.totalDriversInSystem,
     required this.totalVehiclesInSystem,
     required this.totalMaintainanceCost,
-    required this.vehicleDetails,
     required this.numberOfVehiclesWithMaintenance,
 
     required this.fuelExpense,
@@ -56,21 +54,12 @@ class MainStatsModel {
       inServiceVehicles: (json['inServiceVehicles'] as num?)?.toDouble() ?? 0,
       totalRevenue: (json['totalRevenue'] as num?)?.toDouble() ?? 0,
       totalDriversInSystem: json['totalDriversInSystem'] ?? 0,
-      totalVehiclesInSystem: json['totalVehiclesInSystem'] ?? 0,
+      totalVehiclesInSystem: json['totalVehicles'] ?? 0,
       totalMaintenanceCount: json['totalMaintenanceCount'] ?? 0,
-      totalMaintainanceCost: (json['totalCosts'] as num).toDouble(),
-      numberOfVehiclesWithMaintenance: json['numberOfVehiclesWithMaintenance'],
-      vehicleDetails: (json['vehicleDetails'] as List)
-          .map(
-            (e) => VehicleDetails(
-              vehicleId: e['vehicleId'] ?? '',
-              model: e['model'] ?? '',
-              status: e['status'] ?? '',
-              driverId: e['driverId'] ?? '',
-              driverName: e['driverName'] ?? '',
-            ),
-          )
-          .toList(),
+      totalMaintainanceCost: (json['totalCosts'] as num?)?.toDouble() ?? 0,
+      numberOfVehiclesWithMaintenance:
+          json['numberOfVehiclesWithMaintenance'] ?? 0,
+
       fuelExpense: (json['fuelExpense'] as num?)?.toDouble() ?? 0,
       foodExpense: (json['foodExpense'] as num?)?.toDouble() ?? 0,
       tolgateExpense: (json['tolgateExpense'] as num?)?.toDouble() ?? 0,

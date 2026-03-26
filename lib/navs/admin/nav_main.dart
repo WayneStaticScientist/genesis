@@ -24,10 +24,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
   // Inject controller if not already in memory
   final _statsController = Get.find<StatsController>();
   final _notificationsController = Get.find<NotificationsController>();
-  DateTimeRange? selectedDateRange = DateTimeRange(
-    start: DateTime.now().subtract(const Duration(days: 7)),
-    end: DateTime.now(),
-  );
+  DateTimeRange? selectedDateRange;
   // Colors
   final Color primaryColor = const Color(0xFF2A2D3E);
   final Color secondaryColor = const Color(0xFF212332);

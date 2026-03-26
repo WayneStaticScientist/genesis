@@ -229,6 +229,7 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                       ),
                     ],
                     if (maintenance.status == "Approved" &&
+                        maintenance.urgenceLevel != 'Completed' &&
                         (_userController.user.value?.role == 'manager' ||
                             _userController.user.value?.role == 'maintainer' ||
                             _userController.user.value?.role == 'admin')) ...[

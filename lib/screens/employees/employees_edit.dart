@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/employee_utils.dart';
 import 'package:genesis/utils/managers_permissions.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/toast.dart';
@@ -191,15 +192,8 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
   }
 
   Widget _buildRoleSelector() {
-    final roles = [
-      {'id': 'admin', 'label': 'Admin', 'icon': LineIcons.userShield},
-      {'id': 'manager', 'label': 'Manager', 'icon': LineIcons.users},
-      {'id': 'driver', 'label': 'Driver', 'icon': LineIcons.car},
-      {'id': 'maintainer', 'label': 'Maintainer', 'icon': LineIcons.cog},
-    ];
-
     return Row(
-      children: roles.map((role) {
+      children: EmployeeUtils.roles.map((role) {
         bool isSelected = _selectedRole == role['id'];
         return Expanded(
           child: GestureDetector(

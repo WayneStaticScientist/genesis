@@ -18,11 +18,6 @@ class ModernDateRangeDisplay extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Default to "Now" and "7 days later" if no dates provided for preview purposes
-    final displayStart = startDate ?? DateTime.now();
-    final displayEnd = endDate ?? DateTime.now().add(const Duration(days: 7));
-    final bool hasSelection = startDate != null && endDate != null;
-
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 450),
@@ -71,9 +66,9 @@ class ModernDateRangeDisplay extends StatelessWidget {
             const SizedBox(height: 24),
 
             // The Date Range View
-            if (!hasSelection && startDate == null)
+            if ((startDate == null || endDate == null))
               Text(
-                "No Range Selected",
+                "All Time",
                 style: TextStyle(
                   fontSize: 18,
                   color: colorScheme.onSurface.withAlpha(100),
@@ -86,7 +81,7 @@ class ModernDateRangeDisplay extends StatelessWidget {
                   Expanded(
                     child: _DateColumn(
                       label: "START DATE",
-                      date: displayStart,
+                      date: startDate!,
                       color: colorScheme.primary,
                       crossAxisAlignment: CrossAxisAlignment.start,
                     ),
@@ -99,7 +94,7 @@ class ModernDateRangeDisplay extends StatelessWidget {
                   Expanded(
                     child: _DateColumn(
                       label: "END DATE",
-                      date: displayEnd,
+                      date: endDate!,
                       color: colorScheme.primary,
                       crossAxisAlignment: CrossAxisAlignment.end,
                     ),
