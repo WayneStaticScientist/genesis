@@ -752,6 +752,12 @@ class GenisisPrinter {
               ],
             ),
           ],
+          if (stats.notes.isNotEmpty) ...[
+            pw.SizedBox(height: 32),
+            _buildHeader(title: "Notes"),
+            pw.SizedBox(height: 14),
+            pw.Text(stats.notes),
+          ],
         ],
       ),
     );

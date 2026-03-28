@@ -1,8 +1,8 @@
-import 'package:genesis/controllers/user_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/models/trip_model.dart';
+import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:genesis/controllers/trips_controller.dart';
 import 'package:genesis/widgets/inputs/default_formfield.dart';
@@ -27,6 +27,7 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
   final _truckShopExpensesController = TextEditingController(text: '0');
   final _finesController = TextEditingController(text: '0');
   final _extraController = TextEditingController(text: '0');
+  final _notesController = TextEditingController();
   final _controller = Get.find<TripsController>();
   final _userController = Get.find<UserController>();
   @override
@@ -112,6 +113,13 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
               hint: "enter amount",
               icon: Icons.edit_road_sharp,
             ),
+            DefaultFormfield(
+              keyboardType: TextInputType.multiline,
+              controller: _notesController,
+              label: "Notes",
+              hint: "write trip notes",
+              icon: Icons.edit_road_sharp,
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -167,6 +175,7 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
         'truckShopExpense': truckShopExpense,
         'finesExpense': finesExpense,
         'extrasExpense': extrasExpense,
+        'notes': _notesController.text.trim(),
       },
     );
     if (response && mounted) {

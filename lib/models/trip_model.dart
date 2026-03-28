@@ -4,6 +4,7 @@ import 'package:genesis/models/populated_location_model.dart';
 class TripModel {
   String status;
   final String id;
+  final String notes;
   final String origin;
   final dynamic driver;
   final String loadType;
@@ -29,6 +30,7 @@ class TripModel {
   final double finesExpense;
   final double extrasExpense;
   TripModel({
+    required this.notes,
     required this.driver,
     required this.id,
     required this.origin,
@@ -59,6 +61,7 @@ class TripModel {
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
       driver: json['driver'],
+      notes: json['notes'] ?? '',
       distance: (json['distance'] as num?)?.toDouble() ?? 0,
       finalizer: (json['finalizer']),
       receiver: (json['receiver']) ?? '',
@@ -96,6 +99,7 @@ class TripModel {
   }
   Map<String, dynamic> toJson() {
     return {
+      'notes': notes,
       'initiater': initiater,
       'distance': distance,
       'locationOrigin': locationOrigin,

@@ -1,7 +1,3 @@
-import 'package:genesis/utils/bool_utils.dart';
-import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
-import 'package:genesis/utils/string_utils.dart';
-import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -9,11 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/widgets/layouts/finalize_trip_dialog.dart';
 
 class TripDetailsScreen extends StatefulWidget {
@@ -193,6 +193,11 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     ),
                     _buildInitiatorCard(theme, trip.initiater),
                     _buildFinalizerCard(theme, trip.finalizer),
+                    if (trip.notes.isNotEmpty) ...[
+                      _buildSectionTitle(theme, "Notes"),
+                      trip.notes.text(),
+                      SizedBox(height: 20),
+                    ],
                   ],
                 ),
               ),
