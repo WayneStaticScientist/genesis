@@ -1,6 +1,8 @@
 import 'package:genesis/screens/stats/vehicle_mantainance_history.dart';
 import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/widgets/layouts/foot_note.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +56,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
     start: DateTime.now().subtract(const Duration(days: 30)),
     end: DateTime.now(),
   );
-
+  bool _isPrinting = false;
   final controller = Get.put(VehicleStatsController());
   @override
   void initState() {
@@ -140,6 +142,26 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
         ),
       ),
       actions: [
+        Obx(
+          () => _statsController.vehicleTripStats.value == null
+              ? 0.gapHeight
+              : IconButton(
+                  onPressed: () async {
+                    if (_isPrinting) return;
+                    setState(() {
+                      _isPrinting = true;
+                    });
+                    await GenisisPrinter.printVehicleProfileReports(
+                      widget.vehicle,
+                      _statsController.vehicleTripStats.value!,
+                    );
+                    setState(() {
+                      _isPrinting = false;
+                    });
+                  },
+                  icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                ),
+        ),
         IconButton(
           icon: const Icon(Icons.edit),
           onPressed: () =>

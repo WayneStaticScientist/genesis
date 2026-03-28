@@ -1,5 +1,3 @@
-import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
-import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -10,6 +8,8 @@ import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/models/main_stats_model.dart';
 import 'package:genesis/controllers/stats_controller.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/widgets/layouts/modern_date_range.dart';
 import 'package:genesis/controllers/notifications_controller.dart';
 import 'package:genesis/screens/notifications/notification_list.dart';
@@ -401,6 +401,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
 
   // --- Analytics (Graph Section) ---
   Widget _buildAnalyticsSection(MainStatsModel data) {
+    final dateTime = DateTime.now();
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isWide = constraints.maxWidth > 900;
@@ -447,8 +448,16 @@ class _AdminNavMainState extends State<AdminNavMain> {
                             color: GTheme.cardColor(context),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            "This Week",
+                          child: Text(
+                            (selectedDateRange?.end == null ||
+                                    (selectedDateRange?.end.day ==
+                                            dateTime.day &&
+                                        selectedDateRange?.end.month ==
+                                            dateTime.month &&
+                                        selectedDateRange?.end.year ==
+                                            dateTime.year))
+                                ? "This Week"
+                                : "Week of ${selectedDateRange?.end.day}/${selectedDateRange?.end.month}",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -626,6 +635,12 @@ class _AdminNavMainState extends State<AdminNavMain> {
               reservedSize: 30,
               interval: 1,
               getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 ||
+                    index >= _statsController.sevenDaysTotals.length) {
+                  return const Text("");
+                }
+                final data = _statsController.sevenDaysTotals[index];
                 const style = TextStyle(
                   color: Color(0xff68737d),
                   fontWeight: FontWeight.bold,
@@ -633,7 +648,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
                 );
                 return SideTitleWidget(
                   meta: meta,
-                  child: Text("${value.toInt()}", style: style),
+                  child: Text("${data.date.day}", style: style),
                 );
               },
             ),

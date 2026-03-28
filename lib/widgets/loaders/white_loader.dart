@@ -12,3 +12,17 @@ class WhiteLoader extends StatelessWidget {
     ).sizedBox(width: 20, height: 20);
   }
 }
+
+class AdaptiveLoader extends StatelessWidget {
+  const AdaptiveLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return CircularProgressIndicator(
+      color: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Colors.black,
+      strokeWidth: 1,
+    ).sizedBox(width: 20, height: 20);
+  }
+}

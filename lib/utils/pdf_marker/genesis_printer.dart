@@ -1,17 +1,18 @@
 import 'dart:io';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:genesis/utils/date_utils.dart';
+import 'package:genesis/utils/number_utils.dart';
+import 'package:genesis/models/vehicle_model.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:genesis/models/main_stats_model.dart';
 import 'package:genesis/models/trip_stats_model.dart';
-import 'package:genesis/utils/number_utils.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:genesis/models/vehicle_stats_model.dart';
 
 class GenisisPrinter {
   static Future<void> printFinancialReports(TripStatsModel model) async {
     final pdf = pw.Document();
-    final dateFormat = DateFormat('MMM yyyy');
 
     pdf.addPage(
       pw.MultiPage(
@@ -62,7 +63,7 @@ class GenisisPrinter {
               data: model.monthlyBreakdown
                   .map(
                     (m) => [
-                      dateFormat.format(m.date),
+                      GenesisDate.getInformalDate(m.date),
                       "\$${m.revenue.toStringAsFixed(2)}",
                     ],
                   )
@@ -188,6 +189,17 @@ class GenisisPrinter {
         ],
       ),
     );
+    final output = await getTemporaryDirectory();
+    final file = File(
+      "${output.path}/trip_report_${DateTime.now().millisecondsSinceEpoch}.pdf",
+    );
+    await file.writeAsBytes(await pdf.save());
+
+    // 2. Open / Print Preview
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'main_report.pdf',
+    );
   }
 
   static pw.Widget _buildStatCard(String title, String value) {
@@ -253,6 +265,18 @@ class GenisisPrinter {
             ),
           ),
           pw.Container(height: 2, width: 40, color: PdfColors.blue700),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildSectionSubtitle(String title) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(title.toUpperCase(), style: pw.TextStyle(fontSize: 12)),
         ],
       ),
     );
@@ -333,6 +357,115 @@ class GenisisPrinter {
           ),
         ),
       ],
+    );
+  }
+
+  static Future<void> printVehicleProfileReports(
+    VehicleModel mode,
+    VehicleStatsModel stats,
+  ) async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          _buildHeader(),
+          pw.SizedBox(height: 24),
+
+          // --- Section 1: Fleet Utilization Overview ---
+          _buildSectionTitle("Vehicle - ${mode.carModel}"),
+          _buildSectionSubtitle(mode.licencePlate),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(10),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey300),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+            ),
+            child: pw.Column(
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildMetric("Trips", stats.totalTrips.toString()),
+                    _buildMetric(
+                      "Maintainances Costs",
+                      stats.totalMaintenanceCosts.toString(),
+                      color: PdfColors.red400,
+                    ),
+                    _buildMetric(
+                      "Total Revenue",
+                      stats.totalRevenue.toString(),
+                      color: PdfColors.orange700,
+                    ),
+                  ],
+                ),
+                pw.Divider(height: 20, color: PdfColors.grey100),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 32),
+          if (mode.insurances.isNotEmpty) ...[
+            pw.Header(level: 1, child: pw.Text("Insurance Coverage")),
+            pw.TableHelper.fromTextArray(
+              headers: ['Name', 'Amount'],
+              data: mode.insurances
+                  .map(
+                    (m) => [m.name, "\$${NumberUtils.formatCurrency(m.value)}"],
+                  )
+                  .toList(),
+            ),
+            pw.SizedBox(height: 32),
+          ],
+          if (stats.trips.isNotEmpty) ...[
+            pw.Header(level: 1, child: pw.Text("Trips History")),
+            pw.TableHelper.fromTextArray(
+              headers: ['Route', 'Payout', 'Start Date', 'End Date', 'Status'],
+              data: stats.trips
+                  .map(
+                    (m) => [
+                      '${m.origin}-${m.destination}',
+                      "\$${NumberUtils.formatCurrency(m.tripPayout)}",
+                      "${m.startTime != null ? GenesisDate.getInformalDate(m.startTime!) : '-'}",
+                      "${m.endTime != null ? GenesisDate.getInformalDate(m.endTime!) : 'in progress'}",
+                      m.status.toUpperCase(),
+                    ],
+                  )
+                  .toList(),
+            ),
+            pw.SizedBox(height: 32),
+          ],
+
+          if (stats.trips.isNotEmpty) ...[
+            pw.Header(level: 1, child: pw.Text("Service History")),
+            pw.TableHelper.fromTextArray(
+              headers: ['Issue Details', 'CarModel', 'Cost', 'Status'],
+              data: stats.maintenances
+                  .map(
+                    (m) => [
+                      '${m.issueDetails.length > 30 ? m.issueDetails.substring(0, 30) + '...' : m.issueDetails}',
+                      '${m.carModel}',
+                      "\$${NumberUtils.formatCurrency(m.estimatedCosts)}",
+                      m.status.toUpperCase(),
+                    ],
+                  )
+                  .toList(),
+            ),
+            pw.SizedBox(height: 32),
+          ],
+        ],
+      ),
+    );
+    final output = await getTemporaryDirectory();
+    final file = File(
+      "${output.path}/vehicle_report_${DateTime.now().millisecondsSinceEpoch}.pdf",
+    );
+    await file.writeAsBytes(await pdf.save());
+
+    // 2. Open / Print Preview
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'vehicle_report.pdf',
     );
   }
 }
