@@ -1,3 +1,6 @@
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +23,7 @@ class DriverStatsScreen extends StatefulWidget {
 class _DriverStatsScreenState extends State<DriverStatsScreen> {
   final _navReports = Get.find<StatsController>();
   late DateTimeRange _selectedDateRange;
-
+  bool _isPrinting = false;
   @override
   void initState() {
     super.initState();
@@ -57,7 +60,28 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
           "Performance Insights",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        actions: [],
+        actions: [
+          Obx(
+            () => _navReports.userTripStats.value == null
+                ? 0.gapHeight
+                : IconButton(
+                    onPressed: () async {
+                      if (_isPrinting) return;
+                      setState(() {
+                        _isPrinting = true;
+                      });
+                      await GenisisPrinter.printUserInsightsState(
+                        _navReports.userTripStats.value!,
+                        _selectedDateRange,
+                      );
+                      setState(() {
+                        _isPrinting = false;
+                      });
+                    },
+                    icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                  ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),

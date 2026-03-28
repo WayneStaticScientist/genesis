@@ -1,3 +1,5 @@
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +33,7 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
     _filterRecords();
   }
 
+  bool _isPrinting = false;
   void _filterRecords() {
     _maintainaceController.findMaintainanceForVehicle(
       widget.vehicle.id ?? '',
@@ -96,6 +99,27 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
           ],
         ),
         actions: [
+          Obx(
+            () => _maintainaceController.maintainancesForVehicle.isEmpty
+                ? 0.gapHeight
+                : IconButton(
+                    onPressed: () async {
+                      if (_isPrinting) return;
+                      setState(() {
+                        _isPrinting = true;
+                      });
+                      await GenisisPrinter.printMaintainancesState(
+                        widget.vehicle,
+                        _maintainaceController.maintainancesForVehicle,
+                        _selectedDateRange!,
+                      );
+                      setState(() {
+                        _isPrinting = false;
+                      });
+                    },
+                    icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                  ),
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_month),
             onPressed: _selectDateRange,

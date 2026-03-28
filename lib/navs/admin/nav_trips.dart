@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +24,7 @@ class NavTrips extends StatefulWidget {
 class _NavTripsState extends State<NavTrips> {
   // State for filtering
   Timer? _debounceTimer;
+  bool _isPrinting = false;
   String _searchQuery = "";
   String _selectedStatus = "All";
   DateTimeRange? _selectedDateRange;
@@ -74,6 +78,27 @@ class _NavTripsState extends State<NavTrips> {
           "Trip Management",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        actions: [
+          Obx(
+            () => _tripsController.trips.isEmpty
+                ? 0.gapHeight
+                : IconButton(
+                    onPressed: () async {
+                      if (_isPrinting) return;
+                      setState(() {
+                        _isPrinting = true;
+                      });
+                      await GenisisPrinter.printTripsReports(
+                        _tripsController.trips,
+                      );
+                      setState(() {
+                        _isPrinting = false;
+                      });
+                    },
+                    icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                  ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),

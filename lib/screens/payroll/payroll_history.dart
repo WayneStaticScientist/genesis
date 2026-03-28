@@ -1,3 +1,7 @@
+import 'package:exui/exui.dart';
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/date_utils.dart';
@@ -17,6 +21,7 @@ class _PayrollHistoryState extends State<PayrollHistory> {
   final _payrollController = Get.find<PayrollController>();
 
   late DateTimeRange _selectedRange;
+  bool _isPrinting = false;
   @override
   void initState() {
     super.initState();
@@ -45,6 +50,28 @@ class _PayrollHistoryState extends State<PayrollHistory> {
         ),
         centerTitle: false,
         actions: [
+          Obx(
+            () => _payrollController.payrollHistory.isEmpty
+                ? 0.gapHeight
+                : IconButton(
+                    onPressed: () async {
+                      if (_isPrinting) return;
+                      setState(() {
+                        _isPrinting = true;
+                      });
+                      await GenisisPrinter.printPayrollHistory(
+                        _payrollController.payrollHistory,
+                        _selectedRange,
+                        _payrollController.totalGrossHistory.value,
+                      );
+                      setState(() {
+                        _isPrinting = false;
+                      });
+                    },
+
+                    icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                  ),
+          ),
           IconButton(
             icon: Icon(Icons.calendar_month, color: colorScheme.primary),
             onPressed: () async {

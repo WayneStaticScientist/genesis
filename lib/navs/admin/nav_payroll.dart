@@ -191,8 +191,22 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
               ),
             ),
           ),
-          Obx(
-            () => SliverList(
+          Obx(() {
+            if (_payrollController.findingEmployees.value) {
+              return SliverToBoxAdapter(
+                child: [
+                  AdaptiveLoader(),
+                ].row(mainAxisAlignment: MainAxisAlignment.center),
+              );
+            }
+            if (_payrollController.employees.isEmpty) {
+              return SliverToBoxAdapter(
+                child: [
+                  "No Employees found".text(),
+                ].row(mainAxisAlignment: MainAxisAlignment.center),
+              );
+            }
+            return SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final emp = _payrollController.employees[index];
                 return Padding(
@@ -285,8 +299,8 @@ class _AdminNavPayrollState extends State<AdminNavPayroll> {
                   ),
                 );
               }, childCount: _payrollController.employees.length),
-            ),
-          ),
+            );
+          }),
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),

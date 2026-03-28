@@ -1,5 +1,7 @@
 import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/utils/string_utils.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -26,7 +28,7 @@ class TripDetailsScreen extends StatefulWidget {
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
   final UserController userController = Get.find<UserController>();
   final _socketController = Get.find<SocketController>();
-
+  bool _isPrinting = false;
   @override
   void initState() {
     super.initState();
@@ -55,6 +57,25 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           ),
         ),
         actions: [
+          Obx(
+            () => userController.trip.value == null
+                ? 0.gapHeight
+                : IconButton(
+                    onPressed: () async {
+                      if (_isPrinting) return;
+                      setState(() {
+                        _isPrinting = true;
+                      });
+                      await GenisisPrinter.PrintTrip(
+                        userController.trip.value!,
+                      );
+                      setState(() {
+                        _isPrinting = false;
+                      });
+                    },
+                    icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                  ),
+          ),
           Obx(
             () => "track"
                 .toUpperCase()

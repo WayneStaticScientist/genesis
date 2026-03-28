@@ -1,4 +1,6 @@
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
@@ -25,6 +27,8 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
     super.initState();
     _maintainanceController.getMantainance(widget.maintainance_id);
   }
+
+  bool _isPrinting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +70,30 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                 ),
               ),
             ),
+            actions: [
+              Obx(
+                () => _maintainanceController.maintainance.value == null
+                    ? 0.gapHeight
+                    : IconButton(
+                        onPressed: () async {
+                          if (_isPrinting) return;
+                          setState(() {
+                            _isPrinting = true;
+                          });
+                          await GenisisPrinter.PrintMantainance(
+                            _maintainanceController.maintainance.value!,
+                          );
+                          setState(() {
+                            _isPrinting = false;
+                          });
+                        },
+                        icon: _isPrinting.lord(
+                          AdaptiveLoader(),
+                          Icon(Icons.print),
+                        ),
+                      ),
+              ),
+            ],
           ),
           Obx(() {
             if (_maintainanceController.gettingMaintainance.value) {

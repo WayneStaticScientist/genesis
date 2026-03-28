@@ -1,7 +1,10 @@
 import 'package:genesis/controllers/maintainance_controller.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/widgets/displays/error_widget.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +25,8 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
   final _maintainanceController = Get.find<MaintainanceController>();
   final _userController = Get.find<UserController>();
   String _status = '';
+  bool _isPrinting = false;
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +103,29 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
               ),
             ),
             actions: [
+              Obx(
+                () => _maintainanceController.maintainances.isEmpty
+                    ? 0.gapHeight
+                    : IconButton(
+                        onPressed: () async {
+                          if (_isPrinting) return;
+                          setState(() {
+                            _isPrinting = true;
+                          });
+                          await GenisisPrinter.printListMaintainances(
+                            _maintainanceController.maintainances,
+                          );
+                          setState(() {
+                            _isPrinting = false;
+                          });
+                        },
+
+                        icon: _isPrinting.lord(
+                          AdaptiveLoader(),
+                          Icon(Icons.print),
+                        ),
+                      ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: IconButton(

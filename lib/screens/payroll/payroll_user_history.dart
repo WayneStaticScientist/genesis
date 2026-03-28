@@ -1,12 +1,16 @@
-import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:exui/exui.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/models/payroll_model.dart';
 import 'package:genesis/widgets/layouts/date_stepper.dart';
 import 'package:genesis/controllers/payroll_controller.dart';
+import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/widgets/loaders/white_loader.dart' show AdaptiveLoader;
 
 class PayrollUserHistory extends StatefulWidget {
   final User user;
@@ -20,6 +24,7 @@ class PayrollUserHistory extends StatefulWidget {
 class _PayrollUserHistoryState extends State<PayrollUserHistory> {
   late DateTimeRange _selectedDateRange;
   final _payrollController = Get.find<PayrollController>();
+  bool _isPrinting = false;
 
   Future<void> _selectDateRange(BuildContext context) async {
     final DateTimeRange? picked = await showDateRangePicker(
@@ -73,6 +78,29 @@ class _PayrollUserHistoryState extends State<PayrollUserHistory> {
         ),
         centerTitle: false,
         actions: [
+          Obx(
+            () => _payrollController.userPayrollHistory.isEmpty
+                ? 0.gapHeight
+                : IconButton(
+                    onPressed: () async {
+                      if (_isPrinting) return;
+                      setState(() {
+                        _isPrinting = true;
+                      });
+                      await GenisisPrinter.printUserPayrollHistory(
+                        _payrollController.userPayrollHistory,
+                        _selectedDateRange,
+                        _payrollController.totalNetPayment.value,
+                        widget.user,
+                      );
+                      setState(() {
+                        _isPrinting = false;
+                      });
+                    },
+
+                    icon: _isPrinting.lord(AdaptiveLoader(), Icon(Icons.print)),
+                  ),
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_month_rounded),
             onPressed: () => _selectDateRange(context),
