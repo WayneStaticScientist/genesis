@@ -423,8 +423,8 @@ class UserController extends GetxController {
     }
     final updatedExpenses = List<OtherExpense>.from(currentTrip.otherExpenses)
       ..add(OtherExpense(name: name, amount: amount));
-    final response = await Net.put(
-      "/trip/$tripId",
+    final response = await Net.patch(
+      "/trip/other-expense/$tripId",
       data: {"otherExpenses": updatedExpenses.map((e) => e.toJson()).toList()},
     );
     processingTrip.value = false;
@@ -432,7 +432,7 @@ class UserController extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
-    await findTrip(tripId); // Refresh the trip
+    trip.value = TripModel.fromJson(response.body);
     return true;
   }
 }

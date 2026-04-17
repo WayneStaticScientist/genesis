@@ -1,6 +1,27 @@
 import 'package:genesis/models/current_vehicle_model.dart';
 import 'package:genesis/models/populated_location_model.dart';
 
+class Destinations {
+  final String name;
+  final bool reached;
+  final PopulatedLocationModel? location;
+
+  Destinations({
+    required this.name,
+    required this.reached,
+    required this.location,
+  });
+  factory Destinations.fromJson(data) {
+    return Destinations(
+      name: data['name'] ?? '',
+      reached: data['reached'] ?? false,
+      location: data['location'] != null
+          ? PopulatedLocationModel.fromJSON(data['location'])
+          : null,
+    );
+  }
+}
+
 class OtherExpense {
   final String name;
   final double amount;
@@ -52,6 +73,7 @@ class TripModel {
   final String? portOfExit;
   final String? portOfEntry;
   final List<OtherExpense> otherExpenses;
+  final List<Destinations> destinations;
   TripModel({
     required this.notes,
     required this.driver,
@@ -85,6 +107,7 @@ class TripModel {
     this.portOfExit,
     this.portOfEntry,
     this.otherExpenses = const [],
+    this.destinations = const [],
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
@@ -127,6 +150,11 @@ class TripModel {
       tripType: json['tripType'] ?? 'Local',
       portOfExit: json['portOfExit'],
       portOfEntry: json['portOfEntry'],
+      destinations:
+          (json['destinations'] as List<dynamic>?)
+              ?.map((e) => Destinations.fromJson(e))
+              .toList() ??
+          [],
       otherExpenses:
           (json['otherExpenses'] as List<dynamic>?)
               ?.map((e) => OtherExpense.fromJson(e))

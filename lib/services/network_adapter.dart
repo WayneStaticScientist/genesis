@@ -56,6 +56,22 @@ class Net {
     }
   }
 
+  static Future<ResponseModel> patch(
+    String url, {
+    dynamic data,
+    Options? options,
+  }) async {
+    if (Net._dio == null) {
+      await initDio();
+    }
+    try {
+      final response = await _dio!.patch(url, data: data, options: options);
+      return ResponseModel(hasError: false, response: "", body: response.data);
+    } on DioException catch (e) {
+      return getError(e);
+    }
+  }
+
   static Future<ResponseModel> delete(
     String url, {
     dynamic data,

@@ -40,7 +40,6 @@ class _AssignTripModalState extends State<AssignTripModal> {
   final TextEditingController _portOfEntryController = TextEditingController();
 
   // Controllers for the new pickers
-  final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _originCoordsController = TextEditingController();
   final Rx<DateTime> departureDateTime = DateTime.now()
       .add(const Duration(hours: 1))
@@ -49,7 +48,11 @@ class _AssignTripModalState extends State<AssignTripModal> {
       .add(const Duration(hours: 10))
       .obs;
   final Rx<LatLng?> originCoords = Rx<LatLng?>(null);
-  final Rx<LatLng?> destinationCoords = Rx<LatLng?>(null);
+
+  // Multi-destinations
+  List<TextEditingController> destinationNameControllers = [];
+  List<TextEditingController> destinationCoordControllers = [];
+  List<Rx<LatLng?>> destinationCoordsList = [];
 
   // Selection State
   final Rx<VehicleModel?> selectedVehicle = Rx<VehicleModel?>(null);
@@ -60,6 +63,9 @@ class _AssignTripModalState extends State<AssignTripModal> {
     super.initState();
     // Initial fetch
     vehicleController.fetchAllVehicles(page: 1, search: '');
+
+    // Add first destination
+    _addDestination();
 
     // Infinite scroll listener
     _scrollController.addListener(() {
@@ -84,10 +90,33 @@ class _AssignTripModalState extends State<AssignTripModal> {
     _tripPaymentController.dispose();
     _destinationNameController.dispose();
     _searchController.dispose();
-    _destinationController.dispose();
     _portOfExitController.dispose();
     _portOfEntryController.dispose();
+    for (var controller in destinationNameControllers) {
+      controller.dispose();
+    }
+    for (var controller in destinationCoordControllers) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _addDestination() {
+    setState(() {
+      destinationNameControllers.add(TextEditingController());
+      destinationCoordControllers.add(TextEditingController());
+      destinationCoordsList.add(Rx<LatLng?>(null));
+    });
+  }
+
+  void _removeDestination(int index) {
+    setState(() {
+      destinationNameControllers[index].dispose();
+      destinationCoordControllers[index].dispose();
+      destinationNameControllers.removeAt(index);
+      destinationCoordControllers.removeAt(index);
+      destinationCoordsList.removeAt(index);
+    });
   }
 
   void _onSearchChanged(String value) {
@@ -118,16 +147,6 @@ class _AssignTripModalState extends State<AssignTripModal> {
           pickedTime.minute,
         );
       }
-    }
-  }
-
-  // Method to open Map Picker
-  void _selectLocationOnMap() async {
-    final LatLng? result = await Get.to(() => const MapPickerScreen());
-    if (result != null) {
-      destinationCoords.value = result;
-      _destinationController.text =
-          "Selected: ${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)}";
     }
   }
 
@@ -296,29 +315,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                   ),
                 ),
                 12.gapHeight,
-                TextFormField(
-                  controller: _destinationNameController,
-                  decoration: _modernInputDecoration(
-                    Icons.map,
-                    "Enter destination city/depot",
-                  ),
-                ),
-                12.gapHeight,
-                TextFormField(
-                  controller: _destinationController,
-                  readOnly: true,
-                  onTap: _selectLocationOnMap,
-                  decoration:
-                      _modernInputDecoration(
-                        Icons.location_pin,
-                        "Cordinates",
-                      ).copyWith(
-                        suffixIcon: const Icon(
-                          Icons.location_searching,
-                          size: 20,
-                        ),
-                      ),
-                ),
+                _buildMultiDestinationsSection(),
                 12.gapHeight,
                 _buildInputLabel("Distance In KM"),
                 TextFormField(
@@ -781,6 +778,78 @@ class _AssignTripModalState extends State<AssignTripModal> {
     );
   }
 
+  Widget _buildMultiDestinationsSection() {
+    return Column(
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: destinationNameControllers.length,
+          itemBuilder: (context, index) {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: destinationNameControllers[index],
+                        decoration: _modernInputDecoration(
+                          Icons.map,
+                          "Enter destination ${index + 1} city/depot",
+                        ),
+                      ),
+                    ),
+                    if (destinationNameControllers.length > 1)
+                      IconButton(
+                        icon: Icon(Icons.remove_circle, color: Colors.red),
+                        onPressed: () => _removeDestination(index),
+                      ),
+                  ],
+                ),
+                12.gapHeight,
+                TextFormField(
+                  controller: destinationCoordControllers[index],
+                  readOnly: true,
+                  onTap: () => _selectLocationForDestination(index),
+                  decoration:
+                      _modernInputDecoration(
+                        Icons.location_pin,
+                        "Coordinates for destination ${index + 1}",
+                      ).copyWith(
+                        suffixIcon: const Icon(
+                          Icons.location_searching,
+                          size: 20,
+                        ),
+                      ),
+                ),
+                if (index < destinationNameControllers.length - 1) 12.gapHeight,
+              ],
+            );
+          },
+        ),
+        12.gapHeight,
+        ElevatedButton.icon(
+          onPressed: _addDestination,
+          icon: Icon(Icons.add),
+          label: Text("Add Another Destination"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _selectLocationForDestination(int index) async {
+    final LatLng? result = await Get.to(() => const MapPickerScreen());
+    if (result != null) {
+      destinationCoordsList[index].value = result;
+      destinationCoordControllers[index].text =
+          "Selected: ${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)}";
+    }
+  }
+
   InputDecoration _modernInputDecoration(IconData icon, String hint) {
     return InputDecoration(
       filled: true,
@@ -841,10 +910,31 @@ class _AssignTripModalState extends State<AssignTripModal> {
     final destinationName = _destinationNameController.text.trim();
     if (destinationName.isEmpty) {
       Toaster.showErrorTop(
-        "Destination City required",
-        "Please enter destination name before confirming.",
+        "Origin City required",
+        "Please enter origin name before confirming.",
       );
       return;
+    }
+    // Validate destinations
+    List<Map<String, dynamic>> destinations = [];
+    for (int i = 0; i < destinationNameControllers.length; i++) {
+      final name = destinationNameControllers[i].text.trim();
+      if (name.isEmpty) {
+        Toaster.showErrorTop(
+          "Destination required",
+          "Please enter name for destination ${i + 1}.",
+        );
+        return;
+      }
+      destinations.add({
+        "name": name,
+        "location": destinationCoordsList[i].value != null
+            ? {
+                "lng": destinationCoordsList[i].value!.longitude,
+                "lat": destinationCoordsList[i].value!.latitude,
+              }
+            : null,
+      });
     }
 
     final response = await _userController.startTrip(
@@ -856,7 +946,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "tripPayout": tripPrice,
         "driver": widget.driver.id,
         "tolgateFees": tolgateFees,
-        "destination": destinationName,
+        "destinations": destinations,
         "vehicle": selectedVehicle.value?.id,
         "tripType": selectedTripType.value,
         "portOfExit": selectedTripType.value == "Cross-Border"
@@ -868,12 +958,6 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "receiver": _receiverController.text.trim(),
         "startTime": departureDateTime.value.toIso8601String(),
         "estimatedEndTime": arrivalDateTime.value.toIso8601String(),
-        "location": destinationCoords.value != null
-            ? {
-                "lng": destinationCoords.value!.longitude,
-                "lat": destinationCoords.value!.latitude,
-              }
-            : null,
         "locationOrigin": originCoords.value != null
             ? {
                 "lng": originCoords.value!.longitude,
