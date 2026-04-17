@@ -1,12 +1,13 @@
-import 'package:exui/material.dart';
-import 'package:genesis/models/licence_model.dart';
-import 'package:genesis/utils/date_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
+import 'package:exui/material.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/toast.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/models/licence_model.dart';
+import 'package:genesis/models/passport_model.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 
@@ -45,6 +46,18 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
   late TextEditingController _expiryDate = TextEditingController(
     text: GenesisDate.formatNormalDateN(widget.driver.licence?.expiryDate),
   );
+
+  late TextEditingController _passportNumber = TextEditingController(
+    text: widget.driver.passport?.passportNumber ?? '',
+  );
+  late TextEditingController _issuingCountry = TextEditingController(
+    text: widget.driver.passport?.issuingCountry ?? '',
+  );
+  late DateTime? passportExpiryDate = widget.driver.passport?.expiryDate;
+  late TextEditingController _passportExpiryDateStr = TextEditingController(
+    text: GenesisDate.formatNormalDateN(widget.driver.passport?.expiryDate),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +91,13 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                 expiryDate: expiryDate!,
                 licenceClass: licenceClass!,
                 licenceNumber: licenceNumber,
+              ).toJson()
+            : null,
+        "passport": _passportNumber.text.isNotEmpty
+            ? PassportModel(
+                passportNumber: _passportNumber.text.trim(),
+                issuingCountry: _issuingCountry.text.trim(),
+                expiryDate: passportExpiryDate ?? DateTime.now(),
               ).toJson()
             : null,
       };
@@ -270,6 +290,28 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
                     )
                     .sizedBox(width: double.infinity),
               ],
+              const SizedBox(height: 24),
+              _sectionHeader("Passport Details"),
+              _buildField(
+                label: "Passport Number",
+                hint: "Enter passport number",
+                controller: _passportNumber,
+                icon: Icons.badge_outlined,
+              ),
+              _buildField(
+                label: "Issuing Country",
+                hint: "e.g. Zimbabwe",
+                controller: _issuingCountry,
+                icon: Icons.flag_outlined,
+              ),
+              _buildField(
+                label: "Passport Expiry Date",
+                hint: "Tap to select",
+                editable: false,
+                controller: _passportExpiryDateStr,
+                icon: Icons.calendar_today_outlined,
+                ontap: () => selectPassportDate(context),
+              ),
               const SizedBox(height: 40),
               // Retention Info
               Container(
@@ -380,6 +422,22 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
       setState(() {
         _expiryDate.text = GenesisDate.formatNormalDateN(picked);
         expiryDate = picked;
+      });
+    }
+  }
+
+  Future<void> selectPassportDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: passportExpiryDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+      lastDate: DateTime(2101),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _passportExpiryDateStr.text = GenesisDate.formatNormalDateN(picked);
+        passportExpiryDate = picked;
       });
     }
   }

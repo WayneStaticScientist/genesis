@@ -5,6 +5,7 @@ import 'package:genesis/utils/theme.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/profile_screen.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
+import 'package:genesis/controllers/notifications_controller.dart';
 
 class GNavBar extends StatefulWidget {
   final String selectedIndex;
@@ -18,7 +19,7 @@ class GNavBar extends StatefulWidget {
 class _GNavBarState extends State<GNavBar> {
   final _userController = Get.find<UserController>();
   final _messageController = Get.find<MessagingController>();
-
+  final _notificationsController = Get.find<NotificationsController>();
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -29,6 +30,7 @@ class _GNavBarState extends State<GNavBar> {
       final role = user?.role ?? "driver";
       final isDriver = role == "driver";
       final isMaintainer = role == "maintainer";
+      final isAgent = role == "agent";
 
       return Container(
         width: 280,
@@ -103,13 +105,13 @@ class _GNavBarState extends State<GNavBar> {
                         'dashboard',
                         "Dashboard",
                         Icons.grid_view_rounded,
-                      ).visibleIf(!isDriver && !isMaintainer),
+                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
                       _buildNavItem(
                         context,
                         'reports',
                         "Revenue Reports",
                         Icons.report_outlined,
-                      ).visibleIf(!isDriver && !isMaintainer),
+                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
                       Obx(
                         () => _buildNavItem(
                           context,
@@ -118,6 +120,16 @@ class _GNavBarState extends State<GNavBar> {
                           Icons.message_outlined,
                           notificationSize:
                               _messageController.notifications.value,
+                        ),
+                      ),
+                      Obx(
+                        () => _buildNavItem(
+                          context,
+                          'notifications',
+                          "Notifications",
+                          Icons.notifications_outlined,
+                          notificationSize:
+                              _notificationsController.notificationSize.value,
                         ),
                       ),
                       _buildNavItem(
@@ -137,7 +149,7 @@ class _GNavBarState extends State<GNavBar> {
                         'drivers',
                         "Drivers",
                         Icons.person_search_rounded,
-                      ).visibleIf(!isDriver),
+                      ).visibleIf(!isDriver && !isAgent),
                       _buildNavItem(
                         context,
                         'tracking',
@@ -158,26 +170,25 @@ class _GNavBarState extends State<GNavBar> {
                         'payrolls',
                         "Payroll",
                         Icons.account_balance_wallet_outlined,
-                      ).visibleIf(!isDriver && !isMaintainer),
+                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
                       _buildNavItem(
                         context,
                         'my_payments',
                         "My Payments",
                         Icons.account_balance,
                       ),
-
                       const SizedBox(
                         height: 24,
                       ).visibleIf(!isDriver && !isMaintainer),
                       _sectionHeader(
                         "OPERATIONS",
-                      ).visibleIf(!isDriver && !isMaintainer),
+                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
                       _buildNavItem(
                         context,
                         'employees',
                         "Employees",
                         Icons.people_alt,
-                      ).visibleIf(!isDriver && !isMaintainer),
+                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
                       const SizedBox(height: 24),
                       _sectionHeader("SYSTEM"),
                       _buildNavItem(

@@ -1,23 +1,24 @@
-import 'package:genesis/navs/admin/nav_employee.dart';
-import 'package:genesis/navs/admin/nav_settings.dart';
-import 'package:genesis/screens/payroll/payroll_user_history.dart';
-import 'package:genesis/utils/bool_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/navs/admin/nav_main.dart';
 import 'package:genesis/navs/admin/nav_trips.dart';
 import 'package:genesis/navs/admin/nav_chats.dart';
 import 'package:genesis/navs/admin/nav_payroll.dart';
 import 'package:genesis/navs/admin/nav_drivers.dart';
+import 'package:genesis/navs/admin/nav_settings.dart';
 import 'package:genesis/navs/admin/nav_reports.dart';
 import 'package:genesis/navs/admin/nav_vehicles.dart';
 import 'package:genesis/widgets/layouts/side_bar.dart';
+import 'package:genesis/navs/admin/nav_employee.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:genesis/navs/admin/nav_maintanance.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/screens/payroll/payroll_user_history.dart';
+import 'package:genesis/screens/notifications/notification_list.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -37,10 +38,14 @@ class _MainScreenState extends State<MainScreen> {
       "tracking",
       (_userController.user.value?.role == "maintainer").lors(
         'maintanance',
-        "dashboard",
+        (_userController.user.value?.role == 'agent').lors(
+          'chats',
+          'dashboard',
+        ),
       ),
     );
     widgetTree = {
+      "notifications": NotificationListScreen(triggerKey: _scaffoldKey),
       "employees": AdminNavEmployees(triggerKey: _scaffoldKey),
       "settings": AdminSettingsScreen(triggerKey: _scaffoldKey),
       "my_payments": PayrollUserHistory(

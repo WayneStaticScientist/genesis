@@ -24,6 +24,8 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
   String _plate = "";
   String _status = "Active";
   String _type = "Electric";
+  String _engineNumber = "";
+  String _vinNumber = "";
   final TextEditingController _licenceNumber = TextEditingController();
   final TextEditingController _licenceClass = TextEditingController();
   final TextEditingController _expiryDate = TextEditingController();
@@ -49,6 +51,8 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         "status": _status,
         "carModel": _model,
         "engineType": _type,
+        "engineNumber": _engineNumber.trim(),
+        "vinNumber": _vinNumber.trim(),
         "licencePlate": _plate,
         "fuelRatio": _fuelRatio,
       };
@@ -156,11 +160,16 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                 validator: (val) => val!.isEmpty ? "Required" : null,
               ),
               _buildField(
-                label: "License Plate",
-                hint: "e.g. GX-8821-K",
-                icon: Icons.pin_rounded,
-                onSaved: (val) => _plate = val ?? "",
-                validator: (val) => val!.isEmpty ? "Required" : null,
+                label: "Engine Number",
+                hint: "Enter engine number",
+                icon: Icons.settings_input_component,
+                onSaved: (val) => _engineNumber = val ?? "",
+              ),
+              _buildField(
+                label: "Chassis (VIN) Number",
+                hint: "Enter VIN number",
+                icon: Icons.pin,
+                onSaved: (val) => _vinNumber = val ?? "",
               ),
 
               const SizedBox(height: 24),

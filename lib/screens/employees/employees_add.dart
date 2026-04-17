@@ -28,6 +28,10 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
   final fullNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final passportNumberController = TextEditingController();
+  final issuingCountryController = TextEditingController();
+  DateTime? passportExpiryDate;
+  final passportExpiryController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,6 +110,40 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
                   ),
                   onPressed: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // Passport Information Section
+              _buildSectionTitle("Passport Information"),
+              WhiteFormfield(
+                "Passport Number",
+                obscurePassword: false,
+                LineIcons.identificationCard,
+                hint: "Enter passport number",
+                controller: passportNumberController,
+              ),
+              const SizedBox(height: 16),
+              WhiteFormfield(
+                "Issuing Country",
+                obscurePassword: false,
+                LineIcons.flag,
+                hint: "e.g. Zimbabwe",
+                controller: issuingCountryController,
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => _selectPassportDate(context),
+                child: AbsorbPointer(
+                  child: WhiteFormfield(
+                    "Expiry Date",
+                    LineIcons.calendar,
+                    obscurePassword: false,
+
+                    hint: "Tap to select",
+                    controller: passportExpiryController,
+                  ),
                 ),
               ),
 
@@ -194,16 +232,18 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
   }
 
   Widget _buildRoleSelector() {
-    return Row(
-      children: EmployeeUtils.roles.map((role) {
-        bool isSelected = _selectedRole == role['id'];
-        return Expanded(
-          child: GestureDetector(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: EmployeeUtils.roles.map((role) {
+          bool isSelected = _selectedRole == role['id'];
+          return GestureDetector(
             onTap: () => setState(() => _selectedRole = role['id'] as String),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               decoration: BoxDecoration(
                 color: isSelected ? GTheme.primary(context) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -248,9 +288,9 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
                 ],
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -312,11 +352,35 @@ class _EmployeeAddScreenState extends State<EmployeeAddScreen> {
       "role": _selectedRole,
       "country": _userController.user.value!.country,
       "permissions": _selectedRole == "manager" ? permissions : [],
+      "passport": passportNumberController.text.isNotEmpty
+          ? {
+              "passportNumber": passportNumberController.text.trim(),
+              "issuingCountry": issuingCountryController.text.trim(),
+              "expiryDate": passportExpiryDate?.toIso8601String(),
+            }
+          : null,
     });
     if (response && mounted) {
       _userController.findChats();
       Get.back();
       Toaster.showSuccess('Employee added success');
+    }
+  }
+
+  Future<void> _selectPassportDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+      lastDate: DateTime(2101),
+    );
+
+    if (picked != null) {
+      setState(() {
+        passportExpiryDate = picked;
+        passportExpiryController.text =
+            "${picked.day}/${picked.month}/${picked.year}";
+      });
     }
   }
 }

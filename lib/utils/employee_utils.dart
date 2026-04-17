@@ -6,5 +6,6 @@ class EmployeeUtils {
     {'id': 'manager', 'label': 'Manager', 'icon': LineIcons.users},
     {'id': 'driver', 'label': 'Driver', 'icon': LineIcons.car},
     {'id': 'maintainer', 'label': 'Mechanic', 'icon': LineIcons.cog},
+    {'id': 'agent', 'label': 'Agent', 'icon': LineIcons.userCheck},
   ];
 }

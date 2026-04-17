@@ -1,6 +1,3 @@
-import 'package:genesis/models/deducton_item.dart';
-import 'package:genesis/widgets/actions/deduction_tile.dart';
-import 'package:genesis/widgets/actions/section_header.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -10,9 +7,12 @@ import 'package:genesis/utils/toast.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/licence_model.dart';
+import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/controllers/user_controller.dart';
+import 'package:genesis/widgets/actions/section_header.dart';
+import 'package:genesis/widgets/actions/deduction_tile.dart';
 import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 
@@ -30,6 +30,8 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   final _vehicleController = Get.find<VehicleControler>();
   late TextEditingController _modelController;
   late TextEditingController _plateController;
+  late TextEditingController _engineNumberController;
+  late TextEditingController _vinNumberController;
   late String _selectedStatus;
   late String? _selectedType;
   late double _fuelRation;
@@ -51,6 +53,10 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     super.initState();
     _modelController = TextEditingController(text: widget.vehicle.carModel);
     _plateController = TextEditingController(text: widget.vehicle.licencePlate);
+    _engineNumberController =
+        TextEditingController(text: widget.vehicle.engineNumber ?? '');
+    _vinNumberController =
+        TextEditingController(text: widget.vehicle.vinNumber ?? '');
     _selectedStatus = widget.vehicle.status;
     _selectedType = widget.vehicle.engineType.isEmpty
         ? VehicleUtlis.engineTypes[0]
@@ -67,6 +73,8 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   void dispose() {
     _modelController.dispose();
     _plateController.dispose();
+    _engineNumberController.dispose();
+    _vinNumberController.dispose();
     super.dispose();
   }
 
@@ -85,6 +93,8 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     final updatedVehicle = {
       "carModel": _modelController.text,
       "licencePlate": _plateController.text,
+      "engineNumber": _engineNumberController.text.trim(),
+      "vinNumber": _vinNumberController.text.trim(),
       "status": _selectedStatus,
       "engineType": _selectedType,
       "fuelRatio": _fuelRation,
@@ -275,6 +285,16 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
               controller: _plateController,
               label: "License Plate",
               icon: Icons.badge,
+            ),
+            _buildTextField(
+              controller: _engineNumberController,
+              label: "Engine Number",
+              icon: Icons.settings_input_component,
+            ),
+            _buildTextField(
+              controller: _vinNumberController,
+              label: "Chassis (VIN) Number",
+              icon: Icons.pin,
             ),
 
             const SizedBox(height: 16),

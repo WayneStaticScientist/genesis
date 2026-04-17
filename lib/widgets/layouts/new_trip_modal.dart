@@ -1,4 +1,3 @@
-import 'package:genesis/utils/bool_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:genesis/utils/theme.dart';
 import 'package:genesis/utils/toast.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
@@ -36,6 +36,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
       TextEditingController(text: '0');
   final TextEditingController _destinationNameController =
       TextEditingController();
+  final TextEditingController _portOfExitController = TextEditingController();
+  final TextEditingController _portOfEntryController = TextEditingController();
 
   // Controllers for the new pickers
   final TextEditingController _destinationController = TextEditingController();
@@ -51,6 +53,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
 
   // Selection State
   final Rx<VehicleModel?> selectedVehicle = Rx<VehicleModel?>(null);
+  final RxString selectedTripType = "Local".obs;
 
   @override
   void initState() {
@@ -82,6 +85,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
     _destinationNameController.dispose();
     _searchController.dispose();
     _destinationController.dispose();
+    _portOfExitController.dispose();
+    _portOfEntryController.dispose();
     super.dispose();
   }
 
@@ -198,6 +203,58 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 ),
 
                 const SizedBox(height: 30),
+
+                _buildInputLabel("TRIP TYPE"),
+                _buildTripTypeSelector(),
+
+                Obx(() {
+                  if (selectedTripType.value == "Cross-Border") {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildInputLabel("PORT OF EXIT"),
+                                  TextFormField(
+                                    controller: _portOfExitController,
+                                    decoration: _modernInputDecoration(
+                                      Icons.exit_to_app,
+                                      "e.g. Beitbridge",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildInputLabel("PORT OF ENTRY"),
+                                  TextFormField(
+                                    controller: _portOfEntryController,
+                                    decoration: _modernInputDecoration(
+                                      Icons.login,
+                                      "e.g. Chirundu",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
+
+                const SizedBox(height: 25),
 
                 // Vehicle Selection Section (Required)
                 _buildInputLabel("SELECT VEHICLE *"),
@@ -355,6 +412,98 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 ),
                 const SizedBox(height: 30),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTripTypeSelector() {
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => selectedTripType.value = "Local",
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: selectedTripType.value == "Local"
+                      ? GTheme.primary(context).withAlpha(30)
+                      : GTheme.emmense(context),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selectedTripType.value == "Local"
+                        ? GTheme.primary(context)
+                        : Colors.grey.withAlpha(50),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.home,
+                      size: 20,
+                      color: selectedTripType.value == "Local"
+                          ? GTheme.primary(context)
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Local",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: selectedTripType.value == "Local"
+                            ? GTheme.primary(context)
+                            : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => selectedTripType.value = "Cross-Border",
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: selectedTripType.value == "Cross-Border"
+                      ? GTheme.primary(context).withAlpha(30)
+                      : GTheme.emmense(context),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selectedTripType.value == "Cross-Border"
+                        ? GTheme.primary(context)
+                        : Colors.grey.withAlpha(50),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.public,
+                      size: 20,
+                      color: selectedTripType.value == "Cross-Border"
+                          ? GTheme.primary(context)
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Cross-Border",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: selectedTripType.value == "Cross-Border"
+                            ? GTheme.primary(context)
+                            : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -709,6 +858,13 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "tolgateFees": tolgateFees,
         "destination": destinationName,
         "vehicle": selectedVehicle.value?.id,
+        "tripType": selectedTripType.value,
+        "portOfExit": selectedTripType.value == "Cross-Border"
+            ? _portOfExitController.text.trim()
+            : null,
+        "portOfEntry": selectedTripType.value == "Cross-Border"
+            ? _portOfEntryController.text.trim()
+            : null,
         "receiver": _receiverController.text.trim(),
         "startTime": departureDateTime.value.toIso8601String(),
         "estimatedEndTime": arrivalDateTime.value.toIso8601String(),

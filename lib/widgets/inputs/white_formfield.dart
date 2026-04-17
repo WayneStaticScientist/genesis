@@ -9,6 +9,7 @@ class WhiteFormfield extends StatelessWidget {
   final Widget? suffix;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
   final String? hint;
   const WhiteFormfield(
     this.label,
@@ -20,6 +21,7 @@ class WhiteFormfield extends StatelessWidget {
     this.suffix,
     required this.controller,
     super.key,
+    this.keyboardType,
   });
 
   @override
@@ -39,6 +41,7 @@ class WhiteFormfield extends StatelessWidget {
               ],
       ),
       child: TextFormField(
+        keyboardType: keyboardType,
         validator: validator,
         controller: controller,
         obscureText: isPassword && obscurePassword,

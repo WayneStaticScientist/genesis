@@ -10,6 +10,8 @@ class VehicleModel {
   double fuelLevel;
   final double fuelRatio;
   final String engineType;
+  final String? engineNumber;
+  final String? vinNumber;
   final String licencePlate;
   final PopulatedDriverModel? driver;
   final List<DeductionItem> insurances;
@@ -26,6 +28,8 @@ class VehicleModel {
     required this.fuelRatio,
     required this.insurances,
     required this.engineType,
+    this.engineNumber,
+    this.vinNumber,
     required this.licencePlate,
   });
 
@@ -40,6 +44,8 @@ class VehicleModel {
       'fuelLevel': fuelLevel,
       "insurances": insurances,
       'engineType': engineType,
+      'engineNumber': engineNumber,
+      'vinNumber': vinNumber,
       'driver': driver?.toJSON(),
       "licencePlate": licencePlate,
     };
@@ -64,6 +70,8 @@ class VehicleModel {
       licencePlate: data['licencePlate'],
 
       engineType: data['engineType'] ?? '',
+      engineNumber: data['engineNumber'],
+      vinNumber: data['vinNumber'],
       usage: (data['usage'] as num?)?.toDouble() ?? 0,
       fuelLevel: (data['fuelLevel'] as num?)?.toDouble() ?? 0,
       fuelRatio: (data['fuelRatio'] as num?)?.toDouble() ?? 0.0,

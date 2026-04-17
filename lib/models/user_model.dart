@@ -1,6 +1,7 @@
 import 'package:isar_plus/isar_plus.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:genesis/models/licence_model.dart';
+import 'package:genesis/models/passport_model.dart';
 import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/models/populated_trip_model.dart';
 import 'package:genesis/models/current_vehicle_model.dart';
@@ -34,6 +35,8 @@ class User {
   @ignore
   LicenceModel? licence;
   @ignore
+  PassportModel? passport;
+  @ignore
   List<DeductionItem> taxes;
   @ignore
   List<DeductionItem> insurance;
@@ -45,6 +48,7 @@ class User {
     required this.id,
     required this.payment,
     this.licence,
+    this.passport,
     this.trip,
     this.trips,
     this.safety,
@@ -71,6 +75,7 @@ class User {
       'trips': trips,
       'email': email,
       'licence': licence,
+      'passport': passport?.toJson(),
       'rating': rating,
       'status': status,
       'safety': safety,
@@ -112,6 +117,9 @@ class User {
           : [],
       licence: data['licence'] != null
           ? LicenceModel.fromJSON(data['licence'])
+          : null,
+      passport: data['passport'] != null
+          ? PassportModel.fromJSON(data['passport'])
           : null,
       id: data['_id'] ?? new DateTime.now().millisecondsSinceEpoch.toString(),
       chatToken: data['chatToken'],

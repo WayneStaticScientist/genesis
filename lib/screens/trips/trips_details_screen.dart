@@ -14,6 +14,7 @@ import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/controllers/socket_controller.dart';
 import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
+import 'package:genesis/screens/trips/trip_clearing_screen.dart';
 import 'package:genesis/widgets/layouts/finalize_trip_dialog.dart';
 
 class TripDetailsScreen extends StatefulWidget {
@@ -99,7 +100,24 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   userController.trip.value?.status.toLowerCase() == "active",
                 ),
           ),
-
+          Obx(() {
+            final trip = userController.trip.value;
+            final user = userController.user.value;
+            final canAddExpense =
+                trip != null &&
+                trip.status.toLowerCase() == "active" &&
+                user != null &&
+                (user.role == 'admin' ||
+                    user.role == 'agent' ||
+                    (user.role == 'manager' &&
+                        user.permissions.contains('trip')));
+            return canAddExpense
+                ? IconButton(
+                    icon: Icon(Icons.add, color: primaryColor),
+                    onPressed: () => _showAddExpenseDialog(),
+                  )
+                : SizedBox.shrink();
+          }),
           IconButton(
             icon: Icon(Icons.refresh, color: primaryColor),
             onPressed: () => userController.findTrip(widget.tripId),
@@ -190,6 +208,13 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       title: "Extras",
                       icon: Icons.exposure,
                       value: trip.extrasExpense,
+                    ),
+                    ...trip.otherExpenses.map(
+                      (expense) => _buildExpenseCard(
+                        title: expense.name,
+                        icon: Icons.attach_money,
+                        value: expense.amount,
+                      ),
                     ),
                     _buildInitiatorCard(theme, trip.initiater),
                     _buildFinalizerCard(theme, trip.finalizer),
@@ -526,20 +551,27 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           "cancel",
         );
       };
-    } else if (status == 'pending') {
-      label = "Revoke Trip";
-      btnColor = Colors.orange;
-      icon = Icons.undo;
-      onTap = () {
-        _showActionDialog(
-          "Are you sure you want revoke the trip , The trip will not be recorded at all",
-          "revoke",
-        );
-      };
+    } else if (status == 'agent-assigned') {
+      final user = userController.user.value;
+      final canClear =
+          user != null &&
+          (user.role == 'admin' ||
+              user.role == 'agent' ||
+              (user.role == 'manager' && user.permissions.contains('trip')));
+
+      if (canClear) {
+        label = "Clear Trip";
+        btnColor = primaryColor;
+        icon = Icons.local_shipping;
+        onTap = () {
+          Get.to(() => TripClearingScreen(trip: trip));
+        };
+      } else {
+        return const SizedBox.shrink();
+      }
     } else {
       return SizedBox.shrink(); // No action for other statuses
     }
-
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -673,6 +705,60 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             setDialogState: setInnerState,
           ),
         ),
+      ),
+    );
+  }
+
+  void _showAddExpenseDialog() {
+    final nameController = TextEditingController();
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Add Extra Trip Cost"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: "Expense Name"),
+            ),
+            TextField(
+              controller: amountController,
+              decoration: InputDecoration(labelText: "Amount"),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: Text("Cancel")),
+          TextButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              final amountText = amountController.text.trim();
+              if (name.isEmpty || amountText.isEmpty) {
+                Toaster.showError("Please fill both fields");
+                return;
+              }
+              final amount = double.tryParse(amountText);
+              if (amount == null || amount <= 0) {
+                Toaster.showError("Invalid amount");
+                return;
+              }
+              Get.back();
+              final success = await userController.addOtherExpense(
+                tripId: widget.tripId,
+                name: name,
+                amount: amount,
+              );
+              if (success) {
+                Toaster.showSuccess("Expense added successfully");
+              }
+            },
+            child: Text("Add"),
+          ),
+        ],
       ),
     );
   }

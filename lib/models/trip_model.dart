@@ -1,12 +1,31 @@
 import 'package:genesis/models/current_vehicle_model.dart';
 import 'package:genesis/models/populated_location_model.dart';
 
+class OtherExpense {
+  final String name;
+  final double amount;
+
+  OtherExpense({required this.name, required this.amount});
+
+  factory OtherExpense.fromJson(Map<String, dynamic> json) {
+    return OtherExpense(
+      name: json['name'] ?? '',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'name': name, 'amount': amount};
+  }
+}
+
 class TripModel {
   String status;
   final String id;
   final String notes;
   final String origin;
   final dynamic driver;
+  final dynamic clearer;
   final String loadType;
   final double distance;
   final String receiver;
@@ -29,9 +48,14 @@ class TripModel {
   final double truckShopExpense;
   final double finesExpense;
   final double extrasExpense;
+  final String tripType;
+  final String? portOfExit;
+  final String? portOfEntry;
+  final List<OtherExpense> otherExpenses;
   TripModel({
     required this.notes,
     required this.driver,
+    required this.clearer,
     required this.id,
     required this.origin,
     required this.status,
@@ -57,9 +81,14 @@ class TripModel {
     required this.distance,
     required this.receiver,
     required this.initiater,
+    required this.tripType,
+    this.portOfExit,
+    this.portOfEntry,
+    this.otherExpenses = const [],
   });
   factory TripModel.fromJson(Map<String, dynamic> json) {
     return TripModel(
+      clearer: json['clearer'],
       driver: json['driver'],
       notes: json['notes'] ?? '',
       distance: (json['distance'] as num?)?.toDouble() ?? 0,
@@ -95,35 +124,48 @@ class TripModel {
       finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
       extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
       initiater: json['initiater'],
+      tripType: json['tripType'] ?? 'Local',
+      portOfExit: json['portOfExit'],
+      portOfEntry: json['portOfEntry'],
+      otherExpenses:
+          (json['otherExpenses'] as List<dynamic>?)
+              ?.map((e) => OtherExpense.fromJson(e))
+              .toList() ??
+          [],
     );
   }
   Map<String, dynamic> toJson() {
     return {
       'notes': notes,
-      'initiater': initiater,
-      'distance': distance,
-      'locationOrigin': locationOrigin,
-      'finalizer': finalizer,
-      'receiver': receiver,
       'driver': driver,
       'status': status,
+      'clearer': clearer,
+      'tripType': tripType,
       'loadType': loadType,
-      'endTime': endTime?.toIso8601String(),
+      'receiver': receiver,
+      'distance': distance,
+      'finalizer': finalizer,
+      'initiater': initiater,
       'loadWeight': loadWeight,
       'tripPayout': tripPayout,
       'destination': destination,
-      'startTime': startTime?.toIso8601String(),
-      'endFuelLevel': endFuelLevel,
-      'startFuelLevel': startFuelLevel,
-      'estimatedEndTime': estimatedEndTime?.toIso8601String(),
       'vehicle': vehicle.toJson(),
-      'location': location?.toJson(),
       'fuelExpense': fuelExpense,
       'foodExpense': foodExpense,
+      'endFuelLevel': endFuelLevel,
+      'location': location?.toJson(),
+      'startFuelLevel': startFuelLevel,
+      'locationOrigin': locationOrigin,
+      'endTime': endTime?.toIso8601String(),
+      'startTime': startTime?.toIso8601String(),
+      'estimatedEndTime': estimatedEndTime?.toIso8601String(),
+      'otherExpenses': otherExpenses.map((e) => e.toJson()).toList(),
       'tolgateExpense': tolgateExpense,
       'truckShopExpense': truckShopExpense,
       'finesExpense': finesExpense,
       'extrasExpense': extrasExpense,
+      'portOfExit': portOfExit,
+      'portOfEntry': portOfEntry,
     };
   }
 }

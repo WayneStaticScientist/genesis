@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
-import 'package:genesis/models/response_model.dart';
-import 'package:genesis/models/tokens_model.dart';
-import 'package:genesis/models/user_model.dart';
-import 'package:genesis/services/network_adapter.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:genesis/models/user_model.dart';
+import 'package:genesis/models/tokens_model.dart';
+import 'package:genesis/models/response_model.dart';
+import 'package:genesis/screens/auth/login_screen.dart';
+import 'package:genesis/services/network_adapter.dart';
 import 'package:mobile_device_identifier/mobile_device_identifier.dart';
 
 class AuthenticationInterceptor extends Interceptor {
@@ -72,6 +74,7 @@ class AuthenticationInterceptor extends Interceptor {
       if (response.statusCode == 401) {
         User.clearStorage();
         TokenModel.clearStorage();
+        Get.offAll(() => LoginScreen());
       }
       return response;
     }

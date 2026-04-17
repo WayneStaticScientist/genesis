@@ -312,6 +312,28 @@ class UserController extends GetxController {
     return true;
   }
 
+  Future<bool> clearTrip({
+    required String tripId,
+    required List<Map<String, dynamic>> expenses,
+  }) async {
+    if (processingTrip.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    processingTrip.value = true;
+    final response = await Net.put(
+      "/trip/clear/$tripId",
+      data: {"otherExpenses": expenses},
+    );
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    await findTrip(tripId);
+    return true;
+  }
+
   RxBool fetchingTrip = RxBool(false);
   Rx<TripModel?> trip = Rx(null);
   Future<void> findTrip(String id) async {
@@ -378,6 +400,39 @@ class UserController extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
+    return true;
+  }
+
+  Future<bool> addOtherExpense({
+    required String tripId,
+    required String name,
+    required double amount,
+  }) async {
+    if (processingTrip.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    processingTrip.value = true;
+    // First, get the current trip to append to otherExpenses
+    await findTrip(tripId);
+    final currentTrip = trip.value;
+    if (currentTrip == null) {
+      processingTrip.value = false;
+      Toaster.showError("Trip not found");
+      return false;
+    }
+    final updatedExpenses = List<OtherExpense>.from(currentTrip.otherExpenses)
+      ..add(OtherExpense(name: name, amount: amount));
+    final response = await Net.put(
+      "/trip/$tripId",
+      data: {"otherExpenses": updatedExpenses.map((e) => e.toJson()).toList()},
+    );
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    await findTrip(tripId); // Refresh the trip
     return true;
   }
 }

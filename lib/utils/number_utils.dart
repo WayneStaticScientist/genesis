@@ -66,12 +66,17 @@ class NumberUtils {
   }
 
   static num getTripExpenseTotal(TripModel trip) {
+    final otherExpensesTotal = trip.otherExpenses.fold(
+      0.0,
+      (sum, expense) => sum + expense.amount,
+    );
     return trip.extrasExpense +
         trip.finesExpense +
         trip.foodExpense +
         trip.fuelExpense +
         trip.truckShopExpense +
-        trip.tolgateExpense;
+        trip.tolgateExpense +
+        otherExpensesTotal;
   }
 
   static num getStatsTotalExpenses(MainStatsModel model) {

@@ -10,7 +10,8 @@ import 'package:genesis/controllers/notifications_controller.dart';
 // This UI implementation uses a simulated list of that model.
 
 class NotificationListScreen extends StatefulWidget {
-  const NotificationListScreen({super.key});
+  final GlobalKey<ScaffoldState>? triggerKey;
+  const NotificationListScreen({super.key, this.triggerKey});
 
   @override
   State<NotificationListScreen> createState() => _NotificationListScreenState();
