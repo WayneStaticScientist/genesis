@@ -146,6 +146,12 @@ class _TripClearingScreenState extends State<TripClearingScreen> {
                 ),
               ],
             ),
+            if (widget.trip.tollgates.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              _buildSectionTitle("Tollgates"),
+              const SizedBox(height: 10),
+              _buildTollgateList(),
+            ],
             const SizedBox(height: 32),
 
             _buildSectionTitle("Clearing Costs (Prices Paid)"),
@@ -261,6 +267,44 @@ class _TripClearingScreenState extends State<TripClearingScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTollgateList() {
+    return Column(
+      children: widget.trip.tollgates.map((toll) {
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: GTheme.emmense(context),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.toll, size: 20, color: Colors.blue),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  toll.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                NumberUtils.formatCurrency(toll.amount),
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 

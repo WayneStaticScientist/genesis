@@ -13,7 +13,7 @@ class CurrentVehicleModel {
     this.vinNumber,
   });
   factory CurrentVehicleModel.fromJson(dynamic json) {
-    if (json.runtimeType == String) {
+    if (json.runtimeType == String || json == null || json['_id'] == null) {
       return CurrentVehicleModel(id: "", carModel: "");
     }
     return CurrentVehicleModel(

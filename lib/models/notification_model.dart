@@ -9,6 +9,7 @@ class NotificationModel {
   final String content;
   final String type;
   final DateTime date;
+  final String referedId;
   bool isRead;
 
   NotificationModel(
@@ -18,6 +19,7 @@ class NotificationModel {
     required this.content,
     required this.type,
     required this.date,
+    required this.referedId,
     this.isRead = false,
   });
 
@@ -25,6 +27,7 @@ class NotificationModel {
     return NotificationModel(
       id,
       channenId: json['channenId'] ?? '',
+      referedId: json['referedId'] ?? '',
       title: json['title'] ?? '',
       content: json['content'] ?? '',
       type: json['type'] ?? 'unknown',
@@ -38,6 +41,7 @@ class NotificationModel {
   Map<String, dynamic> toJSON() {
     return {
       'id': id,
+      'referedId': referedId,
       'channenId': channenId,
       'title': title,
       'content': content,

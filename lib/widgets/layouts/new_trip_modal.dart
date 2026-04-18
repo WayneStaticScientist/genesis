@@ -54,6 +54,10 @@ class _AssignTripModalState extends State<AssignTripModal> {
   List<TextEditingController> destinationCoordControllers = [];
   List<Rx<LatLng?>> destinationCoordsList = [];
 
+  // Tollgate entries
+  List<TextEditingController> tollgateNameControllers = [];
+  List<TextEditingController> tollgateAmountControllers = [];
+
   // Selection State
   final Rx<VehicleModel?> selectedVehicle = Rx<VehicleModel?>(null);
   final RxString selectedTripType = "Local".obs;
@@ -98,6 +102,12 @@ class _AssignTripModalState extends State<AssignTripModal> {
     for (var controller in destinationCoordControllers) {
       controller.dispose();
     }
+    for (var controller in tollgateNameControllers) {
+      controller.dispose();
+    }
+    for (var controller in tollgateAmountControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -109,6 +119,13 @@ class _AssignTripModalState extends State<AssignTripModal> {
     });
   }
 
+  void _addTollgate() {
+    setState(() {
+      tollgateNameControllers.add(TextEditingController());
+      tollgateAmountControllers.add(TextEditingController(text: '0'));
+    });
+  }
+
   void _removeDestination(int index) {
     setState(() {
       destinationNameControllers[index].dispose();
@@ -116,6 +133,15 @@ class _AssignTripModalState extends State<AssignTripModal> {
       destinationNameControllers.removeAt(index);
       destinationCoordControllers.removeAt(index);
       destinationCoordsList.removeAt(index);
+    });
+  }
+
+  void _removeTollgate(int index) {
+    setState(() {
+      tollgateNameControllers[index].dispose();
+      tollgateAmountControllers[index].dispose();
+      tollgateNameControllers.removeAt(index);
+      tollgateAmountControllers.removeAt(index);
     });
   }
 
@@ -316,6 +342,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 ),
                 12.gapHeight,
                 _buildMultiDestinationsSection(),
+                12.gapHeight,
+                _buildTollgatesSection(),
                 12.gapHeight,
                 _buildInputLabel("Distance In KM"),
                 TextFormField(
@@ -841,6 +869,64 @@ class _AssignTripModalState extends State<AssignTripModal> {
     );
   }
 
+  Widget _buildTollgatesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildInputLabel("TOLLGATES"),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: tollgateNameControllers.length,
+          itemBuilder: (context, index) {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: tollgateNameControllers[index],
+                        decoration: _modernInputDecoration(
+                          Icons.toll,
+                          "Tollgate name ${index + 1}",
+                        ),
+                      ),
+                    ),
+                    if (tollgateNameControllers.length > 1)
+                      IconButton(
+                        icon: Icon(Icons.remove_circle, color: Colors.red),
+                        onPressed: () => _removeTollgate(index),
+                      ),
+                  ],
+                ),
+                12.gapHeight,
+                TextFormField(
+                  controller: tollgateAmountControllers[index],
+                  keyboardType: TextInputType.number,
+                  decoration: _modernInputDecoration(
+                    Icons.currency_exchange,
+                    "Amount for tollgate ${index + 1}",
+                  ),
+                ),
+                if (index < tollgateNameControllers.length - 1) 12.gapHeight,
+              ],
+            );
+          },
+        ),
+        12.gapHeight,
+        ElevatedButton.icon(
+          onPressed: _addTollgate,
+          icon: Icon(Icons.add),
+          label: Text("Add Tollgate"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
   void _selectLocationForDestination(int index) async {
     final LatLng? result = await Get.to(() => const MapPickerScreen());
     if (result != null) {
@@ -892,13 +978,6 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "You have entered an invalid number on distance",
       );
     }
-    final tolgateFees = double.tryParse(_tripPaymentController.text.trim());
-    if (tolgateFees == null) {
-      return Toaster.showErrorTop(
-        "Invalid Tolgate Fees Amount",
-        "You have entered an invalid number on Tolgate Fees",
-      );
-    }
     final origin = originController.text.trim();
     if (origin.isEmpty) {
       Toaster.showErrorTop(
@@ -930,6 +1009,32 @@ class _AssignTripModalState extends State<AssignTripModal> {
       });
     }
 
+    // Validate tollgates
+    double totalTollgateFees = 0;
+    List<Map<String, dynamic>> tollgates = [];
+    for (int i = 0; i < tollgateNameControllers.length; i++) {
+      final tollName = tollgateNameControllers[i].text.trim();
+      final tollAmount = double.tryParse(
+        tollgateAmountControllers[i].text.trim(),
+      );
+      if (tollName.isEmpty) {
+        Toaster.showErrorTop(
+          "Tollgate required",
+          "Please enter name for tollgate ${i + 1}.",
+        );
+        return;
+      }
+      if (tollAmount == null) {
+        Toaster.showErrorTop(
+          "Invalid Tollgate Amount",
+          "Please enter a valid amount for tollgate ${i + 1}.",
+        );
+        return;
+      }
+      totalTollgateFees += tollAmount;
+      tollgates.add({"name": tollName, "amount": tollAmount});
+    }
+
     final response = await _userController.startTrip(
       data: {
         "origin": origin,
@@ -938,7 +1043,8 @@ class _AssignTripModalState extends State<AssignTripModal> {
         "distance": distanceInKm,
         "tripPayout": tripPrice,
         "driver": widget.driver.id,
-        "tolgateFees": tolgateFees,
+        "tolgateFees": totalTollgateFees,
+        "tollgates": tollgates,
         "destinations": destinations,
         "vehicle": selectedVehicle.value?.id,
         "tripType": selectedTripType.value,

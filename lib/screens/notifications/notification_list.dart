@@ -32,6 +32,11 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
+        leading: widget.triggerKey != null
+            ? DrawerButton(
+                onPressed: () => widget.triggerKey?.currentState?.openDrawer(),
+              )
+            : null,
         systemOverlayStyle: GTheme.copyOverlay(context),
         title: const Text(
           'Notifications',

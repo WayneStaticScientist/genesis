@@ -34,11 +34,15 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   late TextEditingController _vinNumberController;
   late String _selectedStatus;
   late String? _selectedType;
+  late String _selectedLoadType;
   late double _fuelRation;
+  late double _emptyFuelRatio;
+  late double _loadedFuelRatio;
   late DateTime? expiryDate = widget.vehicle.licence?.expiryDate;
   late bool _initialUserInitiliazed = widget.vehicle.driver == null;
   // Added state for driver
   User? _assignedDriver;
+  late List<Map<String, dynamic>> _serviceReminders;
   late TextEditingController _licenceNumber = TextEditingController(
     text: widget.vehicle.licence?.licenceNumber ?? '',
   );
@@ -53,15 +57,23 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     super.initState();
     _modelController = TextEditingController(text: widget.vehicle.carModel);
     _plateController = TextEditingController(text: widget.vehicle.licencePlate);
-    _engineNumberController =
-        TextEditingController(text: widget.vehicle.engineNumber ?? '');
-    _vinNumberController =
-        TextEditingController(text: widget.vehicle.vinNumber ?? '');
+    _engineNumberController = TextEditingController(
+      text: widget.vehicle.engineNumber ?? '',
+    );
+    _vinNumberController = TextEditingController(
+      text: widget.vehicle.vinNumber ?? '',
+    );
     _selectedStatus = widget.vehicle.status;
     _selectedType = widget.vehicle.engineType.isEmpty
         ? VehicleUtlis.engineTypes[0]
         : widget.vehicle.engineType;
+    _selectedLoadType = "Standard";
     _fuelRation = widget.vehicle.fuelRatio;
+    _emptyFuelRatio = 0.0;
+    _loadedFuelRatio = widget.vehicle.fuelRatio;
+    _serviceReminders = widget.vehicle.serviceReminders
+        .map((e) => e.toJson())
+        .toList();
     WidgetsBinding.instance.addPostFrameCallback((tick) {
       _getDriver();
     });
@@ -97,7 +109,15 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
       "vinNumber": _vinNumberController.text.trim(),
       "status": _selectedStatus,
       "engineType": _selectedType,
-      "fuelRatio": _fuelRation,
+      "loadType": _selectedLoadType,
+      "fuelRatio": _selectedLoadType == "Loader"
+          ? _loadedFuelRatio
+          : _fuelRation,
+      if (_selectedLoadType == "Loader") ...{
+        "emptyRatio": _emptyFuelRatio,
+        "loadedFuelRatio": _loadedFuelRatio,
+      },
+      "serviceReminders": _serviceReminders,
       // Add driver ID if selected
       "insurances": widget.vehicle.insurances.map(((e) => e.toJson())).toList(),
       "driver": _assignedDriver?.id,
@@ -369,17 +389,43 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildTextField(
-                    label: "Cost/KM (\$)",
-                    initialValue: _fuelRation.toString(),
-                    keyboardType: TextInputType.number,
+                  child: _buildDropdown(
+                    label: "Vehicle Load Type",
+                    value: _selectedLoadType,
+                    items: ["Standard", "Loader"],
                     onChanged: (val) =>
-                        _fuelRation = double.tryParse(val) ?? 0.0,
-                    icon: Icons.attach_money,
+                        setState(() => _selectedLoadType = val!),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            if (_selectedLoadType != "Loader")
+              _buildTextField(
+                label: "Fuel Ratio per KM",
+                initialValue: _fuelRation.toString(),
+                keyboardType: TextInputType.number,
+                onChanged: (val) => _fuelRation = double.tryParse(val) ?? 0.0,
+                icon: Icons.attach_money,
+              )
+            else ...[
+              _buildTextField(
+                label: "Empty Ratio per KM",
+                initialValue: _emptyFuelRatio.toString(),
+                keyboardType: TextInputType.number,
+                onChanged: (val) =>
+                    _emptyFuelRatio = double.tryParse(val) ?? 0.0,
+                icon: Icons.airline_stops,
+              ),
+              _buildTextField(
+                label: "Loaded Ratio per KM",
+                initialValue: _loadedFuelRatio.toString(),
+                keyboardType: TextInputType.number,
+                onChanged: (val) =>
+                    _loadedFuelRatio = double.tryParse(val) ?? 0.0,
+                icon: Icons.local_shipping,
+              ),
+            ],
             const SizedBox(height: 16),
             _buildLabel("Licence Information"),
             _buildTextField(
@@ -439,6 +485,22 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
               ),
             ),
             // Delete Action
+            const SizedBox(height: 40),
+
+            _buildLabel("Service Reminders"),
+            ..._serviceReminders.map(
+              (reminder) => _buildReminderTile(reminder),
+            ),
+            ElevatedButton.icon(
+              onPressed: _addServiceReminder,
+              icon: Icon(Icons.add),
+              label: Text("Add Reminder"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+              ),
+            ).sizedBox(width: double.infinity),
+
             const SizedBox(height: 40),
 
             SizedBox(
@@ -630,5 +692,131 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         ),
       ),
     );
+  }
+
+  Widget _buildReminderTile(Map<String, dynamic> reminder) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: GTheme.reverse(context).withAlpha(10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reminder['name'],
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "${reminder['type']}: ${reminder['type'] == 'date' ? GenesisDate.formatNormalDate(DateTime.parse(reminder['date'])) : '${reminder['mileage']}'}",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              setState(() {
+                _serviceReminders.remove(reminder);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addServiceReminder() {
+    final nameController = TextEditingController();
+    final valueController = TextEditingController();
+    String selectedType = "mileage";
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setInnerState) => AlertDialog(
+          title: Text("Add Service Reminder"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: "Reminder Name (e.g., Tyre Change)",
+                ),
+              ),
+              DropdownButton<String>(
+                value: selectedType,
+                items: [
+                  DropdownMenuItem(value: "mileage", child: Text("By Mileage")),
+                  DropdownMenuItem(value: "date", child: Text("By Date")),
+                ],
+                onChanged: (val) => setInnerState(() => selectedType = val!),
+              ),
+              if (selectedType == "mileage")
+                TextField(
+                  controller: valueController,
+                  decoration: InputDecoration(
+                    labelText: "Mileage (e.g., 1000km)",
+                  ),
+                  keyboardType: TextInputType.number,
+                )
+              else
+                TextField(
+                  controller: valueController,
+                  decoration: InputDecoration(labelText: "Date"),
+                  readOnly: true,
+                  onTap: () => _selectReminderDate(context, valueController),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty &&
+                    valueController.text.isNotEmpty) {
+                  setState(() {
+                    _serviceReminders.add({
+                      "name": nameController.text,
+                      "type": selectedType,
+                      if (selectedType == 'date') "date": valueController.text,
+                      if (selectedType == 'mileage')
+                        "mileage": valueController.text,
+                    });
+                  });
+                  Navigator.pop(context);
+                }
+              },
+              child: Text("Add"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectReminderDate(
+    BuildContext context,
+    TextEditingController controller,
+  ) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      controller.text = picked.toIso8601String();
+    }
   }
 }

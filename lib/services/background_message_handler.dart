@@ -11,6 +11,7 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
   description: 'This channel is used for chat messages.',
   importance: Importance.high,
   playSound: true,
+  enableVibration: true,
 );
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -19,10 +20,10 @@ class GenesisBackgroundMessageHandler {
   static const String NotificationMessagesCounter =
       "GenesisBackgroundMessageHandler";
   static Future<void> handleBackgroundMessage(RemoteMessage message) async {
-    GenesisNotificationHandler.showNotification(message);
     if (message.data['type'] == "message") {
       return _decodeMessage(message.data);
     }
+
     IsarStatic.isar ?? await IsarStatic.init();
     final isar = IsarStatic.isar;
     if (isar == null) return;
@@ -33,6 +34,7 @@ class GenesisBackgroundMessageHandler {
     await isar.write((isar) async {
       isar.notificationModels.put(notification);
     });
+    GenesisNotificationHandler.showNotification(message);
   }
 
   static Future<void> _decodeMessage(Map<String, dynamic> data) async {

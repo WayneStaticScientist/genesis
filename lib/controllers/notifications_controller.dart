@@ -5,6 +5,8 @@ import 'package:genesis/utils/database_carrier.dart';
 import 'package:genesis/models/notification_model.dart';
 import 'package:genesis/screens/trips/trips_details_screen.dart';
 import 'package:genesis/screens/maintainance/maintainance_view.dart';
+import 'package:genesis/screens/notifications/service_reminders_notifications.dart';
+import 'package:genesis/screens/notifications/notification_details_screen.dart';
 
 class NotificationsController extends GetxController {
   RxInt notificationSize = 0.obs;
@@ -47,6 +49,7 @@ class NotificationsController extends GetxController {
       isar.notificationModels.put(notification);
     });
     initNotifications();
+    getNotifications();
   }
 
   void routeNotification(NotificationModel notification) async {
@@ -61,9 +64,12 @@ class NotificationsController extends GetxController {
       await Get.to(
         () => MaintenanceDetailScreen(maintainance_id: notification.channenId),
       );
-    }
-    if (notification.type == "trip") {
+    } else if (notification.type == "trip") {
       await Get.to(() => TripDetailsScreen(tripId: notification.channenId));
+    } else if (notification.type == "service_reminders") {
+      await Get.to(() => const ServiceRemindersNotificationsScreen());
+    } else {
+      await Get.to(() => NotificationDetailsScreen(notification: notification));
     }
     getNotifications();
   }

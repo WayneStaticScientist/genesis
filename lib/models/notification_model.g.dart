@@ -26,6 +26,7 @@ final NotificationModelSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'content', type: IsarType.string),
       IsarPropertySchema(name: 'type', type: IsarType.string),
       IsarPropertySchema(name: 'date', type: IsarType.dateTime),
+      IsarPropertySchema(name: 'referedId', type: IsarType.string),
       IsarPropertySchema(name: 'isRead', type: IsarType.bool),
     ],
     indexes: [],
@@ -45,7 +46,8 @@ int serializeNotificationModel(IsarWriter writer, NotificationModel object) {
   IsarCore.writeString(writer, 3, object.content);
   IsarCore.writeString(writer, 4, object.type);
   IsarCore.writeLong(writer, 5, object.date.toUtc().microsecondsSinceEpoch);
-  IsarCore.writeBool(writer, 6, value: object.isRead);
+  IsarCore.writeString(writer, 6, object.referedId);
+  IsarCore.writeBool(writer, 7, value: object.isRead);
   return object.id;
 }
 
@@ -70,8 +72,10 @@ NotificationModel deserializeNotificationModel(IsarReader reader) {
       _date = DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true).toLocal();
     }
   }
+  final String _referedId;
+  _referedId = IsarCore.readString(reader, 6) ?? '';
   final bool _isRead;
-  _isRead = IsarCore.readBool(reader, 6);
+  _isRead = IsarCore.readBool(reader, 7);
   final object = NotificationModel(
     _id,
     channenId: _channenId,
@@ -79,6 +83,7 @@ NotificationModel deserializeNotificationModel(IsarReader reader) {
     content: _content,
     type: _type,
     date: _date,
+    referedId: _referedId,
     isRead: _isRead,
   );
   return object;
@@ -110,7 +115,9 @@ dynamic deserializeNotificationModelProp(IsarReader reader, int property) {
         }
       }
     case 6:
-      return IsarCore.readBool(reader, 6);
+      return IsarCore.readString(reader, 6) ?? '';
+    case 7:
+      return IsarCore.readBool(reader, 7);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -124,6 +131,7 @@ sealed class _NotificationModelUpdate {
     String? content,
     String? type,
     DateTime? date,
+    String? referedId,
     bool? isRead,
   });
 }
@@ -141,6 +149,7 @@ class _NotificationModelUpdateImpl implements _NotificationModelUpdate {
     Object? content = ignore,
     Object? type = ignore,
     Object? date = ignore,
+    Object? referedId = ignore,
     Object? isRead = ignore,
   }) {
     return collection.updateProperties(
@@ -151,7 +160,8 @@ class _NotificationModelUpdateImpl implements _NotificationModelUpdate {
             if (content != ignore) 3: content as String?,
             if (type != ignore) 4: type as String?,
             if (date != ignore) 5: date as DateTime?,
-            if (isRead != ignore) 6: isRead as bool?,
+            if (referedId != ignore) 6: referedId as String?,
+            if (isRead != ignore) 7: isRead as bool?,
           },
         ) >
         0;
@@ -166,6 +176,7 @@ sealed class _NotificationModelUpdateAll {
     String? content,
     String? type,
     DateTime? date,
+    String? referedId,
     bool? isRead,
   });
 }
@@ -183,6 +194,7 @@ class _NotificationModelUpdateAllImpl implements _NotificationModelUpdateAll {
     Object? content = ignore,
     Object? type = ignore,
     Object? date = ignore,
+    Object? referedId = ignore,
     Object? isRead = ignore,
   }) {
     return collection.updateProperties(id, {
@@ -191,7 +203,8 @@ class _NotificationModelUpdateAllImpl implements _NotificationModelUpdateAll {
       if (content != ignore) 3: content as String?,
       if (type != ignore) 4: type as String?,
       if (date != ignore) 5: date as DateTime?,
-      if (isRead != ignore) 6: isRead as bool?,
+      if (referedId != ignore) 6: referedId as String?,
+      if (isRead != ignore) 7: isRead as bool?,
     });
   }
 }
@@ -210,6 +223,7 @@ sealed class _NotificationModelQueryUpdate {
     String? content,
     String? type,
     DateTime? date,
+    String? referedId,
     bool? isRead,
   });
 }
@@ -228,6 +242,7 @@ class _NotificationModelQueryUpdateImpl
     Object? content = ignore,
     Object? type = ignore,
     Object? date = ignore,
+    Object? referedId = ignore,
     Object? isRead = ignore,
   }) {
     return query.updateProperties(limit: limit, {
@@ -236,7 +251,8 @@ class _NotificationModelQueryUpdateImpl
       if (content != ignore) 3: content as String?,
       if (type != ignore) 4: type as String?,
       if (date != ignore) 5: date as DateTime?,
-      if (isRead != ignore) 6: isRead as bool?,
+      if (referedId != ignore) 6: referedId as String?,
+      if (isRead != ignore) 7: isRead as bool?,
     });
   }
 }
@@ -263,6 +279,7 @@ class _NotificationModelQueryBuilderUpdateImpl
     Object? content = ignore,
     Object? type = ignore,
     Object? date = ignore,
+    Object? referedId = ignore,
     Object? isRead = ignore,
   }) {
     final q = query.build();
@@ -273,7 +290,8 @@ class _NotificationModelQueryBuilderUpdateImpl
         if (content != ignore) 3: content as String?,
         if (type != ignore) 4: type as String?,
         if (date != ignore) 5: date as DateTime?,
-        if (isRead != ignore) 6: isRead as bool?,
+        if (referedId != ignore) 6: referedId as String?,
+        if (isRead != ignore) 7: isRead as bool?,
       });
     } finally {
       q.close();
@@ -961,10 +979,151 @@ extension NotificationModelQueryFilter
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 6, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdGreaterThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 6,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 6,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdLessThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 6, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 6,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdBetween(String lower, String upper, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 6,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 6,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 6,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 6,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 6,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 6, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
+  referedIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 6, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterFilterCondition>
   isReadEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 6, value: value),
+        EqualCondition(property: 7, value: value),
       );
     });
   }
@@ -1061,16 +1220,30 @@ extension NotificationModelQuerySortBy
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  sortByReferedId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(6, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  sortByReferedIdDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(6, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
   sortByIsRead() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6);
+      return query.addSortBy(7);
     });
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
   sortByIsReadDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6, sort: Sort.desc);
+      return query.addSortBy(7, sort: Sort.desc);
     });
   }
 }
@@ -1163,16 +1336,30 @@ extension NotificationModelQuerySortThenBy
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  thenByReferedId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(6, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
+  thenByReferedIdDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(6, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
   thenByIsRead() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6);
+      return query.addSortBy(7);
     });
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterSortBy>
   thenByIsReadDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6, sort: Sort.desc);
+      return query.addSortBy(7, sort: Sort.desc);
     });
   }
 }
@@ -1215,9 +1402,16 @@ extension NotificationModelQueryWhereDistinct
   }
 
   QueryBuilder<NotificationModel, NotificationModel, QAfterDistinct>
+  distinctByReferedId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(6, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NotificationModel, NotificationModel, QAfterDistinct>
   distinctByIsRead() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(6);
+      return query.addDistinctBy(7);
     });
   }
 }
@@ -1260,9 +1454,15 @@ extension NotificationModelQueryProperty1
     });
   }
 
-  QueryBuilder<NotificationModel, bool, QAfterProperty> isReadProperty() {
+  QueryBuilder<NotificationModel, String, QAfterProperty> referedIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<NotificationModel, bool, QAfterProperty> isReadProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
     });
   }
 }
@@ -1308,9 +1508,16 @@ extension NotificationModelQueryProperty2<R>
     });
   }
 
-  QueryBuilder<NotificationModel, (R, bool), QAfterProperty> isReadProperty() {
+  QueryBuilder<NotificationModel, (R, String), QAfterProperty>
+  referedIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<NotificationModel, (R, bool), QAfterProperty> isReadProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
     });
   }
 }
@@ -1358,10 +1565,17 @@ extension NotificationModelQueryProperty3<R1, R2>
     });
   }
 
+  QueryBuilder<NotificationModel, (R1, R2, String), QOperations>
+  referedIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(6);
+    });
+  }
+
   QueryBuilder<NotificationModel, (R1, R2, bool), QOperations>
   isReadProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(6);
+      return query.addProperty(7);
     });
   }
 }

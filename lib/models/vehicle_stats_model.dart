@@ -2,8 +2,10 @@ import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/models/trip_model.dart';
 
 class VehicleStatsModel {
+  int totalHours;
   double totalTrips;
   double totalRevenue;
+  double totalMileage;
   double totalMaintenanceCosts;
   List<TripModel> trips;
   List<MaintainanceModel> maintenances;
@@ -13,6 +15,8 @@ class VehicleStatsModel {
     required this.totalMaintenanceCosts,
     required this.trips,
     required this.maintenances,
+    required this.totalHours,
+    required this.totalMileage,
   });
 
   factory VehicleStatsModel.fromJSON(data) {
@@ -31,6 +35,8 @@ class VehicleStatsModel {
               ?.map((e) => MaintainanceModel.fromJSON(e))
               .toList() ??
           [],
+      totalHours: (data['totalHours'] as num?)?.toInt() ?? 0,
+      totalMileage: (data['totalMileage'] as num?)?.toDouble() ?? 0,
     );
   }
 }

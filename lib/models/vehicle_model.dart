@@ -1,6 +1,7 @@
 import 'package:genesis/models/deducton_item.dart';
 import 'package:genesis/models/licence_model.dart';
 import 'package:genesis/models/populated_driver_model.dart';
+import 'package:genesis/models/service_remainder_model.dart';
 
 class VehicleModel {
   final String? id;
@@ -9,12 +10,16 @@ class VehicleModel {
   final String carModel;
   double fuelLevel;
   final double fuelRatio;
+  final double emptyRatio;
+  final double loadedFuelRatio;
+  final String loadType; //loadType: "Loader" | "Standard"
   final String engineType;
   final String? engineNumber;
   final String? vinNumber;
   final String licencePlate;
   final PopulatedDriverModel? driver;
   final List<DeductionItem> insurances;
+  final List<ServiceRemainderModel> serviceReminders;
   LicenceModel? licence;
 
   VehicleModel({
@@ -28,6 +33,10 @@ class VehicleModel {
     required this.fuelRatio,
     required this.insurances,
     required this.engineType,
+    required this.serviceReminders,
+    required this.emptyRatio,
+    required this.loadType,
+    required this.loadedFuelRatio,
     this.engineNumber,
     this.vinNumber,
     required this.licencePlate,
@@ -54,6 +63,11 @@ class VehicleModel {
   factory VehicleModel.fromJSON(dynamic data) {
     return VehicleModel(
       id: data['_id'],
+      serviceReminders:
+          (data['serviceReminders'] as List?)
+              ?.map((e) => ServiceRemainderModel.fromJSON(e))
+              .toList() ??
+          [],
       licence: data['licence'] != null
           ? LicenceModel.fromJSON(data['licence'])
           : null,
@@ -75,6 +89,9 @@ class VehicleModel {
       usage: (data['usage'] as num?)?.toDouble() ?? 0,
       fuelLevel: (data['fuelLevel'] as num?)?.toDouble() ?? 0,
       fuelRatio: (data['fuelRatio'] as num?)?.toDouble() ?? 0.0,
+      emptyRatio: (data['emptyRatio'] as num?)?.toDouble() ?? 0.0,
+      loadType: data['loadType'] ?? 'Standard',
+      loadedFuelRatio: (data['loadedFuelRatio'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

@@ -44,6 +44,19 @@ class OtherExpense {
   }
 }
 
+class Tolgates {
+  final String name;
+  final double amount;
+
+  Tolgates({required this.name, required this.amount});
+  factory Tolgates.fromJSON(data) {
+    return Tolgates(
+      name: data['name'],
+      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
 class TripModel {
   String status;
   final String id;
@@ -62,6 +75,8 @@ class TripModel {
   final String destination;
   final DateTime? startTime;
   final double? endFuelLevel;
+  final DateTime? startedAt;
+  final DateTime? finishedAt;
   final double? startFuelLevel;
   final DateTime? estimatedEndTime;
   final CurrentVehicleModel vehicle;
@@ -78,6 +93,7 @@ class TripModel {
   final String? portOfEntry;
   final List<OtherExpense> otherExpenses;
   final List<Destinations> destinations;
+  final List<Tolgates> tollgates;
   TripModel({
     required this.notes,
     required this.driver,
@@ -108,6 +124,9 @@ class TripModel {
     required this.receiver,
     required this.initiater,
     required this.tripType,
+    required this.startedAt,
+    required this.finishedAt,
+    required this.tollgates,
     this.portOfExit,
     this.portOfEntry,
     this.otherExpenses = const [],
@@ -154,6 +173,12 @@ class TripModel {
       tripType: json['tripType'] ?? 'Local',
       portOfExit: json['portOfExit'],
       portOfEntry: json['portOfEntry'],
+      startedAt: (json['startedAt'] != null
+          ? DateTime.parse(json['startedAt']).toLocal()
+          : null),
+      finishedAt: (json['finishedAt'] != null
+          ? DateTime.parse(json['startedAt']).toLocal()
+          : null),
       destinations:
           (json['destinations'] as List<dynamic>?)
               ?.map((e) => Destinations.fromJson(e))
@@ -162,6 +187,11 @@ class TripModel {
       otherExpenses:
           (json['otherExpenses'] as List<dynamic>?)
               ?.map((e) => OtherExpense.fromJson(e))
+              .toList() ??
+          [],
+      tollgates:
+          (json['tollgates'] as List<dynamic>?)
+              ?.map((e) => Tolgates.fromJSON(e))
               .toList() ??
           [],
     );

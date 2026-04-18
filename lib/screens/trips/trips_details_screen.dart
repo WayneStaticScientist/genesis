@@ -1,4 +1,3 @@
-import 'package:genesis/shared/utils/trip-util.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -10,6 +9,7 @@ import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/string_utils.dart';
+import 'package:genesis/shared/utils/trip-util.dart';
 import 'package:genesis/navs/admin/fleet_tracking.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:genesis/controllers/user_controller.dart';
@@ -178,8 +178,18 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       _buildDestinationsSection(trip, theme, primaryColor),
                       SizedBox(height: 20),
                     ],
+                    if (trip.tripType == "Cross-Border") ...[
+                      _buildSectionTitle(theme, "Border Information"),
+                      SizedBox(height: 10),
+                      _buildBorderInfoSection(trip, theme),
+                      SizedBox(height: 20),
+                    ],
                     _buildSectionTitle(theme, "Timeline"),
                     SizedBox(height: 10),
+                    if (trip.startedAt != null && trip.finishedAt != null) ...[
+                      _buildRuntimeCard(trip, theme),
+                      SizedBox(height: 20),
+                    ],
                     _buildTimelineCard(trip, theme, primaryColor),
                     SizedBox(height: 20),
                     _buildSectionTitle(
@@ -192,6 +202,18 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       icon: Icons.gas_meter_outlined,
                       value: trip.tolgateExpense,
                     ),
+                    if (trip.tollgates.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _buildSectionTitle(theme, "Tollgates"),
+                      const SizedBox(height: 10),
+                      ...trip.tollgates.map(
+                        (toll) => _buildExpenseCard(
+                          title: toll.name,
+                          icon: Icons.toll,
+                          value: toll.amount,
+                        ),
+                      ),
+                    ],
                     _buildExpenseCard(
                       title: "Food Expense",
                       icon: Icons.food_bank,
@@ -647,6 +669,65 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     );
   }
 
+  Widget _buildRuntimeCard(TripModel trip, ThemeData theme) {
+    final startedAt = trip.startedAt!;
+    final finishedAt = trip.finishedAt!;
+    final durationText = _formatDuration(finishedAt.difference(startedAt));
+
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: GTheme.surface(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Driver Runtime",
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 12),
+          _buildTimeRow(
+            "Started at",
+            GenesisDate.getInformalDate(startedAt),
+            theme,
+          ),
+          SizedBox(height: 12),
+          _buildTimeRow(
+            "Finished at",
+            GenesisDate.getInformalDate(finishedAt),
+            theme,
+          ),
+          SizedBox(height: 12),
+          _buildTimeRow("Duration", durationText, theme),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration.inDays > 0) {
+      final days = duration.inDays;
+      final hours = duration.inHours % 24;
+      final minutes = duration.inMinutes % 60;
+      return "${days}d ${hours}h ${minutes}m";
+    }
+    if (duration.inHours > 0) {
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes % 60;
+      return "${hours}h ${minutes}m";
+    }
+    if (duration.inMinutes > 0) {
+      final minutes = duration.inMinutes;
+      final seconds = duration.inSeconds % 60;
+      return "${minutes}m ${seconds}s";
+    }
+    return "${duration.inSeconds}s";
+  }
+
   Widget _buildTimeRow(String label, String time, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -928,6 +1009,82 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       title: title.text(style: TextStyle(fontSize: 12)),
       leading: Icon(icon),
       subtitle: NumberUtils.formatCurrency(value).text(),
+    );
+  }
+
+  Widget _buildBorderInfoSection(TripModel trip, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.primary.withAlpha(50)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.exit_to_app,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Port of Exit",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      trip.portOfExit ?? "Not specified",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(Icons.login, color: theme.colorScheme.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Port of Entry",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      trip.portOfEntry ?? "Not specified",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

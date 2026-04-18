@@ -80,8 +80,11 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
             ).padding(const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
           ),
           SliverToBoxAdapter(child: _buildQuickActions(context)),
+          SliverToBoxAdapter(child: _buildTotalsSection(context)),
 
           SliverToBoxAdapter(child: _buildDocumentSection(context)),
+          if (widget.vehicle.serviceReminders.isNotEmpty)
+            SliverToBoxAdapter(child: _buildServiceRemindersSection(context)),
           SliverToBoxAdapter(
             child:
                 FootNote(
@@ -361,6 +364,142 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
     );
   }
 
+  Widget _buildTotalsSection(BuildContext context) {
+    return Obx(() {
+      if (_statsController.fetchingUserTripStatus.value ||
+          _statsController.vehicleTripStats.value == null) {
+        return const SizedBox.shrink();
+      }
+
+      final stats = _statsController.vehicleTripStats.value!;
+      final fuelConsumption = _calculateFuelConsumption(stats.totalMileage);
+      final ratioLabel = widget.vehicle.loadType.toLowerCase() == 'loader'
+          ? ((widget.vehicle.emptyRatio + widget.vehicle.loadedFuelRatio) / 2)
+                .toStringAsFixed(2)
+          : widget.vehicle.fuelRatio.toStringAsFixed(2);
+      final ratioText = widget.vehicle.loadType.toLowerCase() == 'loader'
+          ? 'Avg ratio $ratioLabel L/km'
+          : 'Ratio $ratioLabel L/km';
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: GTheme.emmense(context),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.withAlpha(30)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.dashboard_customize,
+                    color: GTheme.primary(context),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Vehicle Performance',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTotalsCard(
+                      title: 'Total Mileage',
+                      value:
+                          '${NumberUtils.formatNumber(stats.totalMileage)} km',
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildTotalsCard(
+                      title: 'Total Hours',
+                      value: '${stats.totalHours} h',
+                      color: Colors.purple,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildTotalsCard(
+                title: 'Estimated Fuel Use',
+                value: '${NumberUtils.formatNumber(fuelConsumption)} L',
+                color: Colors.green,
+                subtitle: ratioText,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  double _calculateFuelConsumption(double mileage) {
+    if (widget.vehicle.loadType.toLowerCase() == 'loader') {
+      final avgRatio =
+          (widget.vehicle.emptyRatio + widget.vehicle.loadedFuelRatio) / 2;
+      return mileage * avgRatio;
+    }
+    return mileage * widget.vehicle.fuelRatio;
+  }
+
+  Widget _buildTotalsCard({
+    required String title,
+    required String value,
+    required Color color,
+    String? subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withAlpha(15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withAlpha(30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // 4. DOCUMENTS (License & Permits)
   Widget _buildDocumentSection(BuildContext context) {
     return Padding(
@@ -429,6 +568,105 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
           ],
         ),
       ).onTap(() => ontap?.call()),
+    );
+  }
+
+  // SERVICE REMINDERS SECTION
+  Widget _buildServiceRemindersSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Service Reminders",
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...widget.vehicle.serviceReminders.map((reminder) {
+            String remainingText;
+            Color statusColor;
+            if (reminder.type == 'mileage') {
+              double remaining = reminder.mileage - widget.vehicle.usage;
+              if (remaining <= 0) {
+                remainingText =
+                    'Overdue by ${NumberUtils.formatNumber(remaining.abs())} km';
+                statusColor = Colors.red;
+              } else {
+                remainingText =
+                    '${NumberUtils.formatNumber(remaining)} km remaining';
+                statusColor = Colors.green;
+              }
+            } else {
+              // date
+              if (reminder.date == null) {
+                remainingText = 'No date set';
+                statusColor = Colors.grey;
+              } else {
+                int daysRemaining = reminder.date!
+                    .difference(DateTime.now())
+                    .inDays;
+                if (daysRemaining < 0) {
+                  remainingText = 'Overdue by ${daysRemaining.abs()} days';
+                  statusColor = Colors.red;
+                } else if (daysRemaining == 0) {
+                  remainingText = 'Due today';
+                  statusColor = Colors.orange;
+                } else {
+                  remainingText = '$daysRemaining days remaining';
+                  statusColor = Colors.green;
+                }
+              }
+            }
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(20),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: statusColor.withAlpha(30)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.build, color: statusColor, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          reminder.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          reminder.type == 'mileage'
+                              ? 'Mileage: ${NumberUtils.formatNumber(reminder.mileage)} km'
+                              : 'Date: ${reminder.date != null ? GenesisDate.getInformalShortDate(reminder.date!) : 'N/A'}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    remainingText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
