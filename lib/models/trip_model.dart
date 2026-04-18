@@ -20,6 +20,10 @@ class Destinations {
           : null,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {'name': name, 'reached': reached, 'location': location?.toJson()};
+  }
 }
 
 class OtherExpense {

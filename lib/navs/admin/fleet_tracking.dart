@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:exui/material.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -6,10 +7,12 @@ import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/models/user_model.dart';
+import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:genesis/screens/chats/chat_screen.dart';
+import 'package:genesis/models/populated_trip_model.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -97,6 +100,106 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     super.dispose();
   }
 
+  Destinations? _getCurrentDestination(PopulatedTripModel trip) {
+    for (var dest in trip.destinations) {
+      if (!dest.reached) {
+        return dest;
+      }
+    }
+    return trip.destinations.isNotEmpty ? trip.destinations.last : null;
+  }
+
+  bool _allDestinationsReached(PopulatedTripModel trip) {
+    return trip.destinations.isEmpty ||
+        trip.destinations.every((dest) => dest.reached);
+  }
+
+  Future<void> _updateTripDestinations(
+    PopulatedTripModel trip,
+    List<Destinations> destinations,
+  ) async {
+    final response = await Get.dialog(
+      AlertDialog(
+        title: "Update".text(),
+        content: "Are you sure to update trip".text(),
+        actions: [
+          "No".text().textButton(onPressed: () => Get.back(result: false)),
+          "Yes".text().textButton(onPressed: () => Get.back(result: true)),
+        ],
+      ),
+    );
+    if (!response) {
+      return;
+    }
+    final success = await _userController.updateTripDestinations(
+      tripId: trip.id,
+      destinations: destinations
+          .map(
+            (dest) => {
+              'name': dest.name,
+              'reached': dest.reached,
+              'location': dest.location?.toJson(),
+            },
+          )
+          .toList(),
+    );
+    if (!success) return;
+    final liveUser = _socketController.liveTrackDriver.value;
+    if (liveUser != null && liveUser.trip?.id == trip.id) {
+      liveUser.trip?.destinations.clear();
+      liveUser.trip?.destinations.addAll(destinations);
+      _socketController.liveTrackDriver.refresh();
+    }
+
+    if (_userController.user.value?.trip?.id == trip.id) {
+      _userController.user.value?.trip?.destinations.clear();
+      _userController.user.value?.trip?.destinations.addAll(destinations);
+      _userController.user.refresh();
+    }
+  }
+
+  Future<void> _markDestinationCompleted(
+    PopulatedTripModel trip,
+    int index,
+  ) async {
+    if (trip.destinations[index].reached) return;
+    final updated = trip.destinations
+        .map(
+          (dest) => Destinations(
+            name: dest.name,
+            reached: dest.reached,
+            location: dest.location,
+          ),
+        )
+        .toList();
+    updated[index] = Destinations(
+      name: updated[index].name,
+      reached: true,
+      location: updated[index].location,
+    );
+    await _updateTripDestinations(trip, updated);
+  }
+
+  Future<void> _reorderDestination(
+    PopulatedTripModel trip,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    if (oldIndex == newIndex) return;
+    final updated = trip.destinations
+        .map(
+          (dest) => Destinations(
+            name: dest.name,
+            reached: dest.reached,
+            location: dest.location,
+          ),
+        )
+        .toList();
+    final item = updated.removeAt(oldIndex);
+    updated.insert(newIndex, item);
+    await _updateTripDestinations(trip, updated);
+  }
+
   bool _automaticTracking = true;
   @override
   Widget build(BuildContext context) {
@@ -107,11 +210,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           // 1. GOOGLE MAP LAYER
           Obx(() {
             final liveData = _socketController.liveTrackModel.value;
-            final destination =
-                _socketController.liveTrackDriver.value?.trip?.location;
-            final origin =
-                _socketController.liveTrackDriver.value?.trip?.locationOrigin;
             final trip = _socketController.liveTrackDriver.value?.trip;
+            final destinations = trip?.destinations ?? [];
+            final destination = trip?.location;
+            final origin = trip?.locationOrigin;
             final hasData = liveData != null;
             final currentPos = hasData
                 ? LatLng(liveData.lat, liveData.lng)
@@ -129,7 +231,34 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
               zoomControlsEnabled: false,
               myLocationButtonEnabled: false,
               markers: {
-                if (destination != null)
+                if (destinations.isNotEmpty)
+                  ...destinations
+                      .asMap()
+                      .entries
+                      .map((entry) {
+                        final idx = entry.key;
+                        final dest = entry.value;
+                        if (dest.location == null) return null;
+                        return Marker(
+                          markerId: MarkerId('destination_$idx'),
+                          position: LatLng(
+                            dest.location!.lat,
+                            dest.location!.lng,
+                          ),
+                          infoWindow: InfoWindow(
+                            title: 'Stop ${idx + 1}: ${dest.name}',
+                            snippet: dest.reached ? 'Reached' : 'Pending',
+                          ),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(
+                            dest.reached
+                                ? BitmapDescriptor.hueGreen
+                                : BitmapDescriptor.hueAzure,
+                          ),
+                        );
+                      })
+                      .whereType<Marker>()
+                      .toSet(),
+                if (destinations.isEmpty && destination != null)
                   Marker(
                     markerId: const MarkerId('green_marker_1'),
                     position: LatLng(destination.lat, destination.lng),
@@ -137,7 +266,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       title: 'destination',
                       snippet: (trip?.destination).empty("not specified"),
                     ),
-                    // THIS IS THE KEY PART:
                     icon: BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueGreen,
                     ),
@@ -150,7 +278,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       title: 'origin',
                       snippet: (trip?.origin).empty("not specified"),
                     ),
-                    // THIS IS THE KEY PART:
                     icon: BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueRed,
                     ),
@@ -161,14 +288,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                     position: currentPos,
                     rotation:
                         liveData.rotation, // Bearing from your GPS data (0-360)
-                    anchor: const Offset(
-                      0.5,
-                      0.5,
-                    ), // Centers the icon so it rotates correctly
-                    icon:
-                        vehicleIcon ??
-                        BitmapDescriptor
-                            .defaultMarker, // Fallback if icon isn't loaded
+                    anchor: const Offset(0.5, 0.5),
+                    icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
                   ),
               },
             );
@@ -426,8 +547,13 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
 
                       // === ANIMATED TRIP BUTTON ===
                       Obx(() {
-                        final user = _userController.user.value;
-                        final isOnTrip = (user?.trip?.status == 'Active');
+                        final currentUser = _userController.user.value;
+                        final isOnTrip =
+                            (currentUser?.trip?.status == 'Active');
+                        final canStop =
+                            currentUser != null &&
+                            currentUser.trip != null &&
+                            _allDestinationsReached(currentUser.trip!);
                         return PingingStopButton(
                           isLoading: _userController.processingTrip.value,
                           isOnTrip: isOnTrip,
@@ -436,9 +562,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               ? _showEndTripDialog()
                               : _showStartTripDialog(),
                         ).visibleIf(
-                          user?.role == 'driver' &&
-                              user?.trip != null &&
-                              user?.trip?.status != "Completed",
+                          currentUser?.role == 'driver' &&
+                              currentUser?.trip != null &&
+                              currentUser?.trip?.status != "Completed" &&
+                              (!isOnTrip || canStop),
                         );
                       }),
                       Obx(() {
@@ -448,10 +575,17 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                             (user.trip?.status == 'Active' ||
                             user.trip?.status == "Completed");
                         return [
+                              if (user.trip?.destinations.isNotEmpty ??
+                                  false) ...[
+                                _buildTripDestinationsSection(user.trip!),
+                                SizedBox(height: 20),
+                              ],
                               ListTile(
-                                title: (user.trip?.destination)
-                                    .empty("No destination Specified")
-                                    .text(),
+                                title:
+                                    (_getCurrentDestination(user.trip!)?.name ??
+                                            user.trip?.destination)
+                                        .empty("No destination Specified")
+                                        .text(),
                                 subtitle: 'Destination'.text(),
                                 leading: Icon(Icons.location_city),
                               ),
@@ -506,6 +640,146 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
         ),
         Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildTripDestinationsSection(PopulatedTripModel trip) {
+    final currentDest = _getCurrentDestination(trip);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        15.gapHeight,
+        Text(
+          "Trip Destinations",
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        ...trip.destinations.asMap().entries.map((entry) {
+          final index = entry.key;
+          final dest = entry.value;
+          final isCurrent = currentDest == dest;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: dest.reached
+                  ? Colors.green.withAlpha(20)
+                  : isCurrent
+                  ? Theme.of(context).colorScheme.primary.withAlpha(20)
+                  : GTheme.surface(context),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: dest.reached
+                    ? Colors.green.withAlpha(120)
+                    : isCurrent
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey.withAlpha(50),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      dest.reached
+                          ? Icons.check_circle
+                          : isCurrent
+                          ? Icons.location_on
+                          : Icons.location_on_outlined,
+                      color: dest.reached
+                          ? Colors.green
+                          : isCurrent
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Stop ${index + 1}",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            dest.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            dest.reached
+                                ? "Reached"
+                                : isCurrent
+                                ? "Current Route"
+                                : "Pending",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: dest.reached
+                                  ? Colors.green
+                                  : isCurrent
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey,
+                            ),
+                          ),
+                          if (dest.location != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              "${dest.location!.lat.toStringAsFixed(4)}, ${dest.location!.lng.toStringAsFixed(4)}",
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        if (!dest.reached)
+                          IconButton(
+                            onPressed: () =>
+                                _markDestinationCompleted(trip, index),
+                            icon: Icon(
+                              Icons.check,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            tooltip: 'Mark completed',
+                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (index > 0)
+                              IconButton(
+                                onPressed: () =>
+                                    _reorderDestination(trip, index, index - 1),
+                                icon: const Icon(Icons.arrow_upward),
+                              ),
+                            if (index < trip.destinations.length - 1)
+                              IconButton(
+                                onPressed: () =>
+                                    _reorderDestination(trip, index, index + 1),
+                                icon: const Icon(Icons.arrow_downward),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ],
     );
   }

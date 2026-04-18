@@ -1,3 +1,4 @@
+import 'package:genesis/shared/utils/trip-util.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -30,6 +31,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   final UserController userController = Get.find<UserController>();
   final _socketController = Get.find<SocketController>();
   bool _isPrinting = false;
+
+  /// Get current destination - first one with reached == false, or last if all are true
+
   @override
   void initState() {
     super.initState();
@@ -170,6 +174,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     SizedBox(height: 10),
                     _buildInfoGrid(trip, theme),
                     SizedBox(height: 20),
+                    if (trip.destinations.isNotEmpty) ...[
+                      _buildDestinationsSection(trip, theme, primaryColor),
+                      SizedBox(height: 20),
+                    ],
                     _buildSectionTitle(theme, "Timeline"),
                     SizedBox(height: 10),
                     _buildTimelineCard(trip, theme, primaryColor),
@@ -312,7 +320,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               .text(),
           SizedBox(height: 5),
           Text(
-            trip.destination,
+            trip.destinations.isNotEmpty
+                ? TripUtils.getCurrentDestination(trip)?.name ??
+                      trip.destination
+                : trip.destination,
             style: theme.textTheme.headlineSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -390,6 +401,151 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             value: trip.vehicle.carModel, // Assuming name exists
             theme: theme,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDestinationsSection(
+    TripModel trip,
+    ThemeData theme,
+    Color primaryColor,
+  ) {
+    final currentDest = TripUtils.getCurrentDestination(trip);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(theme, "Trip Routes (${trip.destinations.length})"),
+        SizedBox(height: 10),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: trip.destinations.length,
+          itemBuilder: (context, index) {
+            final dest = trip.destinations[index];
+            final isCurrentDest = currentDest?.name == dest.name;
+            final isReached = dest.reached;
+
+            return Container(
+              margin: EdgeInsets.only(bottom: 12),
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isCurrentDest
+                    ? primaryColor.withAlpha(30)
+                    : isReached
+                    ? Colors.green.withAlpha(20)
+                    : GTheme.surface(context),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isCurrentDest
+                      ? primaryColor
+                      : isReached
+                      ? Colors.green.withAlpha(100)
+                      : Colors.grey.withAlpha(50),
+                  width: isCurrentDest ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isReached
+                              ? Colors.green
+                              : (isCurrentDest ? primaryColor : Colors.grey),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isReached
+                              ? Icons.check
+                              : (isCurrentDest
+                                    ? Icons.location_pin
+                                    : Icons.location_on_outlined),
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Stop ${index + 1}",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              dest.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isReached)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withAlpha(50),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "Reached",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      else if (isCurrentDest)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withAlpha(50),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "Current",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (dest.location != null) ...[
+                    SizedBox(height: 12),
+                    Text(
+                      "Coordinates",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      "${dest.location!.lat.toStringAsFixed(4)}, ${dest.location!.lng.toStringAsFixed(4)}",
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
         ),
       ],
     );

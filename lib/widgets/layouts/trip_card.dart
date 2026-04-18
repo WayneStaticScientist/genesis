@@ -1,11 +1,12 @@
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
+import 'package:genesis/utils/theme.dart';
 import 'package:genesis/models/trip_model.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/utils/string_utils.dart';
-import 'package:genesis/utils/theme.dart';
+import 'package:genesis/shared/utils/trip-util.dart';
 
 /// --- TRIP CARD COMPONENT ---
 
@@ -130,7 +131,8 @@ class TripCard extends StatelessWidget {
                   _locationRow(
                     Icons.location_on,
                     "Destination",
-                    trip.destination,
+                    TripUtils.getCurrentDestination(trip)?.name ??
+                        trip.destination,
                     Colors.redAccent,
                   ).expanded1,
                 ],

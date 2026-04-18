@@ -289,6 +289,33 @@ class UserController extends GetxController {
     return true;
   }
 
+  Future<bool> updateTripDestinations({
+    required String tripId,
+    required List<Map<String, dynamic>> destinations,
+  }) async {
+    if (processingTrip.value) {
+      Toaster.showError("loading please wait");
+      return false;
+    }
+    processingTrip.value = true;
+    final response = await Net.patch(
+      "/trip/destination/$tripId",
+      data: {"destinations": destinations},
+    );
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    final user = await fetchUser(this.user.value?.id ?? '');
+    if (user != null) {
+      this.user.value = user;
+      this.user.value?.saveUser();
+      this.user.refresh();
+    }
+    return true;
+  }
+
   Future<bool> finalizeTrip({
     required String tripId,
     required String tripAction,

@@ -1,3 +1,5 @@
+import 'package:genesis/models/trip_model.dart';
+
 class UserTripStatsHistory {
   final String id;
   final String status;
@@ -7,6 +9,7 @@ class UserTripStatsHistory {
   final DateTime date;
   final String loadType;
   final double loadWeight;
+  final List<Destinations> destinations;
 
   UserTripStatsHistory({
     required this.id,
@@ -17,10 +20,16 @@ class UserTripStatsHistory {
     required this.date,
     required this.loadType,
     required this.loadWeight,
+    required this.destinations,
   });
   factory UserTripStatsHistory.fromJSON(data) {
     return UserTripStatsHistory(
       id: data['_id'] ?? '',
+      destinations:
+          (data['destinations'] as List<dynamic>?)
+              ?.map((e) => Destinations.fromJson(e))
+              .toList() ??
+          [],
       status: data['status'] ?? '',
       loadType: data['loadType'] ?? '',
       destination: data['destination'] ?? '',

@@ -321,7 +321,7 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
                     children: [
                       _detailRow(
                         "Route",
-                        "${trip.origin} → ${trip.destination}",
+                        "${trip.origin} → ${trip.destinations.isNotEmpty ? trip.destinations.last.name : trip.destination}",
                       ),
                       const SizedBox(height: 8),
                       _detailRow("Load", trip.loadType),

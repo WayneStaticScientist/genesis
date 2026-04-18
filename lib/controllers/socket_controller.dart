@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:developer';
 import 'package:exui/exui.dart';
 import 'package:get/get.dart';
 import 'package:genesis/utils/toast.dart';
@@ -99,9 +98,6 @@ class SocketController extends GetxController {
   StreamSubscription<Position>? _positionStreamSubscription;
   Future<void> _checkRouteConfigurations() async {
     final user = User.fromStorage();
-    if (user?.role == "driver") {
-      liveTrackDriver.value = user;
-    }
     if (_positionStreamSubscription != null && user?.trip == null) {
       _positionStreamSubscription?.cancel();
       _positionStreamSubscription = null;
@@ -222,11 +218,10 @@ class SocketController extends GetxController {
       return null;
     }
     final vehicle = VehicleModel.fromJSON(response.body);
-    log("found vehicle with driver ${vehicle.driver?.toJSON()}");
     if (update) {
       currentVehicle.value = vehicle;
-      findDriver(vehicle.driver?.id ?? '');
     }
+    findDriver(vehicle.driver?.id ?? '');
     return vehicle;
   }
 
@@ -255,7 +250,6 @@ class SocketController extends GetxController {
   }
 
   void findDriver(String id) async {
-    log("findding driver with id $id");
     if (id.isEmpty) return;
     final response = await Net.get("/user/$id");
     if (response.hasError) {

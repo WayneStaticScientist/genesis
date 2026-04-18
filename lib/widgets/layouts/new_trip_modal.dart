@@ -907,14 +907,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
       );
       return;
     }
-    final destinationName = _destinationNameController.text.trim();
-    if (destinationName.isEmpty) {
-      Toaster.showErrorTop(
-        "Origin City required",
-        "Please enter origin name before confirming.",
-      );
-      return;
-    }
+
     // Validate destinations
     List<Map<String, dynamic>> destinations = [];
     for (int i = 0; i < destinationNameControllers.length; i++) {
