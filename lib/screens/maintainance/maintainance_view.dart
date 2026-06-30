@@ -298,6 +298,8 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                         ],
                       ),
                     ],
+                    const SizedBox(height: 32),
+                    _buildCommentsSection(maintenance),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -519,6 +521,181 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
       default:
         return Colors.blueAccent;
     }
+  }
+
+  Widget _buildCommentsSection(MaintainanceModel maintenance) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Comments & Updates",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _showAddCommentDialog(),
+              icon: const Icon(Icons.add_comment_outlined, size: 18),
+              label: const Text("Add Comment"),
+              style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (maintenance.comments.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(
+              child: Text(
+                "No comments yet",
+                style: TextStyle(color: Colors.white38, fontSize: 13),
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: maintenance.comments.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final comment = maintenance.comments[index];
+              return _buildCommentItem(comment);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCommentItem(MaintenanceComment comment) {
+    final authorName = comment.author is Map
+        ? "${comment.author['firstName']} ${comment.author['lastName']}"
+        : "System User";
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withAlpha(10)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: Colors.blueAccent.withAlpha(50),
+                child: const Icon(Icons.person, size: 14, color: Colors.blueAccent),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                authorName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                "${comment.createdAt.day}/${comment.createdAt.month} ${comment.createdAt.hour}:${comment.createdAt.minute}",
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            comment.text,
+            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddCommentDialog() {
+    final TextEditingController commentController = TextEditingController();
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E293B),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Add Comment",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: commentController,
+              maxLines: 4,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Enter your update or comment here...",
+                hintStyle: const TextStyle(color: Colors.white38),
+                filled: true,
+                fillColor: const Color(0xFF0F172A),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (commentController.text.trim().isEmpty) return;
+                  final success = await _maintainanceController.addComment(
+                    widget.maintainance_id,
+                    commentController.text.trim(),
+                  );
+                  if (success) {
+                    Get.back();
+                    Toaster.showSuccess("Comment added successfully");
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text("Post Comment", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 
   void _handleMaintainanceCompleted() async {

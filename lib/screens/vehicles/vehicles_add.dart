@@ -34,6 +34,9 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
   double _fuelRatio = 0.0;
   double _emptyFuelRatio = 0.0;
   double _loadedFuelRatio = 0.0;
+  double _fullLoad = 0.0;
+  double _mileage = 0.0;
+  String _trackerId = "";
   List<Map<String, dynamic>> _serviceReminders = [];
 
   void _submit() async {
@@ -59,13 +62,12 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         "vinNumber": _vinNumber.trim(),
         "licencePlate": _plate,
         "loadType": _vehicleLoadType,
-        "fuelRatio": _vehicleLoadType == "Loader"
-            ? _loadedFuelRatio
-            : _fuelRatio,
-        if (_vehicleLoadType == "Loader") ...{
-          "emptyRatio": _emptyFuelRatio,
-          "loadedFuelRatio": _loadedFuelRatio,
-        },
+        "fuelRatio": _fuelRatio,
+        "emptyRatio": _emptyFuelRatio,
+        "loadedFuelRatio": _loadedFuelRatio,
+        "fullLoad": _fullLoad,
+        "mileage": _mileage,
+        "trackerId": _trackerId.trim(),
         "serviceReminders": _serviceReminders,
       };
       final response = await _vehicleController.registerVehicle(
@@ -172,6 +174,13 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                 validator: (val) => val!.isEmpty ? "Required" : null,
               ),
               _buildField(
+                label: "Licence Plate",
+                hint: "Enter licence plate",
+                icon: Icons.numbers,
+                onSaved: (val) => _plate = val ?? "",
+                validator: (val) => val!.isEmpty ? "Required" : null,
+              ),
+              _buildField(
                 label: "Engine Number",
                 hint: "Enter engine number",
                 icon: Icons.settings_input_component,
@@ -182,6 +191,19 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                 hint: "Enter VIN number",
                 icon: Icons.pin,
                 onSaved: (val) => _vinNumber = val ?? "",
+              ),
+              _buildField(
+                label: "Current Mileage",
+                hint: "Enter current mileage",
+                icon: Icons.speed,
+                keyboardType: TextInputType.number,
+                onSaved: (val) => _mileage = double.tryParse(val ?? "0") ?? 0.0,
+              ),
+              _buildField(
+                label: "Tracker ID / IMEI (Optional)",
+                hint: "Enter hardware GPS tracker ID",
+                icon: Icons.satellite_alt_outlined,
+                onSaved: (val) => _trackerId = val ?? "",
               ),
 
               const SizedBox(height: 24),
@@ -200,33 +222,40 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                 onChanged: (val) => setState(() => _type = val!),
               ),
               const SizedBox(height: 16),
-              if (_vehicleLoadType != "Loader")
-                _buildField(
-                  label: "FuelRatio per KM",
-                  hint: "0.00",
-                  icon: Icons.gas_meter,
-                  keyboardType: TextInputType.number,
-                  onSaved: (val) =>
-                      _fuelRatio = double.tryParse(val ?? "0") ?? 0.0,
-                )
-              else ...[
-                _buildField(
-                  label: "Empty Ratio per KM",
-                  hint: "0.00",
-                  icon: Icons.airline_stops,
-                  keyboardType: TextInputType.number,
-                  onSaved: (val) =>
-                      _emptyFuelRatio = double.tryParse(val ?? "0") ?? 0.0,
-                ),
-                _buildField(
-                  label: "Loaded Ratio per KM",
-                  hint: "0.00",
-                  icon: Icons.local_shipping,
-                  keyboardType: TextInputType.number,
-                  onSaved: (val) =>
-                      _loadedFuelRatio = double.tryParse(val ?? "0") ?? 0.0,
-                ),
-              ],
+              _buildField(
+                label: "Base FuelRatio (L/KM)",
+                hint: "0.00",
+                icon: Icons.gas_meter,
+                keyboardType: TextInputType.number,
+                onSaved: (val) =>
+                    _fuelRatio = double.tryParse(val ?? "0") ?? 0.0,
+              ),
+              const SizedBox(height: 16),
+              _sectionHeader("Advanced Fuel Metrics (Optional)"),
+              _buildField(
+                label: "Empty Ratio (L/KM)",
+                hint: "0.00",
+                icon: Icons.airline_stops,
+                keyboardType: TextInputType.number,
+                onSaved: (val) =>
+                    _emptyFuelRatio = double.tryParse(val ?? "0") ?? 0.0,
+              ),
+              _buildField(
+                label: "Loaded Ratio (L/KM)",
+                hint: "0.00",
+                icon: Icons.local_shipping,
+                keyboardType: TextInputType.number,
+                onSaved: (val) =>
+                    _loadedFuelRatio = double.tryParse(val ?? "0") ?? 0.0,
+              ),
+              _buildField(
+                label: "Full Load Capacity (KG)",
+                hint: "e.g. 30000",
+                icon: Icons.monitor_weight_outlined,
+                keyboardType: TextInputType.number,
+                onSaved: (val) =>
+                    _fullLoad = double.tryParse(val ?? "0") ?? 0.0,
+              ),
 
               const SizedBox(height: 16),
               _buildDropdown(

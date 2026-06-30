@@ -123,36 +123,6 @@ class _AdminAddDriverState extends State<AdminAddDriver> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Placeholder for Profile Photo Upload
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      height: 90,
-                      width: 90,
-                      decoration: BoxDecoration(
-                        color: GTheme.reverse(context).withAlpha(25),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: GTheme.reverse(context).withAlpha(25),
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.add_a_photo_outlined,
-                        size: 32,
-                        color: GTheme.reverse(context).withAlpha(128),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    "Upload Driver ID Photo".text(
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
               _sectionHeader("Onboarding Details"),
               _buildField(
                 label: "Full Name",

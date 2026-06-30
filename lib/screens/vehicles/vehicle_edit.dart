@@ -38,6 +38,9 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   late double _fuelRation;
   late double _emptyFuelRatio;
   late double _loadedFuelRatio;
+  late double _fullLoad;
+  late double _mileage;
+  late String _trackerId;
   late DateTime? expiryDate = widget.vehicle.licence?.expiryDate;
   late bool _initialUserInitiliazed = widget.vehicle.driver == null;
   // Added state for driver
@@ -67,10 +70,13 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     _selectedType = widget.vehicle.engineType.isEmpty
         ? VehicleUtlis.engineTypes[0]
         : widget.vehicle.engineType;
-    _selectedLoadType = "Standard";
+    _selectedLoadType = widget.vehicle.loadType;
     _fuelRation = widget.vehicle.fuelRatio;
-    _emptyFuelRatio = 0.0;
-    _loadedFuelRatio = widget.vehicle.fuelRatio;
+    _emptyFuelRatio = widget.vehicle.emptyRatio;
+    _loadedFuelRatio = widget.vehicle.loadedFuelRatio;
+    _fullLoad = widget.vehicle.fullLoad;
+    _mileage = widget.vehicle.mileage;
+    _trackerId = widget.vehicle.trackerId ?? '';
     _serviceReminders = widget.vehicle.serviceReminders
         .map((e) => e.toJson())
         .toList();
@@ -110,13 +116,12 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
       "status": _selectedStatus,
       "engineType": _selectedType,
       "loadType": _selectedLoadType,
-      "fuelRatio": _selectedLoadType == "Loader"
-          ? _loadedFuelRatio
-          : _fuelRation,
-      if (_selectedLoadType == "Loader") ...{
-        "emptyRatio": _emptyFuelRatio,
-        "loadedFuelRatio": _loadedFuelRatio,
-      },
+      "fuelRatio": _fuelRation,
+      "emptyRatio": _emptyFuelRatio,
+      "loadedFuelRatio": _loadedFuelRatio,
+      "fullLoad": _fullLoad,
+      "mileage": _mileage,
+      "trackerId": _trackerId.trim(),
       "serviceReminders": _serviceReminders,
       // Add driver ID if selected
       "insurances": widget.vehicle.insurances.map(((e) => e.toJson())).toList(),
@@ -316,6 +321,19 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
               label: "Chassis (VIN) Number",
               icon: Icons.pin,
             ),
+            _buildTextField(
+              label: "Current Mileage",
+              initialValue: _mileage.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (val) => _mileage = double.tryParse(val) ?? 0.0,
+              icon: Icons.speed,
+            ),
+            _buildTextField(
+              label: "Tracker ID / IMEI (Optional)",
+              initialValue: _trackerId,
+              onChanged: (val) => _trackerId = val,
+              icon: Icons.satellite_alt_outlined,
+            ),
 
             const SizedBox(height: 16),
             _buildLabel("Fleet Management"),
@@ -400,32 +418,37 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
               ],
             ),
             const SizedBox(height: 16),
-            if (_selectedLoadType != "Loader")
-              _buildTextField(
-                label: "Fuel Ratio per KM",
-                initialValue: _fuelRation.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (val) => _fuelRation = double.tryParse(val) ?? 0.0,
-                icon: Icons.attach_money,
-              )
-            else ...[
-              _buildTextField(
-                label: "Empty Ratio per KM",
-                initialValue: _emptyFuelRatio.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (val) =>
-                    _emptyFuelRatio = double.tryParse(val) ?? 0.0,
-                icon: Icons.airline_stops,
-              ),
-              _buildTextField(
-                label: "Loaded Ratio per KM",
-                initialValue: _loadedFuelRatio.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (val) =>
-                    _loadedFuelRatio = double.tryParse(val) ?? 0.0,
-                icon: Icons.local_shipping,
-              ),
-            ],
+            _buildTextField(
+              label: "Base Fuel Ratio (L/KM)",
+              initialValue: _fuelRation.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (val) => _fuelRation = double.tryParse(val) ?? 0.0,
+              icon: Icons.gas_meter,
+            ),
+            const SizedBox(height: 16),
+            _buildLabel("Advanced Fuel Metrics (Optional)"),
+            _buildTextField(
+              label: "Empty Ratio (L/KM)",
+              initialValue: _emptyFuelRatio.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (val) => _emptyFuelRatio = double.tryParse(val) ?? 0.0,
+              icon: Icons.airline_stops,
+            ),
+            _buildTextField(
+              label: "Loaded Ratio (L/KM)",
+              initialValue: _loadedFuelRatio.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (val) =>
+                  _loadedFuelRatio = double.tryParse(val) ?? 0.0,
+              icon: Icons.local_shipping,
+            ),
+            _buildTextField(
+              label: "Full Load Capacity (KG)",
+              initialValue: _fullLoad.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (val) => _fullLoad = double.tryParse(val) ?? 0.0,
+              icon: Icons.monitor_weight_outlined,
+            ),
             const SizedBox(height: 16),
             _buildLabel("Licence Information"),
             _buildTextField(
@@ -506,7 +529,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {}, // Implementation for deletion
+                onPressed: _deleteVehicle,
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
                 label: "Decommission Vehicle".text(
                   style: const TextStyle(color: Colors.red),
@@ -524,6 +547,38 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
         ),
       ),
     );
+  }
+
+  void _deleteVehicle() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Vehicle"),
+        content: const Text(
+          "Are you sure you want to delete this vehicle? This action cannot be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final success = await _vehicleController.deleteVehicle(
+        widget.vehicle.id ?? '',
+      );
+      if (success) {
+        Get.back();
+        Toaster.showSuccess("Vehicle deleted successfully");
+      }
+    }
   }
 
   Widget _buildLabel(String text) {

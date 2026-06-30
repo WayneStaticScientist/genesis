@@ -52,7 +52,19 @@ class _AssignTripModalState extends State<AssignTripModal> {
   // Multi-destinations
   List<TextEditingController> destinationNameControllers = [];
   List<TextEditingController> destinationCoordControllers = [];
+  List<TextEditingController> destinationDistanceControllers = [];
+  List<TextEditingController> destinationOffloadControllers = [];
+  List<TextEditingController> destinationRevenueControllers = [];
+  List<TextEditingController> destinationReceiverControllers = [];
   List<Rx<LatLng?>> destinationCoordsList = [];
+
+  void _calculateTotalRevenue() {
+    double total = 0;
+    for (var controller in destinationRevenueControllers) {
+      total += double.tryParse(controller.text) ?? 0;
+    }
+    _tripPaymentController.text = total.toStringAsFixed(2);
+  }
 
   // Tollgate entries
   List<TextEditingController> tollgateNameControllers = [];
@@ -102,6 +114,18 @@ class _AssignTripModalState extends State<AssignTripModal> {
     for (var controller in destinationCoordControllers) {
       controller.dispose();
     }
+    for (var controller in destinationDistanceControllers) {
+      controller.dispose();
+    }
+    for (var controller in destinationOffloadControllers) {
+      controller.dispose();
+    }
+    for (var controller in destinationRevenueControllers) {
+      controller.dispose();
+    }
+    for (var controller in destinationReceiverControllers) {
+      controller.dispose();
+    }
     for (var controller in tollgateNameControllers) {
       controller.dispose();
     }
@@ -115,6 +139,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
     setState(() {
       destinationNameControllers.add(TextEditingController());
       destinationCoordControllers.add(TextEditingController());
+      destinationDistanceControllers.add(TextEditingController(text: '0'));
+      destinationOffloadControllers.add(TextEditingController(text: '0'));
+      
+      final revenueController = TextEditingController(text: '0');
+      revenueController.addListener(_calculateTotalRevenue);
+      destinationRevenueControllers.add(revenueController);
+
+      destinationReceiverControllers.add(TextEditingController());
       destinationCoordsList.add(Rx<LatLng?>(null));
     });
   }
@@ -130,9 +162,20 @@ class _AssignTripModalState extends State<AssignTripModal> {
     setState(() {
       destinationNameControllers[index].dispose();
       destinationCoordControllers[index].dispose();
+      destinationDistanceControllers[index].dispose();
+      destinationOffloadControllers[index].dispose();
+      destinationRevenueControllers[index].removeListener(_calculateTotalRevenue);
+      destinationRevenueControllers[index].dispose();
+
       destinationNameControllers.removeAt(index);
       destinationCoordControllers.removeAt(index);
+      destinationDistanceControllers.removeAt(index);
+      destinationOffloadControllers.removeAt(index);
+      destinationRevenueControllers.removeAt(index);
+      destinationReceiverControllers.removeAt(index);
       destinationCoordsList.removeAt(index);
+
+      _calculateTotalRevenue();
     });
   }
 
@@ -307,7 +350,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
 
                 12.gapHeight,
                 const SizedBox(height: 20),
-                _buildInputLabel("ORIGIN"),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: originController,
                   decoration: _modernInputDecoration(Icons.map, "Enter Origin"),
@@ -331,26 +374,15 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 ),
                 const SizedBox(height: 20),
 
-                // Destination Input
-                _buildInputLabel("DESTINATION"),
-                TextFormField(
-                  controller: _receiverController,
-                  decoration: _modernInputDecoration(
-                    Icons.commute_sharp,
-                    "Company Name/Client",
-                  ),
-                ),
-                12.gapHeight,
                 _buildMultiDestinationsSection(),
                 12.gapHeight,
                 _buildTollgatesSection(),
                 12.gapHeight,
-                _buildInputLabel("Distance In KM"),
                 TextFormField(
                   controller: _distanceInKmController,
                   decoration: _modernInputDecoration(
                     Icons.edit_road_sharp,
-                    "Distance in Km",
+                    "Total Distance in Km",
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -365,34 +397,22 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildInputLabel("LOAD TYPE"),
-                          TextFormField(
-                            controller: _loadTypeController,
-                            decoration: _modernInputDecoration(
-                              Icons.local_shipping,
-                              "Type",
-                            ),
-                          ),
-                        ],
+                      child: TextFormField(
+                        controller: _loadTypeController,
+                        decoration: _modernInputDecoration(
+                          Icons.local_shipping,
+                          "Load Type",
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildInputLabel("WEIGHT (KG)"),
-                          TextFormField(
-                            controller: _loadWeightController,
-                            decoration: _modernInputDecoration(
-                              Icons.scale,
-                              "kgs",
-                            ),
-                          ),
-                        ],
+                      child: TextFormField(
+                        controller: _loadWeightController,
+                        decoration: _modernInputDecoration(
+                          Icons.scale,
+                          "Total Load Weight (kg)",
+                        ),
                       ),
                     ),
                   ],
@@ -772,16 +792,19 @@ class _AssignTripModalState extends State<AssignTripModal> {
             width: 120,
             child: TextFormField(
               controller: _tripPaymentController,
+              readOnly: true,
               style: TextStyle(
                 color: Colors.green[800],
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
               ),
               decoration: InputDecoration(
-                label: "Enter Amount".text(),
+                labelText: "Trip Payment",
+                labelStyle: TextStyle(color: Colors.green[800], fontSize: 14),
                 prefixText: "\$ ",
                 prefixStyle: TextStyle(color: Colors.green[800], fontSize: 24),
                 border: InputBorder.none,
+                floatingLabelBehavior: FloatingLabelBehavior.auto,
               ),
               keyboardType: TextInputType.number,
             ),
@@ -823,15 +846,66 @@ class _AssignTripModalState extends State<AssignTripModal> {
                         controller: destinationNameControllers[index],
                         decoration: _modernInputDecoration(
                           Icons.map,
-                          "Enter destination ${index + 1} city/depot",
+                          "Dest ${index + 1} City/Depot",
+                        ),
+                      ),
+                    ),
+                    12.gapWidth,
+                    Expanded(
+                      child: TextFormField(
+                        controller: destinationReceiverControllers[index],
+                        decoration: _modernInputDecoration(
+                          Icons.business_outlined,
+                          "Client/Company",
                         ),
                       ),
                     ),
                     if (destinationNameControllers.length > 1)
                       IconButton(
-                        icon: Icon(Icons.remove_circle, color: Colors.red),
+                        icon: const Icon(Icons.remove_circle, color: Colors.red),
                         onPressed: () => _removeDestination(index),
                       ),
+                  ],
+                ),
+                12.gapHeight,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: destinationDistanceControllers[index],
+                        keyboardType: TextInputType.number,
+                        decoration: _modernInputDecoration(
+                          Icons.speed,
+                          "Dist (km) ${index == 0 ? 'from Origin' : 'from Dest ${index}'}",
+                        ),
+                      ),
+                    ),
+                    12.gapWidth,
+                    Expanded(
+                      child: TextFormField(
+                        controller: destinationOffloadControllers[index],
+                        keyboardType: TextInputType.number,
+                        decoration: _modernInputDecoration(
+                          Icons.monitor_weight_outlined,
+                          "Offload (kg)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                12.gapHeight,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: destinationRevenueControllers[index],
+                        keyboardType: TextInputType.number,
+                        decoration: _modernInputDecoration(
+                          Icons.attach_money,
+                          "Route Revenue",
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 12.gapHeight,
@@ -850,19 +924,32 @@ class _AssignTripModalState extends State<AssignTripModal> {
                         ),
                       ),
                 ),
-                if (index < destinationNameControllers.length - 1) 12.gapHeight,
+                16.gapHeight,
+                if (index < destinationNameControllers.length - 1)
+                  const Divider(height: 32),
               ],
             );
           },
         ),
         12.gapHeight,
-        ElevatedButton.icon(
-          onPressed: _addDestination,
-          icon: Icon(Icons.add),
-          label: Text("Add Another Destination"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
+        16.gapHeight,
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: _addDestination,
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: const Text(
+              "Add Another Destination",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Colors.blue.withAlpha(30),
+              foregroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
           ),
         ),
       ],
@@ -936,20 +1023,29 @@ class _AssignTripModalState extends State<AssignTripModal> {
     }
   }
 
-  InputDecoration _modernInputDecoration(IconData icon, String hint) {
+  InputDecoration _modernInputDecoration(IconData icon, String label) {
+    final theme = Theme.of(context);
     return InputDecoration(
       filled: true,
-      fillColor: GTheme.emmense(context),
-      prefixIcon: Icon(icon, color: Colors.grey[600], size: 20),
-      hintText: hint,
-      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+      fillColor: GTheme.reverse(context).withAlpha(15),
+      prefixIcon: Icon(icon, color: theme.colorScheme.primary, size: 20),
+      labelText: label,
+      labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+      hintText: label,
+      hintStyle: TextStyle(fontSize: 14, color: Colors.grey[500]),
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
+      ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: GTheme.emmense(context)),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: GTheme.color(context), width: 1.5),
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
       ),
     );
   }
@@ -1000,6 +1096,13 @@ class _AssignTripModalState extends State<AssignTripModal> {
       }
       destinations.add({
         "name": name,
+        "distance":
+            double.tryParse(destinationDistanceControllers[i].text.trim()) ?? 0,
+        "offloadWeight":
+            double.tryParse(destinationOffloadControllers[i].text.trim()) ?? 0,
+        "revenue":
+            double.tryParse(destinationRevenueControllers[i].text.trim()) ?? 0,
+        "receiver": destinationReceiverControllers[i].text.trim(),
         "location": destinationCoordsList[i].value != null
             ? {
                 "lng": destinationCoordsList[i].value!.longitude,

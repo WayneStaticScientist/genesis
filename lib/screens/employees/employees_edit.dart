@@ -58,6 +58,12 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
           "Edit Employee",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(LineIcons.trash, color: Colors.red),
+            onPressed: _deleteEmployee,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -386,6 +392,36 @@ class _EmployeesEditScreenState extends State<EmployeesEditScreen> {
         passportExpiryController.text =
             "${picked.day}/${picked.month}/${picked.year}";
       });
+    }
+  }
+
+  void _deleteEmployee() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Employee"),
+        content: const Text(
+          "Are you sure you want to delete this employee? This action cannot be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final success = await _userController.deleteEmployee(widget.user.id);
+      if (success) {
+        Get.back();
+        Toaster.showSuccess("Employee deleted successfully");
+      }
     }
   }
 }

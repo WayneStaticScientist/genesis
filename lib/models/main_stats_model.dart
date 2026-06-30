@@ -29,6 +29,13 @@ class MainStatsModel {
   double finesExpense;
   double extrasExpense;
   double truckShopExpense;
+  double grossPayroll;
+  int? payrollCount;
+  int? servicesDue;
+  int? servicesAlmostDue;
+  int? tripsFinalized;
+  int? tripsActive;
+  int? tripsPending;
   MainStatsModel({
     required this.idleVehicles,
     required this.activeVehicles,
@@ -39,13 +46,19 @@ class MainStatsModel {
     required this.totalVehiclesInSystem,
     required this.totalMaintainanceCost,
     required this.numberOfVehiclesWithMaintenance,
-
     required this.fuelExpense,
     required this.foodExpense,
     required this.tolgateExpense,
     required this.finesExpense,
     required this.extrasExpense,
     required this.truckShopExpense,
+    required this.grossPayroll,
+    this.payrollCount,
+    this.servicesDue,
+    this.servicesAlmostDue,
+    this.tripsFinalized,
+    this.tripsActive,
+    this.tripsPending,
   });
   factory MainStatsModel.fromJson(Map<String, dynamic> json) {
     return MainStatsModel(
@@ -60,13 +73,19 @@ class MainStatsModel {
           (json['totalMaintenanceCosts'] as num?)?.toDouble() ?? 0,
       numberOfVehiclesWithMaintenance:
           json['numberOfVehiclesWithMaintenance'] ?? 0,
-
       fuelExpense: (json['fuelExpense'] as num?)?.toDouble() ?? 0,
       foodExpense: (json['foodExpense'] as num?)?.toDouble() ?? 0,
       tolgateExpense: (json['tolgateExpense'] as num?)?.toDouble() ?? 0,
       finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
       extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
       truckShopExpense: (json['truckShopExpense'] as num?)?.toDouble() ?? 0,
+      grossPayroll: (json['grossPayroll'] as num?)?.toDouble() ?? 0,
+      payrollCount: json['payrollCount'] ?? 0,
+      servicesDue: json['servicesDue'] ?? 0,
+      servicesAlmostDue: json['servicesAlmostDue'] ?? 0,
+      tripsFinalized: json['tripsFinalized'] ?? 0,
+      tripsActive: json['tripsActive'] ?? 0,
+      tripsPending: json['tripsPending'] ?? 0,
     );
   }
 }

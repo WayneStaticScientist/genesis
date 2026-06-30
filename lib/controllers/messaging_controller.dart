@@ -97,7 +97,13 @@ class MessagingController extends GetxController {
   }
 
   RxBool sendingMessage = RxBool(false);
-  Future<bool> sendMessage(String content, User receiver) async {
+  Future<bool> sendMessage(
+    String content,
+    User receiver, {
+    String? fileUrl,
+    String? fileName,
+    String? fileType,
+  }) async {
     final isar = IsarStatic.isar;
     if (isar == null) {
       Toaster.showError("Database not initialized");
@@ -108,7 +114,7 @@ class MessagingController extends GetxController {
     if (me == null) return false;
     final index = chatUsers.indexOf((user) => user.id == receiver.id);
     if (index > 0) {
-      chatUsers[index].lastMessage = content;
+      chatUsers[index].lastMessage = content.isEmpty ? 'File attachment' : content;
       chatUsers.refresh();
     }
     final newMessage = MesssageModel(
@@ -117,6 +123,9 @@ class MessagingController extends GetxController {
       receiverId: receiver.id,
       timestamp: DateTime.now(),
       id: isar.messsageModels.autoIncrement(),
+      fileUrl: fileUrl,
+      fileName: fileName,
+      fileType: fileType,
     );
     final response = await Net.post("/chat", data: newMessage.toJSON());
     if (response.hasError) {

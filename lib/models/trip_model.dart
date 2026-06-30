@@ -5,16 +5,33 @@ class Destinations {
   final String name;
   final bool reached;
   final PopulatedLocationModel? location;
+  final double distance;
+  final double offloadWeight;
+  final double revenue;
+  final String receiver;
+  final DateTime? reachedAt;
 
   Destinations({
     required this.name,
     required this.reached,
     required this.location,
+    this.distance = 0.0,
+    this.offloadWeight = 0.0,
+    this.revenue = 0.0,
+    this.receiver = '',
+    this.reachedAt,
   });
   factory Destinations.fromJson(data) {
     return Destinations(
       name: data['name'] ?? '',
       reached: data['reached'] ?? false,
+      distance: (data['distance'] as num?)?.toDouble() ?? 0.0,
+      offloadWeight: (data['offloadWeight'] as num?)?.toDouble() ?? 0.0,
+      revenue: (data['revenue'] as num?)?.toDouble() ?? 0.0,
+      receiver: data['receiver'] ?? '',
+      reachedAt: data['reachedAt'] != null
+          ? DateTime.tryParse(data['reachedAt'])
+          : null,
       location: data['location'] != null
           ? PopulatedLocationModel.fromJSON(data['location'])
           : null,
@@ -22,7 +39,16 @@ class Destinations {
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name, 'reached': reached, 'location': location?.toJson()};
+    return {
+      'name': name,
+      'reached': reached,
+      'distance': distance,
+      'offloadWeight': offloadWeight,
+      'revenue': revenue,
+      'receiver': receiver,
+      'reachedAt': reachedAt?.toIso8601String(),
+      'location': location?.toJson()
+    };
   }
 }
 
@@ -177,7 +203,7 @@ class TripModel {
           ? DateTime.parse(json['startedAt']).toLocal()
           : null),
       finishedAt: (json['finishedAt'] != null
-          ? DateTime.parse(json['startedAt']).toLocal()
+          ? DateTime.parse(json['finishedAt']).toLocal()
           : null),
       destinations:
           (json['destinations'] as List<dynamic>?)

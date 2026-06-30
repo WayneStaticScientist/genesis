@@ -11,6 +11,10 @@ class MesssageModel {
   final String senderId;
   final String receiverId;
   final DateTime timestamp;
+  String? fileUrl;
+  String? fileName;
+  String? fileType;
+
   MesssageModel({
     this.sent = false,
     this.synced = true,
@@ -19,7 +23,11 @@ class MesssageModel {
     required this.senderId,
     required this.timestamp,
     required this.receiverId,
+    this.fileUrl,
+    this.fileName,
+    this.fileType,
   });
+
   toJSON() => {
     "id": id,
     "sent": sent,
@@ -27,7 +35,11 @@ class MesssageModel {
     "senderId": senderId,
     "receiverId": receiverId,
     "timestamp": timestamp.toIso8601String(),
+    if (fileUrl != null) "fileUrl": fileUrl,
+    if (fileName != null) "fileName": fileName,
+    if (fileType != null) "fileType": fileType,
   };
+
   factory MesssageModel.fromJSON(Map<String, dynamic> json) {
     Isar isar = IsarStatic.isar!;
     return MesssageModel(
@@ -36,6 +48,9 @@ class MesssageModel {
       senderId: json['senderId'] as String,
       receiverId: json['receiverId'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
+      fileUrl: json['fileUrl'] as String?,
+      fileName: json['fileName'] as String?,
+      fileType: json['fileType'] as String?,
     );
   }
 }

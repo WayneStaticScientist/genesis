@@ -11,6 +11,8 @@ import 'package:genesis/navs/admin/nav_payroll.dart';
 import 'package:genesis/navs/admin/nav_drivers.dart';
 import 'package:genesis/navs/admin/nav_settings.dart';
 import 'package:genesis/navs/admin/nav_reports.dart';
+import 'package:genesis/navs/admin/nav_monthly_reports.dart';
+import 'package:genesis/navs/admin/nav_yearly_reports.dart';
 import 'package:genesis/navs/admin/nav_vehicles.dart';
 import 'package:genesis/widgets/layouts/side_bar.dart';
 import 'package:genesis/navs/admin/nav_employee.dart';
@@ -57,6 +59,8 @@ class _MainScreenState extends State<MainScreen> {
       "dashboard": AdminNavMain(triggerKey: _scaffoldKey),
       "drivers": AdminNavDrivers(triggerKey: _scaffoldKey),
       "reports": AdminNavReports(triggerKey: _scaffoldKey),
+      "monthly_reports": AdminNavMonthlyReports(triggerKey: _scaffoldKey),
+      "yearly_reports": AdminNavYearlyReports(triggerKey: _scaffoldKey),
       "payrolls": AdminNavPayroll(triggerKey: _scaffoldKey),
       "vehicles": AdminNavVehicles(triggerKey: _scaffoldKey),
       "tracking": FleetTrackingScreen(triggerKey: _scaffoldKey),

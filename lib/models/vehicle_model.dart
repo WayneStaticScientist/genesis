@@ -12,6 +12,8 @@ class VehicleModel {
   final double fuelRatio;
   final double emptyRatio;
   final double loadedFuelRatio;
+  final double fullLoad;
+  final double mileage;
   final String loadType; //loadType: "Loader" | "Standard"
   final String engineType;
   final String? engineNumber;
@@ -20,6 +22,7 @@ class VehicleModel {
   final PopulatedDriverModel? driver;
   final List<DeductionItem> insurances;
   final List<ServiceRemainderModel> serviceReminders;
+  final String? trackerId;
   LicenceModel? licence;
 
   VehicleModel({
@@ -37,8 +40,11 @@ class VehicleModel {
     required this.emptyRatio,
     required this.loadType,
     required this.loadedFuelRatio,
+    required this.fullLoad,
+    required this.mileage,
     this.engineNumber,
     this.vinNumber,
+    this.trackerId,
     required this.licencePlate,
   });
 
@@ -51,10 +57,12 @@ class VehicleModel {
       "carModel": carModel,
       "fuelRatio": fuelRatio,
       'fuelLevel': fuelLevel,
+      'mileage': mileage,
       "insurances": insurances,
       'engineType': engineType,
       'engineNumber': engineNumber,
       'vinNumber': vinNumber,
+      'trackerId': trackerId,
       'driver': driver?.toJSON(),
       "licencePlate": licencePlate,
     };
@@ -92,6 +100,9 @@ class VehicleModel {
       emptyRatio: (data['emptyRatio'] as num?)?.toDouble() ?? 0.0,
       loadType: data['loadType'] ?? 'Standard',
       loadedFuelRatio: (data['loadedFuelRatio'] as num?)?.toDouble() ?? 0.0,
+      fullLoad: (data['fullLoad'] as num?)?.toDouble() ?? 0.0,
+      mileage: (data['mileage'] as num?)?.toDouble() ?? 0.0,
+      trackerId: data['trackerId'],
     );
   }
 }

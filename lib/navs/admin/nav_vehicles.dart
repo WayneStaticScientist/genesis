@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:genesis/utils/bool_utils.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -35,7 +37,7 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
   late Timer _tickerTimer;
   String searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
-  // Mock Data for the "Wow" factor
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +53,8 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = GTheme.isDark(context);
+
     return SmartRefresher(
       onRefresh: () async {
         await _vehicleController.fetchAllVehicles(search: searchQuery.trim());
@@ -76,8 +80,9 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
         slivers: [
           // === PREMIUM HEADER ===
           SliverAppBar(
-            expandedHeight: 120,
+            expandedHeight: 140,
             floating: true,
+            pinned: true,
             leading: DrawerButton(
               color: Colors.white,
               onPressed: () {
@@ -85,9 +90,9 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
               },
             ).visibleIf(widget.triggerKey != null),
             systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarColor: Theme.of(context).colorScheme.primary,
-              statusBarBrightness: Brightness.light,
-              statusBarIconBrightness: Brightness.dark,
+              statusBarColor: Colors.transparent,
+              statusBarBrightness: Brightness.dark,
+              statusBarIconBrightness: Brightness.light,
             ),
             backgroundColor: GTheme.color(context),
             elevation: 0,
@@ -95,39 +100,69 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [GTheme.primary(context), Colors.blueAccent],
+                    colors: [
+                      GTheme.primary(context),
+                      GTheme.primary(context).withBlue(220),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
                 ),
-              ),
-              titlePadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
-              ),
-              title: "Fleet Management".text(
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 20, bottom: 20),
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Fleet Management",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 24,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Track, manage and optimize vehicle performance",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            color: Colors.white.withAlpha(200),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
             actions: [
               Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: CircleAvatar(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withAlpha(25),
-                  child: IconButton(
-                    onPressed: () => Get.to(() => AdminAddVehicle()),
-                    icon: Icon(Icons.add, color: Colors.white),
+                padding: const EdgeInsets.only(right: 16, top: 8),
+                child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(40),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: IconButton(
+                      onPressed: () => Get.to(() => AdminAddVehicle()),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
           // === METRIC OVERVIEW CARDS ===
           Obx(
@@ -135,10 +170,8 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                 ? SliverToBoxAdapter(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         children: [
                           GMainStatCard(
@@ -148,46 +181,44 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                                 .value!
                                 .totalVehiclesInSystem
                                 .toString(),
-                            icon: Icons.car_repair,
+                            icon: Icons.directions_car_filled_rounded,
                             color: Colors.blue,
                           ),
                           GMainStatCard(
                             title: "Active Now",
                             value: _statsController.stats.value!.activeVehicles
-                                .toStringAsFixed(0)
-                                .toString(),
-                            icon: Icons.location_on,
+                                .toStringAsFixed(0),
+                            icon: Icons.sensors_rounded,
                             color: Colors.green,
                           ),
                           GMainStatCard(
-                            title: "Maintenance",
+                            title: "In Service",
                             value: _statsController
                                 .stats
                                 .value!
                                 .inServiceVehicles
-                                .toStringAsFixed(0)
-                                .toString(),
-                            icon: Icons.build_circle,
+                                .toStringAsFixed(0),
+                            icon: Icons.build_circle_rounded,
                             color: Colors.orange,
                           ),
                           GMainStatCard(
-                            title: "costs",
+                            title: "Total Costs",
                             value:
-                                "\$${_statsController.stats.value!.totalMaintainanceCost}",
-                            icon: Icons.alternate_email,
+                                "\$${_statsController.stats.value!.totalMaintainanceCost.toStringAsFixed(0)}",
+                            icon: Icons.monetization_on_rounded,
                             color: Colors.purple,
                           ),
                         ],
                       ),
                     ),
                   )
-                : SliverToBoxAdapter(),
+                : const SliverToBoxAdapter(),
           ),
 
           // === SEARCH & FILTER ===
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
                   Expanded(
@@ -195,41 +226,74 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: GTheme.emmense(context),
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark.lord(
+                            Colors.white12,
+                            Colors.black.withAlpha(5),
+                          ),
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(25),
-                            blurRadius: 10,
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: TextField(
                         controller: _searchController,
+                        style: GoogleFonts.plusJakartaSans(
+                          color: GTheme.reverse(context),
+                          fontSize: 14,
+                        ),
                         decoration: InputDecoration(
-                          icon: Icon(Icons.search, color: Colors.grey),
+                          icon: Icon(
+                            Icons.search_rounded,
+                            color: Colors.grey.shade400,
+                          ),
                           hintText: "Search plate or model...",
                           border: InputBorder.none,
-                          hintStyle: TextStyle(fontSize: 14),
+                          hintStyle: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            color: Colors.grey.shade400,
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: GTheme.emmense(context),
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark.lord(
+                          Colors.white12,
+                          Colors.black.withAlpha(5),
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(8),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Icon(
-                      Icons.filter_list,
+                      Icons.filter_list_rounded,
                       color: GTheme.reverse(context),
+                      size: 20,
                     ),
                   ),
                 ],
               ),
             ),
           ),
+
+          // === VEHICLE LIST ===
           Obx(() {
             if (_vehicleController.loadingVehicles.value &&
                 _vehicleController.vehicles.isEmpty) {
@@ -273,10 +337,8 @@ class _AdminNavVehiclesState extends State<AdminNavVehicles> {
             );
           }),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ClassicFooter(),
+          const ClassicFooter(),
         ],
-
-        // === VEHICLE LIST ===
       ),
     );
   }

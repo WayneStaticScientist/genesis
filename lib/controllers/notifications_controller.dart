@@ -7,6 +7,7 @@ import 'package:genesis/screens/trips/trips_details_screen.dart';
 import 'package:genesis/screens/maintainance/maintainance_view.dart';
 import 'package:genesis/screens/notifications/service_reminders_notifications.dart';
 import 'package:genesis/screens/notifications/notification_details_screen.dart';
+import 'package:genesis/services/network_adapter.dart';
 
 class NotificationsController extends GetxController {
   RxInt notificationSize = 0.obs;
@@ -27,11 +28,56 @@ class NotificationsController extends GetxController {
 
   RxList<NotificationModel> notifications = RxList<NotificationModel>();
   Future<void> getNotifications({String search = ''}) async {
+    // 1. Fetch from server first to ensure Isar has the latest notifications
+    try {
+      final res = await Net.get('/notifications');
+      if (!res.hasError && res.body['data'] != null) {
+        final serverNotes = List<Map<String, dynamic>>.from(res.body['data']);
+        final isar = IsarStatic.isar;
+        if (isar != null) {
+          // Bulk insert/update
+          await isar.write((isar) async {
+            for (var data in serverNotes) {
+              // Create local representation
+              // The backend object has slightly different field names compared to FCM data payload
+              // Make sure to map correctly for fromJSON
+              final localPayload = {
+                'type': data['type'],
+                'channenId': data['channenId'],
+                'referedId': data['referedId'],
+                'title': data['title'],
+                'content': data['content'],
+                'date': data['date'] ?? data['createdAt'],
+              };
+              
+              // We need to avoid duplicates. Check if a notification with this date and channelId already exists
+              final exists = await isar.notificationModels
+                .where()
+                .channenIdEqualTo(data['channenId'])
+                .and()
+                .titleEqualTo(data['title'])
+                .count();
+                
+              if (exists == 0) {
+                 final n = NotificationModel.fromJSON(isar.notificationModels.autoIncrement(), localPayload);
+                 n.isRead = data['isRead'] ?? false;
+                 isar.notificationModels.put(n);
+              }
+            }
+          });
+        }
+      }
+    } catch (e) {
+      print("Failed to sync notifications from backend: $e");
+    }
+
+    // 2. Load from Isar
     final isar = IsarStatic.isar;
     if (isar == null) return;
     notifications.value = await isar.notificationModels
         .where()
         .titleContains(search, caseSensitive: false)
+        .or()
         .contentContains(search, caseSensitive: false)
         .sortByDateDesc()
         .findAll();

@@ -20,6 +20,7 @@ class SocketController extends GetxController {
   Rx<User?> liveTrackDriver = Rx<User?>(null);
   Rx<VehicleModel?> currentVehicle = Rx<VehicleModel?>(null);
   Rx<LiveTrackModel?> liveTrackModel = Rx<LiveTrackModel?>(null);
+  final _userController = Get.find<UserController>();
   @override
   void onInit() {
     super.onInit();
@@ -73,7 +74,7 @@ class SocketController extends GetxController {
     if (res) {
       Toaster.showSuccess("Tracking started");
       listenId.value =
-          _userController.user.value?.currentVehicle?.carModel ?? '';
+          _userController.user.value?.currentVehicle?.id ?? '';
     }
   }
 
@@ -89,29 +90,30 @@ class SocketController extends GetxController {
     _statusTimer?.cancel();
     _statusTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (socket.connected) {
-        _checkRouteConfigurations();
+        checkRouteConfigurations();
         _checkAdminConfiguration();
       }
     });
   }
 
   StreamSubscription<Position>? _positionStreamSubscription;
-  Future<void> _checkRouteConfigurations() async {
-    final user = User.fromStorage();
-    if (_positionStreamSubscription != null && user?.trip == null) {
+  Future<void> checkRouteConfigurations() async {
+    final user = _userController.user.value;
+    if (user == null) return;
+
+    if (_positionStreamSubscription != null && user.trip == null) {
       _positionStreamSubscription?.cancel();
       _positionStreamSubscription = null;
       return;
     }
     if (_positionStreamSubscription != null) return;
-    if (user == null ||
-        user.trip == null ||
+    if (user.trip == null ||
         user.currentVehicle == null ||
         user.trip?.status == "Pending") {
-      if (user?.currentVehicle != null &&
+      if (user.currentVehicle != null &&
           (currentVehicle.value == null ||
-              currentVehicle.value!.id != user!.currentVehicle?.id)) {
-        findVehicle(id: user!.currentVehicle!.id, update: true);
+              currentVehicle.value!.id != user.currentVehicle!.id)) {
+        findVehicle(id: user.currentVehicle!.id, update: true);
       }
 
       return;
@@ -168,11 +170,9 @@ class SocketController extends GetxController {
               'rotation': position.heading,
               "car": user.currentVehicle?.id,
               'timestamp': DateTime.now().toIso8601String(),
-              "location": user.trip?.location?.toJson(),
-              "startPostion": user.trip?.location?.toJson(),
               "fuelLevel": currentVehicle.value?.fuelLevel ?? 0,
             };
-            if (listenId.value != user.currentVehicle) {
+            if (listenId.value != user.currentVehicle?.id) {
               listenId.value = user.currentVehicle!.id;
             }
 
@@ -207,6 +207,8 @@ class SocketController extends GetxController {
 
     _previousListenId = newId;
     findVehicle(id: newId, update: true);
+    // 4. Immediately ask "where-is-the-car" for viewers
+    broadcastFind();
   }
 
   Future<VehicleModel?> findVehicle({
@@ -226,7 +228,7 @@ class SocketController extends GetxController {
   }
 
   void _checkAdminConfiguration() {
-    final user = User.fromStorage();
+    final user = _userController.user.value;
     if (user == null || listenId.value.isEmpty) {
       return;
     }
@@ -242,10 +244,11 @@ class SocketController extends GetxController {
   }
 
   void broadcastFind() {
-    final user = User.fromStorage();
+    final user = _userController.user.value;
+    if (user == null) return;
     transmitMessage(
       channel: 'where-is-the-car',
-      data: {"companyId": user!.companyId, "vehicleId": listenId.value},
+      data: {"companyId": user.companyId, "vehicleId": listenId.value},
     );
   }
 

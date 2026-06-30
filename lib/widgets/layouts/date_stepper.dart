@@ -95,7 +95,9 @@ class GenesisDateRangeStepper extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.secondaryContainer.withOpacity(0.4),
+                        color: colorScheme.secondaryContainer.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Row(
@@ -146,7 +148,7 @@ class GenesisDateRangeStepper extends StatelessWidget {
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 8,
             spreadRadius: 2,
           ),
@@ -195,7 +197,7 @@ class _DateItem extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(icon, size: 16, color: Colors.grey.withOpacity(0.5)),
+            Icon(icon, size: 16, color: Colors.grey.withValues(alpha: 0.5)),
           ],
         ),
       ],

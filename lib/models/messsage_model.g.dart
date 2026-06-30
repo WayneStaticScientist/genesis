@@ -26,6 +26,9 @@ final MesssageModelSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'senderId', type: IsarType.string),
       IsarPropertySchema(name: 'receiverId', type: IsarType.string),
       IsarPropertySchema(name: 'timestamp', type: IsarType.dateTime),
+      IsarPropertySchema(name: 'fileUrl', type: IsarType.string),
+      IsarPropertySchema(name: 'fileName', type: IsarType.string),
+      IsarPropertySchema(name: 'fileType', type: IsarType.string),
     ],
     indexes: [],
   ),
@@ -49,6 +52,30 @@ int serializeMesssageModel(IsarWriter writer, MesssageModel object) {
     6,
     object.timestamp.toUtc().microsecondsSinceEpoch,
   );
+  {
+    final value = object.fileUrl;
+    if (value == null) {
+      IsarCore.writeNull(writer, 7);
+    } else {
+      IsarCore.writeString(writer, 7, value);
+    }
+  }
+  {
+    final value = object.fileName;
+    if (value == null) {
+      IsarCore.writeNull(writer, 8);
+    } else {
+      IsarCore.writeString(writer, 8, value);
+    }
+  }
+  {
+    final value = object.fileType;
+    if (value == null) {
+      IsarCore.writeNull(writer, 9);
+    } else {
+      IsarCore.writeString(writer, 9, value);
+    }
+  }
   return object.id;
 }
 
@@ -87,6 +114,12 @@ MesssageModel deserializeMesssageModel(IsarReader reader) {
       ).toLocal();
     }
   }
+  final String? _fileUrl;
+  _fileUrl = IsarCore.readString(reader, 7);
+  final String? _fileName;
+  _fileName = IsarCore.readString(reader, 8);
+  final String? _fileType;
+  _fileType = IsarCore.readString(reader, 9);
   final object = MesssageModel(
     sent: _sent,
     synced: _synced,
@@ -95,6 +128,9 @@ MesssageModel deserializeMesssageModel(IsarReader reader) {
     senderId: _senderId,
     receiverId: _receiverId,
     timestamp: _timestamp,
+    fileUrl: _fileUrl,
+    fileName: _fileName,
+    fileType: _fileType,
   );
   return object;
 }
@@ -132,6 +168,12 @@ dynamic deserializeMesssageModelProp(IsarReader reader, int property) {
           ).toLocal();
         }
       }
+    case 7:
+      return IsarCore.readString(reader, 7);
+    case 8:
+      return IsarCore.readString(reader, 8);
+    case 9:
+      return IsarCore.readString(reader, 9);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -146,6 +188,9 @@ sealed class _MesssageModelUpdate {
     String? senderId,
     String? receiverId,
     DateTime? timestamp,
+    String? fileUrl,
+    String? fileName,
+    String? fileType,
   });
 }
 
@@ -163,6 +208,9 @@ class _MesssageModelUpdateImpl implements _MesssageModelUpdate {
     Object? senderId = ignore,
     Object? receiverId = ignore,
     Object? timestamp = ignore,
+    Object? fileUrl = ignore,
+    Object? fileName = ignore,
+    Object? fileType = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -173,6 +221,9 @@ class _MesssageModelUpdateImpl implements _MesssageModelUpdate {
             if (senderId != ignore) 4: senderId as String?,
             if (receiverId != ignore) 5: receiverId as String?,
             if (timestamp != ignore) 6: timestamp as DateTime?,
+            if (fileUrl != ignore) 7: fileUrl as String?,
+            if (fileName != ignore) 8: fileName as String?,
+            if (fileType != ignore) 9: fileType as String?,
           },
         ) >
         0;
@@ -188,6 +239,9 @@ sealed class _MesssageModelUpdateAll {
     String? senderId,
     String? receiverId,
     DateTime? timestamp,
+    String? fileUrl,
+    String? fileName,
+    String? fileType,
   });
 }
 
@@ -205,6 +259,9 @@ class _MesssageModelUpdateAllImpl implements _MesssageModelUpdateAll {
     Object? senderId = ignore,
     Object? receiverId = ignore,
     Object? timestamp = ignore,
+    Object? fileUrl = ignore,
+    Object? fileName = ignore,
+    Object? fileType = ignore,
   }) {
     return collection.updateProperties(id, {
       if (sent != ignore) 1: sent as bool?,
@@ -213,6 +270,9 @@ class _MesssageModelUpdateAllImpl implements _MesssageModelUpdateAll {
       if (senderId != ignore) 4: senderId as String?,
       if (receiverId != ignore) 5: receiverId as String?,
       if (timestamp != ignore) 6: timestamp as DateTime?,
+      if (fileUrl != ignore) 7: fileUrl as String?,
+      if (fileName != ignore) 8: fileName as String?,
+      if (fileType != ignore) 9: fileType as String?,
     });
   }
 }
@@ -231,6 +291,9 @@ sealed class _MesssageModelQueryUpdate {
     String? senderId,
     String? receiverId,
     DateTime? timestamp,
+    String? fileUrl,
+    String? fileName,
+    String? fileType,
   });
 }
 
@@ -248,6 +311,9 @@ class _MesssageModelQueryUpdateImpl implements _MesssageModelQueryUpdate {
     Object? senderId = ignore,
     Object? receiverId = ignore,
     Object? timestamp = ignore,
+    Object? fileUrl = ignore,
+    Object? fileName = ignore,
+    Object? fileType = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (sent != ignore) 1: sent as bool?,
@@ -256,6 +322,9 @@ class _MesssageModelQueryUpdateImpl implements _MesssageModelQueryUpdate {
       if (senderId != ignore) 4: senderId as String?,
       if (receiverId != ignore) 5: receiverId as String?,
       if (timestamp != ignore) 6: timestamp as DateTime?,
+      if (fileUrl != ignore) 7: fileUrl as String?,
+      if (fileName != ignore) 8: fileName as String?,
+      if (fileType != ignore) 9: fileType as String?,
     });
   }
 }
@@ -283,6 +352,9 @@ class _MesssageModelQueryBuilderUpdateImpl
     Object? senderId = ignore,
     Object? receiverId = ignore,
     Object? timestamp = ignore,
+    Object? fileUrl = ignore,
+    Object? fileName = ignore,
+    Object? fileType = ignore,
   }) {
     final q = query.build();
     try {
@@ -293,6 +365,9 @@ class _MesssageModelQueryBuilderUpdateImpl
         if (senderId != ignore) 4: senderId as String?,
         if (receiverId != ignore) 5: receiverId as String?,
         if (timestamp != ignore) 6: timestamp as DateTime?,
+        if (fileUrl != ignore) 7: fileUrl as String?,
+        if (fileName != ignore) 8: fileName as String?,
+        if (fileType != ignore) 9: fileType as String?,
       });
     } finally {
       q.close();
@@ -860,6 +935,471 @@ extension MesssageModelQueryFilter
       );
     });
   }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 7));
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 7));
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 7, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlGreaterThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 7, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlBetween(String? lower, String? upper, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 7,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 7,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 7, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 7, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 8));
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 8));
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 8, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameGreaterThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 8, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameBetween(String? lower, String? upper, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 8,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 8,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 8, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 8, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 9));
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 9));
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 9, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeGreaterThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 9, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeBetween(String? lower, String? upper, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 9,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 9,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 9, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterFilterCondition>
+  fileTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 9, value: ''),
+      );
+    });
+  }
 }
 
 extension MesssageModelQueryObject
@@ -962,6 +1502,54 @@ extension MesssageModelQuerySortBy
       return query.addSortBy(6, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByFileUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByFileUrlDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByFileName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByFileNameDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByFileType({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> sortByFileTypeDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension MesssageModelQuerySortThenBy
@@ -1061,6 +1649,54 @@ extension MesssageModelQuerySortThenBy
       return query.addSortBy(6, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByFileUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByFileUrlDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByFileName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByFileNameDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByFileType({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterSortBy> thenByFileTypeDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension MesssageModelQueryWhereDistinct
@@ -1106,6 +1742,28 @@ extension MesssageModelQueryWhereDistinct
       return query.addDistinctBy(6);
     });
   }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct> distinctByFileUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(7, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
+  distinctByFileName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<MesssageModel, MesssageModel, QAfterDistinct>
+  distinctByFileType({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(9, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension MesssageModelQueryProperty1
@@ -1149,6 +1807,24 @@ extension MesssageModelQueryProperty1
   QueryBuilder<MesssageModel, DateTime, QAfterProperty> timestampProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<MesssageModel, String?, QAfterProperty> fileUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<MesssageModel, String?, QAfterProperty> fileNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<MesssageModel, String?, QAfterProperty> fileTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
     });
   }
 }
@@ -1198,6 +1874,24 @@ extension MesssageModelQueryProperty2<R>
       return query.addProperty(6);
     });
   }
+
+  QueryBuilder<MesssageModel, (R, String?), QAfterProperty> fileUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R, String?), QAfterProperty> fileNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R, String?), QAfterProperty> fileTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
 }
 
 extension MesssageModelQueryProperty3<R1, R2>
@@ -1244,6 +1938,27 @@ extension MesssageModelQueryProperty3<R1, R2>
   timestampProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R1, R2, String?), QOperations>
+  fileUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R1, R2, String?), QOperations>
+  fileNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<MesssageModel, (R1, R2, String?), QOperations>
+  fileTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
     });
   }
 }

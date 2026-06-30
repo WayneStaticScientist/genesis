@@ -244,6 +244,19 @@ class UserController extends GetxController {
       Toaster.showError(response.response);
       return false;
     }
+    final user = await fetchUser(this.user.value?.id ?? '');
+    if (user != null) {
+      this.user.value = user;
+      this.user.value?.saveUser();
+      this.user.refresh();
+      
+      // Notify socket controller immediately if tracking is needed
+      final socket = Get.find<SocketController>();
+      if (socket.listenId.value.isEmpty) {
+        socket.listenId.value = user.currentVehicle?.id ?? '';
+      }
+      socket.checkRouteConfigurations();
+    }
     return true;
   }
 
@@ -298,7 +311,7 @@ class UserController extends GetxController {
       return false;
     }
     processingTrip.value = true;
-    final response = await Net.patch(
+    final response = await Net.put(
       "/trip/destination/$tripId",
       data: {"destinations": destinations},
     );
@@ -460,6 +473,31 @@ class UserController extends GetxController {
       return false;
     }
     trip.value = TripModel.fromJson(response.body);
+    return true;
+  }
+
+  Future<bool> deleteEmployee(String id) async {
+    if (registeringEmployee.value) return false;
+    registeringEmployee.value = true;
+    final response = await Net.delete("/employee/$id");
+    registeringEmployee.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> completeTripAdmin(String id) async {
+    if (processingTrip.value) return false;
+    processingTrip.value = true;
+    final response = await Net.put("/trip/complete/$id");
+    processingTrip.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    await findTrip(id);
     return true;
   }
 }

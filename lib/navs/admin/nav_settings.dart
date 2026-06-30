@@ -9,7 +9,7 @@ import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/profile_screen.dart';
 import 'package:genesis/controllers/company_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
-
+import 'package:genesis/screens/settings/tracker_integration_screen.dart';
 class AdminSettingsScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
   const AdminSettingsScreen({super.key, this.triggerKey});
@@ -146,6 +146,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
               ),
             ],
+
+            const SizedBox(height: 25),
+            _buildSectionHeader("Devices & Integrations"),
+            _buildSettingCard(
+              icon: LineIcons.satelliteDish,
+              color: Colors.blueAccent,
+              title: "Hardware Tracker Setup",
+              subtitle: "Documentation for integrating vehicle GPS trackers",
+              onTap: () {
+                Get.to(() => const TrackerIntegrationScreen());
+              },
+            ),
 
             const SizedBox(height: 25),
             _buildSectionHeader("User Adjustments"),

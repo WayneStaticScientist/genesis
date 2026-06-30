@@ -1,7 +1,5 @@
 import 'package:get/get.dart';
-import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
-import 'package:genesis/utils/theme.dart';
 import 'package:genesis/controllers/user_controller.dart';
 import 'package:genesis/screens/auth/profile_screen.dart';
 import 'package:genesis/controllers/messaging_controller.dart';
@@ -20,10 +18,12 @@ class _GNavBarState extends State<GNavBar> {
   final _userController = Get.find<UserController>();
   final _messageController = Get.find<MessagingController>();
   final _notificationsController = Get.find<NotificationsController>();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Obx(() {
       final user = _userController.user.value;
@@ -36,10 +36,12 @@ class _GNavBarState extends State<GNavBar> {
         width: 280,
         height: double.infinity,
         decoration: BoxDecoration(
-          color: GTheme.cardColor(context),
+          color: isDark ? const Color(0xFF0F1117) : const Color(0xFFFAFAFD),
           border: Border(
             right: BorderSide(
-              color: theme.dividerColor.withAlpha(30),
+              color: isDark
+                  ? Colors.white.withAlpha(12)
+                  : Colors.black.withAlpha(10),
               width: 1,
             ),
           ),
@@ -47,245 +49,192 @@ class _GNavBarState extends State<GNavBar> {
         child: SafeArea(
           child: Column(
             children: [
-              // --- APP LOGO SECTION ---
+              // ─── LOGO / BRAND HEADER ────────────────────────────────
+              _buildBrandHeader(primaryColor, isDark),
+
+              // ─── SEARCH ─────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withAlpha(25),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        Icons.auto_awesome_mosaic_rounded,
-                        color: primaryColor,
-                        size: 28,
-                      ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withAlpha(15) : Colors.black.withAlpha(10),
                     ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "GENESIS",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.0,
-                            color: theme.textTheme.bodyLarge?.color,
-                          ),
-                        ),
-                        Text(
-                          "Fleet Management",
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey[500],
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                  ),
+                  child: TextField(
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
-                  ],
+                    decoration: InputDecoration(
+                      hintText: "Search...",
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.grey[600] : Colors.grey[500],
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: isDark ? Colors.grey[500] : Colors.grey[600],
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                  ),
                 ),
               ),
 
-              // --- NAVIGATION ITEMS ---
+              // ─── NAV ITEMS ──────────────────────────────────────────
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader("MAIN MENU"),
-                      _buildNavItem(
+                      _sectionLabel("MAIN"),
+                      _navItem(
                         context,
                         'dashboard',
                         "Dashboard",
                         Icons.grid_view_rounded,
-                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
-                      _buildNavItem(
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer && !isAgent,
+                      ),
+                      _navItem(
                         context,
                         'reports',
                         "Revenue Reports",
-                        Icons.report_outlined,
-                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
+                        Icons.bar_chart_rounded,
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer && !isAgent,
+                      ),
+                      _navItem(
+                        context,
+                        'monthly_reports',
+                        "Monthly Reports",
+                        Icons.calendar_month_rounded,
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer && !isAgent,
+                      ),
+                      _navItem(
+                        context,
+                        'yearly_reports',
+                        "Yearly Reports",
+                        Icons.calendar_view_month_rounded,
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer && !isAgent,
+                      ),
                       Obx(
-                        () => _buildNavItem(
+                        () => _navItem(
                           context,
                           'chats',
                           "Chats",
-                          Icons.message_outlined,
-                          notificationSize:
-                              _messageController.notifications.value,
+                          Icons.chat_bubble_outline_rounded,
+                          primaryColor,
+                          badge: _messageController.notifications.value,
                         ),
                       ),
                       Obx(
-                        () => _buildNavItem(
+                        () => _navItem(
                           context,
                           'notifications',
                           "Notifications",
-                          Icons.notifications_outlined,
-                          notificationSize:
+                          Icons.notifications_none_rounded,
+                          primaryColor,
+                          badge:
                               _notificationsController.notificationSize.value,
                         ),
                       ),
-                      _buildNavItem(
+                      _navItem(
                         context,
                         'trips',
                         "Trips",
-                        Icons.route_outlined,
-                      ).visibleIf(!isDriver && !isMaintainer),
-                      _buildNavItem(
+                        Icons.route_rounded,
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer,
+                      ),
+                      _navItem(
                         context,
                         'vehicles',
                         "Vehicles",
                         Icons.local_shipping_outlined,
-                      ).visibleIf(!isDriver && !isMaintainer),
-                      _buildNavItem(
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer,
+                      ),
+                      _navItem(
                         context,
                         'drivers',
                         "Drivers",
-                        Icons.person_search_rounded,
-                      ).visibleIf(!isDriver && !isAgent),
-                      _buildNavItem(
+                        Icons.badge_outlined,
+                        primaryColor,
+                        visible: !isDriver && !isAgent,
+                      ),
+                      _navItem(
                         context,
                         'tracking',
                         "Live Tracking",
                         Icons.near_me_rounded,
-                      ).visibleIf(isDriver),
+                        primaryColor,
+                        visible: isDriver,
+                      ),
 
-                      const SizedBox(height: 24),
-                      _sectionHeader("OPERATIONS"),
-                      _buildNavItem(
+                      const SizedBox(height: 8),
+                      _sectionLabel("OPERATIONS"),
+                      _navItem(
                         context,
                         'maintanance',
                         "Maintenance",
                         Icons.build_circle_outlined,
+                        primaryColor,
                       ),
-                      _buildNavItem(
+                      _navItem(
                         context,
                         'payrolls',
                         "Payroll",
                         Icons.account_balance_wallet_outlined,
-                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
-                      _buildNavItem(
+                        primaryColor,
+                        visible: !isDriver && !isMaintainer && !isAgent,
+                      ),
+                      _navItem(
                         context,
                         'my_payments',
                         "My Payments",
-                        Icons.account_balance,
+                        Icons.payments_outlined,
+                        primaryColor,
                       ),
-                      const SizedBox(
-                        height: 24,
-                      ).visibleIf(!isDriver && !isMaintainer),
-                      _sectionHeader(
-                        "OPERATIONS",
-                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
-                      _buildNavItem(
-                        context,
-                        'employees',
-                        "Employees",
-                        Icons.people_alt,
-                      ).visibleIf(!isDriver && !isMaintainer && !isAgent),
-                      const SizedBox(height: 24),
-                      _sectionHeader("SYSTEM"),
-                      _buildNavItem(
+
+                      if (!isDriver && !isMaintainer && !isAgent) ...[
+                        const SizedBox(height: 8),
+                        _sectionLabel("WORKFORCE"),
+                        _navItem(
+                          context,
+                          'employees',
+                          "Employees",
+                          Icons.people_alt_outlined,
+                          primaryColor,
+                        ),
+                      ],
+
+                      const SizedBox(height: 8),
+                      _sectionLabel("SYSTEM"),
+                      _navItem(
                         context,
                         'settings',
                         "Settings",
-                        Icons.settings_suggest_outlined,
+                        Icons.tune_rounded,
+                        primaryColor,
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // --- USER PROFILE CARD (BOTTOM) ---
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: InkWell(
-                  onTap: () => Get.to(() => const ProfileScreen()),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white.withAlpha(8)
-                          : Colors.grey.withAlpha(30),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withAlpha(30)),
-                    ),
-                    child: Row(
-                      children: [
-                        // Avatar with online status
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 22,
-                              backgroundColor: primaryColor.withAlpha(50),
-                              child: Text(
-                                (user?.firstName[0] ?? "U").toUpperCase(),
-                                style: TextStyle(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.greenAccent,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: GTheme.cardColor(context),
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                user?.firstName ?? "User",
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                role.capitalizeFirst!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.unfold_more_rounded,
-                          color: Colors.grey[400],
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              // ─── USER PROFILE CARD ──────────────────────────────────
+              _buildUserCard(user, role, primaryColor, isDark),
             ],
           ),
         ),
@@ -293,84 +242,197 @@ class _GNavBarState extends State<GNavBar> {
     });
   }
 
-  Widget _sectionHeader(String title) {
+  // ── Brand Header ──────────────────────────────────────────────────────────
+  Widget _buildBrandHeader(Color primaryColor, bool isDark) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            primaryColor.withAlpha(isDark ? 40 : 20),
+            primaryColor.withAlpha(isDark ? 15 : 8),
+            Colors.transparent,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: primaryColor.withAlpha(isDark ? 30 : 15),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, primaryColor.withBlue(220)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withAlpha(80),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.auto_awesome_mosaic_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "GENESIS",
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.5,
+                ),
+              ),
+              Text(
+                "Fleet Management",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[500],
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Section Label ─────────────────────────────────────────────────────────
+  Widget _sectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
       child: Text(
-        title,
+        label,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: FontWeight.w800,
-          color: Colors.grey[600],
-          letterSpacing: 1.5,
+          color: Colors.grey[500],
+          letterSpacing: 1.8,
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(
+  // ── Nav Item ──────────────────────────────────────────────────────────────
+  Widget _navItem(
     BuildContext context,
     String index,
     String title,
-    IconData icon, {
-    int notificationSize = 0,
+    IconData icon,
+    Color primaryColor, {
+    int badge = 0,
+    bool visible = true,
   }) {
-    bool isSelected = widget.selectedIndex == index;
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    if (!visible) return const SizedBox.shrink();
+
+    final isSelected = widget.selectedIndex == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeInOut,
       margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
+        gradient: isSelected
+            ? LinearGradient(
+                colors: [
+                  primaryColor,
+                  primaryColor.withBlue((primaryColor.blue + 40).clamp(0, 255)),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : null,
+        color: isSelected ? null : Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: primaryColor.withAlpha(60),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
       child: InkWell(
         onTap: () {
-          if (isSelected) return;
-          widget.ontap?.call(index);
+          if (!isSelected) widget.ontap?.call(index);
         },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            color: isSelected ? primaryColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: primaryColor.withAlpha(75),
-                      blurRadius: 15,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
+        borderRadius: BorderRadius.circular(14),
+        splashColor: primaryColor.withAlpha(20),
+        highlightColor: primaryColor.withAlpha(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           child: Row(
             children: [
-              if (notificationSize > 0)
-                Badge.count(
-                  count: notificationSize,
-                  child: Icon(
-                    icon,
-                    color: isSelected ? Colors.white : Colors.grey[500],
-                    size: 22,
-                  ),
-                )
-              else
-                Icon(
-                  icon,
-                  color: isSelected ? Colors.white : Colors.grey[500],
-                  size: 22,
+              // Icon container
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withAlpha(30)
+                      : (isDark
+                            ? Colors.white.withAlpha(10)
+                            : Colors.black.withAlpha(6)),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              const SizedBox(width: 14),
+                child: badge > 0 && !isSelected
+                    ? Badge.count(
+                        count: badge,
+                        child: Icon(
+                          icon,
+                          size: 18,
+                          color: isSelected
+                              ? Colors.white
+                              : Colors.grey[isDark ? 400 : 600],
+                        ),
+                      )
+                    : Icon(
+                        icon,
+                        size: 18,
+                        color: isSelected
+                            ? Colors.white
+                            : Colors.grey[isDark ? 400 : 600],
+                      ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey[500],
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.grey[isDark ? 300 : 700],
+                    letterSpacing: -0.1,
                   ),
                 ),
               ),
+              // Active indicator dot
               if (isSelected)
                 Container(
                   width: 6,
@@ -379,9 +441,167 @@ class _GNavBarState extends State<GNavBar> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
+                )
+              else if (badge > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withAlpha(25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    badge > 99 ? "99+" : badge.toString(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                    ),
+                  ),
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // ── User Profile Card ─────────────────────────────────────────────────────
+  Widget _buildUserCard(
+    dynamic user,
+    String role,
+    Color primaryColor,
+    bool isDark,
+  ) {
+    final initials = user != null ? (user.firstName[0]).toUpperCase() : "U";
+    final fullName = user != null
+        ? "${user.firstName} ${user.lastName}"
+        : "User";
+
+    return GestureDetector(
+      onTap: () => Get.to(() => const ProfileScreen()),
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [Colors.white.withAlpha(8), Colors.white.withAlpha(4)]
+                : [primaryColor.withAlpha(12), primaryColor.withAlpha(6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withAlpha(14)
+                : primaryColor.withAlpha(30),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Avatar with online dot
+            Stack(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor, primaryColor.withBlue(220)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withAlpha(60),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2ECC71),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF0F1117)
+                            : const Color(0xFFFAFAFD),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF2ECC71),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        role.capitalizeFirst ?? role,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.grey[400],
+              size: 18,
+            ),
+          ],
         ),
       ),
     );

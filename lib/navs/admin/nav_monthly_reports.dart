@@ -14,38 +14,50 @@ import 'package:genesis/controllers/vehicle_controller.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class AdminNavReports extends StatefulWidget {
+class AdminNavMonthlyReports extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
-  const AdminNavReports({super.key, required this.triggerKey});
+  const AdminNavMonthlyReports({super.key, required this.triggerKey});
   @override
-  State<AdminNavReports> createState() => _AdminNavReportsState();
+  State<AdminNavMonthlyReports> createState() => _AdminNavMonthlyReportsState();
 }
 
-class _AdminNavReportsState extends State<AdminNavReports> {
+class _AdminNavMonthlyReportsState extends State<AdminNavMonthlyReports> {
   bool _isPrinting = false;
-  // Graph period only — does NOT affect the KPI summary cards
-  String _graphPeriod = 'Monthly';
   final _c = Get.find<StatsController>();
   final _vc = Get.find<VehicleControler>();
 
   @override
   void initState() {
     super.initState();
-    _c.fetchTripStats('Monthly'); // summary is always YTD Monthly
-    if (_c.stats.value == null) _c.fetchStats(null);
-    _refreshGraph();
+    // Default to current month when opened
+    _c.selectedMonth.value = DateTime.now();
+    _c.refreshMonthlyReports();
   }
 
-  void _refreshGraph() {
-    _c.selectedPeriod.value = _graphPeriod;
-    _c.fetchGraphStats(null);
+  void _previousMonth() {
+    final current = _c.selectedMonth.value;
+    _c.selectedMonth.value = DateTime(current.year, current.month - 1, 1);
+    _c.refreshMonthlyReports();
+  }
+
+  void _nextMonth() {
+    final current = _c.selectedMonth.value;
+    final next = DateTime(current.year, current.month + 1, 1);
+    if (next.isBefore(DateTime.now()) || (next.year == DateTime.now().year && next.month == DateTime.now().month)) {
+      _c.selectedMonth.value = next;
+      _c.refreshMonthlyReports();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           _buildHeader(primary),
@@ -61,28 +73,30 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                 Text(_c.fetchingTripStatsError.value.isEmpty ? 'No data available' : _c.fetchingTripStatsError.value,
                     style: const TextStyle(color: Colors.grey)),
                 const SizedBox(height: 12),
-                TextButton.icon(onPressed: () => _c.fetchTripStats('Monthly'),
+                TextButton.icon(onPressed: () => _c.refreshMonthlyReports(),
                     icon: const Icon(Icons.refresh), label: const Text('Retry')),
               ])));
             }
             return SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _buildMonthSelector(primary, isDark),
+                  const SizedBox(height: 20),
                   _buildNetBanner(stat, main, primary),
                   const SizedBox(height: 16),
-                  _buildKpiRow(stat, primary),
+                  _buildKpiGrid(stat, main, primary),
                   const SizedBox(height: 20),
-                  if (main != null) ...[_buildExpenseCard(main), const SizedBox(height: 20)],
                   _buildChartCard(primary),
                   const SizedBox(height: 20),
-                  _sectionTitle('Vehicle Settlements'),
-                  const SizedBox(height: 10),
-                  _buildSettlements(stat.vehicles, isVehicle: true),
-                  const SizedBox(height: 20),
-                  _sectionTitle('Driver Settlements'),
+                  if (main != null) ...[_buildExpenseCard(main), const SizedBox(height: 20)],
+                  _sectionTitle('Driver Performance'),
                   const SizedBox(height: 10),
                   _buildSettlements(stat.drivers, isVehicle: false),
+                  const SizedBox(height: 20),
+                  _sectionTitle('Vehicle Output'),
+                  const SizedBox(height: 10),
+                  _buildSettlements(stat.vehicles, isVehicle: true),
                 ]),
               ),
             );
@@ -95,7 +109,7 @@ class _AdminNavReportsState extends State<AdminNavReports> {
   // ─── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader(Color primary) {
     return SliverAppBar(
-      expandedHeight: 190,
+      expandedHeight: 140,
       pinned: true,
       elevation: 0,
       backgroundColor: primary,
@@ -125,24 +139,167 @@ class _AdminNavReportsState extends State<AdminNavReports> {
             begin: Alignment.topLeft, end: Alignment.bottomRight,
           )),
           child: SafeArea(child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.white.withAlpha(22), borderRadius: BorderRadius.circular(20)),
-                child: Text(GenesisDate.formatNormalDate(DateTime.now()),
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(height: 8),
-              const Text('Performance Reports',
+              const Text('Monthly Reports',
                   style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-              const SizedBox(height: 3),
-              const Text('Revenue · Expenses · Fleet insights',
-                  style: TextStyle(color: Colors.white60, fontSize: 11)),
+              const SizedBox(height: 4),
+              const Text('Track your revenue, expenses, and operations',
+                  style: TextStyle(color: Colors.white60, fontSize: 12)),
             ]),
           )),
         ),
       ),
+    );
+  }
+
+  // ─── Month Selector ────────────────────────────────────────────────────────
+  Widget _buildMonthSelector(Color primary, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: GTheme.cardColor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withAlpha(20)),
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 2))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: _previousMonth,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: primary.withAlpha(20), shape: BoxShape.circle),
+              child: Icon(Icons.chevron_left_rounded, color: primary, size: 24),
+            ),
+          ),
+          Obx(() {
+            final month = _c.selectedMonth.value;
+            final isCurrentMonth = month.year == DateTime.now().year && month.month == DateTime.now().month;
+            return GestureDetector(
+              onTap: () => _showMonthPicker(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withAlpha(15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Column(
+                      children: [
+                        Text(
+                          "${GenesisDate.getShortMonthName(month.month)} ${month.year}",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                        if (isCurrentMonth)
+                          Text(
+                            "Current Month",
+                            style: TextStyle(fontSize: 10, color: Colors.green.shade600, fontWeight: FontWeight.w700),
+                          )
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_drop_down_rounded, size: 20, color: Colors.grey),
+                  ],
+                ),
+              ),
+            );
+          }),
+          GestureDetector(
+            onTap: _nextMonth,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: primary.withAlpha(20), shape: BoxShape.circle),
+              child: Icon(Icons.chevron_right_rounded, color: primary, size: 24),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMonthPicker(BuildContext context) {
+    int tempYear = _c.selectedMonth.value.year;
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (context, setState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(onPressed: () => setState(() => tempYear--), icon: const Icon(Icons.chevron_left)),
+                      Text(tempYear.toString(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        onPressed: tempYear >= DateTime.now().year ? null : () => setState(() => tempYear++), 
+                        icon: const Icon(Icons.chevron_right)
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      final m = index + 1;
+                      final isFuture = tempYear == DateTime.now().year && m > DateTime.now().month;
+                      final isSelected = tempYear == _c.selectedMonth.value.year && m == _c.selectedMonth.value.month;
+                      return InkWell(
+                        onTap: isFuture ? null : () {
+                          _c.selectedMonth.value = DateTime(tempYear, m, 1);
+                          _c.refreshMonthlyReports();
+                          Navigator.pop(context);
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey.withAlpha(20),
+                            borderRadius: BorderRadius.circular(10),
+                            border: isSelected ? null : Border.all(color: Colors.grey.withAlpha(40)),
+                          ),
+                          child: Text(
+                            GenesisDate.getShortMonthName(m),
+                            style: TextStyle(
+                              color: isFuture 
+                                ? Colors.grey 
+                                : isSelected 
+                                  ? Colors.white 
+                                  : Theme.of(context).textTheme.bodyMedium?.color,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+      }
     );
   }
 
@@ -153,12 +310,15 @@ class _AdminNavReportsState extends State<AdminNavReports> {
     final payroll = (main?.grossPayroll as num?)?.toDouble() ?? 0.0;
     final net = revenue - expenses - payroll;
     final pos = net >= 0;
+    
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: pos ? [const Color(0xFF0A6B4D), const Color(0xFF0DB37F)] : [const Color(0xFF7A1616), const Color(0xFFD32F2F)],
+          colors: pos 
+              ? [const Color(0xFF0A6B4D), const Color(0xFF0DB37F)] 
+              : [const Color(0xFF7A1616), const Color(0xFFD32F2F)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
@@ -166,58 +326,89 @@ class _AdminNavReportsState extends State<AdminNavReports> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Container(padding: const EdgeInsets.all(7),
+          Container(padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: Colors.white.withAlpha(28), borderRadius: BorderRadius.circular(10)),
-              child: Icon(pos ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: Colors.white, size: 16)),
-          const SizedBox(width: 8),
-          const Text('Net Profit (YTD)', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+              child: Icon(pos ? Icons.trending_up_rounded : Icons.trending_down_rounded, color: Colors.white, size: 18)),
+          const SizedBox(width: 10),
+          const Text('Net Profit', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
         ]),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Text(NumberUtils.formatCurrency(net),
-            style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900, letterSpacing: -1)),
-        const SizedBox(height: 14),
-        Row(children: [
-          Expanded(child: _miniStat('Revenue', NumberUtils.formatCurrency(revenue))),
-          Expanded(child: _miniStat('Expenses', NumberUtils.formatCurrency(expenses))),
-          Expanded(child: _miniStat('Payroll', NumberUtils.formatCurrency(payroll))),
-        ]),
+            style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1)),
       ]),
     );
   }
 
-  Widget _miniStat(String label, String value) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
-    const SizedBox(height: 2),
-    Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800), maxLines: 1, overflow: TextOverflow.ellipsis),
-  ]);
+  // ─── KPI Grid ──────────────────────────────────────────────────────────────
+  Widget _buildKpiGrid(stat, main, Color primary) {
+    final revenue = (stat.summary.totalRevenue as num).toDouble();
+    final expenses = main != null ? NumberUtils.getStatsTotalExpenses(main) : 0.0;
+    final payroll = (main?.grossPayroll as num?)?.toDouble() ?? 0.0;
+    
+    final trips = stat.summary.totalTrips;
+    final distance = stat.summary.totalDistance ?? 0.0;
+    final load = stat.summary.totalLoadWeight ?? 0.0;
 
-  // ─── KPI Row ───────────────────────────────────────────────────────────────
-  Widget _buildKpiRow(stat, Color primary) {
-    return Row(children: [
-      Expanded(child: _kpiTile('Total Trips', '${stat.summary.totalTrips}', Icons.route_rounded, primary)),
-      const SizedBox(width: 12),
-      Expanded(child: _kpiTile('Margin', '${(stat.summary.margin as num).toStringAsFixed(1)}%', Icons.percent_rounded, const Color(0xFF6C5DD3))),
-      const SizedBox(width: 12),
-      Expanded(child: _kpiTile('YTD Period', 'Monthly', Icons.calendar_today_rounded, const Color(0xFF00C897))),
-    ]);
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.35,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      children: [
+        _kpiCard('Revenue', NumberUtils.formatCurrency(revenue), Icons.account_balance_wallet_rounded, Colors.green),
+        _kpiCard('Total Expenses', NumberUtils.formatCurrency(expenses), Icons.money_off_rounded, Colors.redAccent),
+        _kpiCard('Payroll', NumberUtils.formatCurrency(payroll), Icons.payments_rounded, Colors.orange),
+        _kpiCard('Total Trips', '$trips', Icons.route_rounded, Colors.blue),
+        _kpiCard('Total Distance', '${NumberUtils.formatNumber(distance)} km', Icons.speed_rounded, Colors.purple),
+        _kpiCard('Total Load', '${NumberUtils.formatNumber(load)} kgs', Icons.monitor_weight_rounded, Colors.teal),
+      ],
+    );
   }
 
-  Widget _kpiTile(String label, String value, IconData icon, Color color) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: GTheme.cardColor(context), borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: color.withAlpha(40), width: 1.5),
-      boxShadow: [BoxShadow(color: color.withAlpha(14), blurRadius: 12, offset: const Offset(0, 4))],
-    ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(9)),
-          child: Icon(icon, color: color, size: 15)),
-      const SizedBox(height: 10),
-      Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: -0.4), maxLines: 1, overflow: TextOverflow.ellipsis),
-      const SizedBox(height: 2),
-      Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500)),
-    ]),
-  );
+  Widget _kpiCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: GTheme.cardColor(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(30), width: 1.5),
+        boxShadow: [BoxShadow(color: color.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(8)),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w700),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: GTheme.reverse(context)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
 
   // ─── Expense Card ──────────────────────────────────────────────────────────
   Widget _buildExpenseCard(main) {
@@ -260,7 +451,7 @@ class _AdminNavReportsState extends State<AdminNavReports> {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Expanded(child: Text(e.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[500]))),
-                  Text(NumberUtils.formatCurrency(e.amount), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  Text(NumberUtils.formatCurrency(e.amount), style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
                   const SizedBox(width: 8),
                   SizedBox(width: 34, child: Text('${(pct * 100).toStringAsFixed(0)}%',
                       style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: e.color), textAlign: TextAlign.right)),
@@ -290,11 +481,10 @@ class _AdminNavReportsState extends State<AdminNavReports> {
           boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 14, offset: const Offset(0, 5))],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Title row + period selector — uses Wrap to avoid overflow
-          Wrap(spacing: 12, runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Analytics Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-              _buildPeriodSelector(),
+              const Text('Daily Revenue Trend', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 8),
@@ -304,10 +494,10 @@ class _AdminNavReportsState extends State<AdminNavReports> {
             const SizedBox(width: 16),
             _legend('Expenses', const Color(0xFFFF6B6B)),
           ]),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           // Chart
           SizedBox(
-            height: 260,
+            height: 240,
             child: graphLoading
                 ? const Center(child: CircularProgressIndicator())
                 : data.isEmpty
@@ -365,14 +555,11 @@ class _AdminNavReportsState extends State<AdminNavReports> {
               if (i < 0 || i >= data.length) return const SizedBox.shrink();
               final d = data[i];
               String lbl;
-              if (_graphPeriod == 'Monthly') {
-                lbl = GenesisDate.getShortMonthName(d.date.month)[0];
-              } else if (_graphPeriod == 'Yearly') {
-                lbl = '${d.date.year}';
-              } else {
-                if (d.date.day % 5 != 0) return const SizedBox.shrink();
-                lbl = '${d.date.day}';
-              }
+              // Because we set selectedPeriod = 'Daily' when fetching the graph for the month,
+              // we can just show the day number:
+              if (d.date.day % 5 != 0 && d.date.day != 1 && d.date.day != 31) return const SizedBox.shrink();
+              lbl = '${d.date.day}';
+              
               return SideTitleWidget(meta: m,
                   child: Text(lbl, style: const TextStyle(color: Color(0xff68737d), fontSize: 9, fontWeight: FontWeight.bold)));
             })),
@@ -408,32 +595,6 @@ class _AdminNavReportsState extends State<AdminNavReports> {
     ));
   }
 
-  // ─── Period Selector (graph only) ──────────────────────────────────────────
-  Widget _buildPeriodSelector() {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(color: GTheme.surface(context), borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.withAlpha(20))),
-      child: Row(mainAxisSize: MainAxisSize.min, children: ['Daily', 'Monthly', 'Yearly'].map((p) {
-        final sel = _graphPeriod == p;
-        return GestureDetector(
-          onTap: () {
-            if (_graphPeriod == p) return;
-            setState(() => _graphPeriod = p);
-            _refreshGraph();
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: sel ? const Color(0xFF6C5DD3) : Colors.transparent, borderRadius: BorderRadius.circular(7)),
-            child: Text(p, style: TextStyle(fontSize: 11, fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                color: sel ? Colors.white : Colors.grey[500])),
-          ),
-        );
-      }).toList()),
-    );
-  }
-
   // ─── Settlements ───────────────────────────────────────────────────────────
   Widget _sectionTitle(String t) => Text(t, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800));
 
@@ -467,23 +628,23 @@ class _AdminNavReportsState extends State<AdminNavReports> {
                 Get.to(() => DriverStatsScreen(userId: item.driverId));
               }
             },
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: Container(
-              width: 42, height: 42,
-              decoration: BoxDecoration(color: GTheme.primary(context).withAlpha(14), borderRadius: BorderRadius.circular(12)),
+              width: 44, height: 44,
+              decoration: BoxDecoration(color: GTheme.primary(context).withAlpha(14), borderRadius: BorderRadius.circular(14)),
               child: Icon(isVehicle ? Icons.local_shipping_outlined : Icons.person_outline_rounded,
-                  color: GTheme.primary(context), size: 18),
+                  color: GTheme.primary(context), size: 20),
             ),
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            subtitle: Text(sub, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+            title: Text(name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 14)),
+            subtitle: Text(sub, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
               Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(NumberUtils.formatCurrency(rev),
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
-                Text('Settled', style: TextStyle(fontSize: 9, color: Colors.grey[500], fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900, fontSize: 14, color: Colors.green.shade600)),
+                Text('Revenue', style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w600)),
               ]),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right_rounded, color: Colors.blue.withAlpha(180), size: 18),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right_rounded, color: Colors.grey.withAlpha(100), size: 18),
             ]),
           );
         },

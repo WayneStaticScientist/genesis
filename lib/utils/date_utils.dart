@@ -139,4 +139,9 @@ class GenesisDate {
   static formatSortableDate(DateTime createdAt) {
     return "${createdAt.year}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.day.toString().padLeft(2, '0')} ${getWeekDayName(createdAt)} ${createdAt.day} ${getShortMonthName(createdAt.month)}";
   }
+
+  static String getHour(DateTime? dateTime) {
+    if (dateTime == null) return "";
+    return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+  }
 }

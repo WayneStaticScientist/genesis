@@ -15,19 +15,25 @@ class SummaryTile {
   double totalRevenue;
   int totalTrips;
   double margin;
+  double totalDistance;
+  double totalLoadWeight;
   SummaryTile({
     required this.totalRevenue,
     required this.totalTrips,
     required this.margin,
+    required this.totalDistance,
+    required this.totalLoadWeight,
   });
   factory SummaryTile.fromJSON(data) {
     if (data == null) {
-      return SummaryTile(totalRevenue: 0, totalTrips: 0, margin: 0);
+      return SummaryTile(totalRevenue: 0, totalTrips: 0, margin: 0, totalDistance: 0, totalLoadWeight: 0);
     }
     return SummaryTile(
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
-      totalTrips: data['totalTrips'],
+      totalTrips: data['totalTrips'] ?? 0,
       margin: (data['margin'] as num?)?.toDouble() ?? 0.0,
+      totalDistance: (data['totalDistance'] as num?)?.toDouble() ?? 0.0,
+      totalLoadWeight: (data['totalLoadWeight'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

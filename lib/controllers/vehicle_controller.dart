@@ -119,4 +119,17 @@ class VehicleControler extends GetxController {
     selectedVehicle.value = VehicleModel.fromJSON(response.body);
     return true;
   }
+
+  Future<bool> deleteVehicle(String id) async {
+    if (registeringVehicle.value) return false;
+    registeringVehicle.value = true;
+    final response = await Net.delete("/vehicle/$id");
+    registeringVehicle.value = false;
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    fetchAllVehicles();
+    return true;
+  }
 }

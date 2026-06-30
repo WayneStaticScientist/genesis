@@ -111,6 +111,36 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
     }
   }
 
+  void _deleteDriver() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Driver"),
+        content: const Text(
+          "Are you sure you want to delete this driver? This action cannot be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final success = await _userController.deleteEmployee(widget.driver.id);
+      if (success) {
+        Get.back();
+        Toaster.showSuccess("Driver deleted successfully");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,6 +158,10 @@ class _AdminEditDriverState extends State<AdminEditDriver> {
           style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            onPressed: _deleteDriver,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: ElevatedButton(

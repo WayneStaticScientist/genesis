@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'package:exui/material.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
+import 'package:exui/material.dart';
 import 'package:flutter/material.dart';
 import 'package:genesis/utils/theme.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:genesis/utils/date_utils.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/models/user_model.dart';
 import 'package:genesis/models/trip_model.dart';
@@ -139,6 +140,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
               'name': dest.name,
               'reached': dest.reached,
               'location': dest.location?.toJson(),
+              'reachedAt': dest.reachedAt?.toIso8601String(),
             },
           )
           .toList(),
@@ -176,8 +178,21 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
       name: updated[index].name,
       reached: true,
       location: updated[index].location,
+      reachedAt: DateTime.now(),
     );
     await _updateTripDestinations(trip, updated);
+
+    // Auto-end trip if all destinations are reached
+    final allReached = updated.every((dest) => dest.reached);
+    if (allReached) {
+      final res = await _userController.endTrip(
+        data: {"endTime": DateTime.now().toIso8601String()},
+      );
+      if (res) {
+        Toaster.showSuccess("Trip Completed Successfully");
+        _userController.user.refresh();
+      }
+    }
   }
 
   Future<void> _reorderDestination(
@@ -211,13 +226,64 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           Obx(() {
             final liveData = _socketController.liveTrackModel.value;
             final trip = _socketController.liveTrackDriver.value?.trip;
+            final listenId = _socketController.listenId.value;
+            final isOnTrip = trip?.status == "Active" || trip?.status == "Pending";
+            
+            final hasHardwarePing = liveData != null && 
+                                    liveData.state != 'not-found' && 
+                                    DateTime.now().difference(liveData.timestamp).inMinutes < 15;
+            
+            final shouldShowMap = isOnTrip || hasHardwarePing;
+
+            if (!shouldShowMap || listenId.isEmpty) {
+              return Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(30),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withAlpha(20),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        LineIcons.parking,
+                        size: 80,
+                        color: Colors.grey.withAlpha(150),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    "Vehicle is Parked".text(
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    "No active trip or live GPS signal detected".text(
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.withAlpha(150),
+                      ),
+                    ),
+                    const SizedBox(height: 150), // space for bottom sheet
+                  ],
+                ),
+              );
+            }
+
             final destinations = trip?.destinations ?? [];
             final destination = trip?.location;
             final origin = trip?.locationOrigin;
-            final hasData = liveData != null;
+            final hasData = liveData != null && liveData.lat != 0 && liveData.lng != 0;
             final currentPos = hasData
                 ? LatLng(liveData.lat, liveData.lng)
                 : _defaultLocation;
+                
             return GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: currentPos,
@@ -407,7 +473,63 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       Obx(() {
                         final user = _socketController.liveTrackDriver.value;
                         final liveData = _socketController.liveTrackModel.value;
+                        final listenId = _socketController.listenId.value;
                         final isOnTrip = (user?.trip?.status == "Active");
+
+                        if (listenId.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(vertical: 30),
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: GTheme.surface(context),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  LineIcons.mapMarked,
+                                  size: 40,
+                                  color: Colors.grey.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(height: 12),
+                                "No active tracking session".text(
+                                  style: TextStyle(
+                                    color: Colors.grey.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        if (user == null) {
+                          return Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: GTheme.surface(context),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                "Initializing tracking...".text(
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
                         Duration? difference;
                         if (liveData != null) {
                           difference = DateTime.now().difference(
@@ -419,8 +541,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                             CircleAvatar(
                               radius: 25,
                               child: ("Driver".from(
-                                user?.firstName,
-                                user?.lastName,
+                                user.firstName,
+                                user.lastName,
                               ))[0].text(),
                             ),
                             const SizedBox(width: 16),
@@ -430,8 +552,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                 children: [
                                   Text(
                                     "Driver".from(
-                                      user?.firstName,
-                                      user?.lastName,
+                                      user.firstName,
+                                      user.lastName,
                                     ),
                                     style: const TextStyle(
                                       fontSize: 18,
@@ -463,7 +585,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                             ),
                             IconButton(
                               onPressed: () =>
-                                  Get.to(() => ChatScreen(user: user!)),
+                                  Get.to(() => ChatScreen(user: user)),
                               icon: Icon(
                                 LineIcons.commentAlt,
                                 color: Theme.of(context).colorScheme.primary,
@@ -548,24 +670,70 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       // === ANIMATED TRIP BUTTON ===
                       Obx(() {
                         final currentUser = _userController.user.value;
+                        if (currentUser?.role != 'driver' ||
+                            currentUser?.trip == null)
+                          return const SizedBox.shrink();
+
                         final isOnTrip =
                             (currentUser?.trip?.status == 'Active');
-                        final canStop =
-                            currentUser != null &&
-                            currentUser.trip != null &&
-                            _allDestinationsReached(currentUser.trip!);
-                        return PingingStopButton(
-                          isLoading: _userController.processingTrip.value,
-                          isOnTrip: isOnTrip,
-                          pingAnimation: _pingController,
-                          onPressed: () => isOnTrip
-                              ? _showEndTripDialog()
-                              : _showStartTripDialog(),
-                        ).visibleIf(
-                          currentUser?.role == 'driver' &&
-                              currentUser?.trip != null &&
-                              currentUser?.trip?.status != "Completed" &&
-                              (!isOnTrip || canStop),
+                        final tripCompleted =
+                            (currentUser?.trip?.status == "Completed");
+                        if (tripCompleted) return const SizedBox.shrink();
+
+                        final allReached = _allDestinationsReached(
+                          currentUser!.trip!,
+                        );
+
+                        return Column(
+                          children: [
+                            if (isOnTrip && !allReached)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.orange.withAlpha(100),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.info_outline,
+                                      color: Colors.orange,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: Text(
+                                        "Reach all destinations to complete trip",
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            PingingStopButton(
+                              isLoading: _userController.processingTrip.value,
+                              isOnTrip: isOnTrip,
+                              animationOnly:
+                                  isOnTrip, // Always animation only if on trip
+                              pingAnimation: _pingController,
+                              onPressed: () {
+                                if (!isOnTrip) {
+                                  _showStartTripDialog();
+                                }
+                              },
+                            ),
+                          ],
                         );
                       }),
                       Obx(() {
@@ -685,17 +853,27 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      dest.reached
-                          ? Icons.check_circle
-                          : isCurrent
-                          ? Icons.location_on
-                          : Icons.location_on_outlined,
-                      color: dest.reached
-                          ? Colors.green
-                          : isCurrent
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey,
+                    AnimatedBuilder(
+                      animation: _pingController,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: isCurrent
+                              ? 1.0 + (0.15 * _pingController.value)
+                              : 1.0,
+                          child: Icon(
+                            dest.reached
+                                ? Icons.check_circle
+                                : isCurrent
+                                ? Icons.location_on
+                                : Icons.location_on_outlined,
+                            color: dest.reached
+                                ? Colors.green
+                                : isCurrent
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -720,7 +898,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           const SizedBox(height: 4),
                           Text(
                             dest.reached
-                                ? "Reached"
+                                ? "Reached at ${GenesisDate.getHour(dest.reachedAt)}"
                                 : isCurrent
                                 ? "Current Route"
                                 : "Pending",
@@ -928,29 +1106,6 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
       _socketController.listenId.value =
           _userController.user.value?.currentVehicle?.carModel ?? '';
     }
-  }
-
-  _showEndTripDialog() {
-    if (_socketController.currentVehicle.value == null) {
-      return Toaster.showError("wait vehicle still inititializing please wait");
-    }
-    Get.defaultDialog(
-      title: "End Trip",
-      textCancel: "close",
-      content:
-          "End trip with vehicle ${_socketController.currentVehicle.value?.carModel}"
-              .text(),
-      onConfirm: () async {
-        Get.back();
-        final res = await _userController.endTrip(
-          data: {"endTime": DateTime.now().toIso8601String()},
-        );
-        if (res) {
-          Toaster.showSuccess("Trip Stopped -> waiting for approval");
-          _userController.user.refresh();
-        }
-      },
-    );
   }
 
   void _alartPendingTrip() {

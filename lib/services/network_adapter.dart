@@ -5,8 +5,8 @@ import 'package:genesis/models/response_model.dart';
 
 class Net {
   static Dio? _dio;
-  // static const String domain = "genesis.mistpos.co.zw";
-  static const String domain = "192.168.1.199:5024";
+  // static const String domain = "genesiserp.co.zw";
+  static const String domain = "10.99.161.43:5024";
   static const String baseUrl = "http://$domain/v1";
   static const String url = "http://$domain";
   static Future<ResponseModel> get(
@@ -82,6 +82,25 @@ class Net {
     }
     try {
       final response = await _dio!.delete(url, data: data, options: options);
+      return ResponseModel(hasError: false, response: "", body: response.data);
+    } on DioException catch (e) {
+      return getError(e);
+    }
+  }
+
+  static Future<ResponseModel> uploadFile(
+    String url,
+    String filePath, {
+    String? fileName,
+  }) async {
+    if (Net._dio == null) {
+      await initDio();
+    }
+    try {
+      FormData formData = FormData.fromMap({
+        "file": await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+      final response = await _dio!.post(url, data: formData);
       return ResponseModel(hasError: false, response: "", body: response.data);
     } on DioException catch (e) {
       return getError(e);

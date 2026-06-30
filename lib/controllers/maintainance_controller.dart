@@ -150,4 +150,15 @@ class MaintainanceController extends GetxController {
     );
     return;
   }
+
+  Future<bool> addComment(String id, String text) async {
+    final response =
+        await Net.post("/maintainance/comment/$id", data: {"text": text});
+    if (response.hasError) {
+      Toaster.showError(response.response);
+      return false;
+    }
+    getMantainance(id);
+    return true;
+  }
 }

@@ -25,6 +25,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
   double _health = 85.0;
   int _daysLeft = 14;
   String? _selectedLicencePlate;
+  String _comment = "";
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -43,6 +44,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
         "estimatedCosts": _cost,
         "currentHealth": _health,
         "licencePlate": _selectedLicencePlate,
+        "comment": _comment,
       };
 
       final response = await _mantainanceController.addMantainance(newTask);
@@ -201,6 +203,14 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
                   decimal: true,
                 ),
                 onSaved: (val) => _cost = double.tryParse(val ?? "0") ?? 0.0,
+              ),
+              const SizedBox(height: 16),
+              _buildField(
+                label: "Initial Comment",
+                hint: "Add extra details or notes here...",
+                icon: Icons.comment_outlined,
+                maxLines: 3,
+                onSaved: (val) => _comment = val ?? "",
               ),
 
               const SizedBox(height: 40),
@@ -363,6 +373,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
     String? initialValue,
     required IconData icon,
     TextInputType? keyboardType,
+    int? maxLines = 1,
     FormFieldSetter<String>? onSaved,
     FormFieldValidator<String>? validator,
   }) {
@@ -377,6 +388,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
         onSaved: onSaved,
         validator: validator,
         keyboardType: keyboardType,
+        maxLines: maxLines,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w500,

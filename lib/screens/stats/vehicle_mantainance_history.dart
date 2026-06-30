@@ -9,6 +9,7 @@ import 'package:genesis/models/vehicle_model.dart';
 import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/screens/maintainance/maintainance_view.dart';
 
 class MaintenanceHistoryScreen extends StatefulWidget {
   final VehicleModel vehicle;
@@ -230,7 +231,13 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
                             record: record,
                             currencyFormat: currencyFormat,
                             dateFormat: dateFormat,
-                          );
+                          ).onTap(() {
+                            Get.to(
+                              () => MaintenanceDetailScreen(
+                                maintainance_id: record.id!,
+                              ),
+                            );
+                          });
                         },
                       ),
                     ),

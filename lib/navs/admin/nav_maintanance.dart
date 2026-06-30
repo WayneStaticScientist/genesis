@@ -14,8 +14,9 @@ import 'package:genesis/widgets/layouts/maintanance_card.dart';
 
 class AdminNavMaintenance extends StatefulWidget {
   final GlobalKey<ScaffoldState>? triggerKey;
+  final String initialStatus;
 
-  const AdminNavMaintenance({super.key, this.triggerKey});
+  const AdminNavMaintenance({super.key, this.triggerKey, this.initialStatus = ''});
 
   @override
   State<AdminNavMaintenance> createState() => _AdminNavMaintenanceState();
@@ -30,6 +31,7 @@ class _AdminNavMaintenanceState extends State<AdminNavMaintenance> {
   @override
   void initState() {
     super.initState();
+    _status = widget.initialStatus;
     filterResults();
   }
 
