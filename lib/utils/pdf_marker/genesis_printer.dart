@@ -17,6 +17,7 @@ import 'package:genesis/models/trip_stats_model.dart';
 import 'package:genesis/models/maintainance_model.dart';
 import 'package:genesis/models/vehicle_stats_model.dart';
 import 'package:genesis/models/user_trip_stats_model.dart';
+import 'package:genesis/models/yearly_report_model.dart';
 
 class GenisisPrinter {
   static Future<pw.MemoryImage> _loadLogo() async {
@@ -398,7 +399,7 @@ class GenisisPrinter {
     final rows = [
       ['Fuel Expenses', stats.fuelExpense],
       ['Tollgate Fees', stats.tolgateExpense],
-      ['Truck Shop / Parts', stats.truckShopExpense],
+      ['Truck Stop / Parts', stats.truckStopExpense],
       ['Food / Allowances', stats.foodExpense],
       ['Fines & Penalties', stats.finesExpense],
       ['Miscellaneous Extras', stats.extrasExpense],
@@ -407,7 +408,7 @@ class GenisisPrinter {
     final totalExp =
         stats.fuelExpense +
         stats.tolgateExpense +
-        stats.truckShopExpense +
+        stats.truckStopExpense +
         stats.foodExpense +
         stats.finesExpense +
         stats.extrasExpense;
@@ -483,8 +484,7 @@ class GenisisPrinter {
         margin: const pw.EdgeInsets.all(32),
         build: (context) {
           double totalTripExpenses = stats.trips.fold(0.0, (sum, trip) => sum + NumberUtils.getTripExpenseTotal(trip));
-          double totalExpenses = stats.totalMaintenanceCosts + totalTripExpenses;
-          double netProfit = stats.totalRevenue - totalExpenses;
+          double netProfit = stats.totalRevenue - stats.totalMaintenanceCosts;
           
           return [
           _buildHeader(logo, title: "Vehicle Profile Report"),
@@ -506,14 +506,25 @@ class GenisisPrinter {
                   children: [
                     _buildMetric("Trips", stats.totalTrips.toString()),
                     _buildMetric(
-                      "Total Expenses",
-                      NumberUtils.formatCurrency(totalExpenses),
+                      "Trip Expenses",
+                      NumberUtils.formatCurrency(totalTripExpenses),
                       color: PdfColors.red400,
                     ),
                     _buildMetric(
+                      "Maintenance Costs",
+                      NumberUtils.formatCurrency(stats.totalMaintenanceCosts),
+                      color: PdfColors.orange700,
+                    ),
+                  ],
+                ),
+                pw.Divider(height: 20, color: PdfColors.grey100),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildMetric(
                       "Total Revenue",
                       NumberUtils.formatCurrency(stats.totalRevenue),
-                      color: PdfColors.orange700,
+                      color: PdfColors.green700,
                     ),
                     _buildMetric(
                       "Net Profit",
@@ -523,7 +534,6 @@ class GenisisPrinter {
                     ),
                   ],
                 ),
-                pw.Divider(height: 20, color: PdfColors.grey100),
               ],
             ),
           ),
@@ -650,12 +660,33 @@ class GenisisPrinter {
     );
   }
 
+  static String _formatDuration(int ms) {
+    if (ms <= 0) return "0h 0m";
+    final duration = Duration(milliseconds: ms);
+    if (duration.inDays > 0) {
+      return "${duration.inDays}d ${duration.inHours % 24}h ${duration.inMinutes % 60}m";
+    }
+    if (duration.inHours > 0) {
+      return "${duration.inHours}h ${duration.inMinutes % 60}m";
+    }
+    return "${duration.inMinutes}m";
+  }
+
   static Future<void> printUserInsightsState(
     UserTripStatsModel stats,
-    DateTimeRange dateRange,
+    DateTimeRange? dateRange,
   ) async {
     final logo = await _loadLogo();
     final pdf = pw.Document();
+    
+    final dateRangeStr = dateRange != null
+        ? "${GenesisDate.formatMonthAndDay(dateRange.start)} - ${GenesisDate.formatMonthAndDay(dateRange.end)}"
+        : "All Time";
+
+    final totalTurnaroundTimeStr = stats.totalTurnaroundTimeMs > 0
+        ? _formatDuration(stats.totalTurnaroundTimeMs)
+        : "0h 0m";
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -663,28 +694,38 @@ class GenisisPrinter {
         build: (context) => [
           _buildHeader(
             logo,
-            title:
-                "UserInsights - ${GenesisDate.formatMonthAndDay(dateRange.start)} - ${GenesisDate.formatMonthAndDay(dateRange.end)}",
+            title: "User Insights - $dateRangeStr",
           ),
           pw.SizedBox(height: 24),
 
           // --- Section 1: Fleet Utilization Overview ---
-          _buildSectionTitle("User - ${stats.firstName} ${stats.lastName}}"),
+          _buildSectionTitle("User - ${stats.firstName} ${stats.lastName}"),
           _buildSectionSubtitle(stats.email),
           _buildSectionTitle("Performance Summary"),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               _buildStatCard("Total Trips", "${stats.totalTrips}"),
-
-              _buildStatCard(
-                "Total Revenue",
-                "${NumberUtils.formatCurrency(stats.totalRevenue)}",
-              ),
+              _buildStatCard("Total Revenue", "${NumberUtils.formatCurrency(stats.totalRevenue)}"),
+            ],
+          ),
+          pw.SizedBox(height: 12),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatCard("Total Expenses", "${NumberUtils.formatCurrency(stats.totalExpenses)}"),
+              _buildStatCard("Gross Profit", "${NumberUtils.formatCurrency(stats.grossProfit)}"),
+            ],
+          ),
+          pw.SizedBox(height: 12),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatCard("Turnaround Time", totalTurnaroundTimeStr),
             ],
           ),
           if (stats.recentTrips.isNotEmpty) ...[
-            _buildSectionTitle("Service History"),
+            _buildSectionTitle("Trips History"),
             pw.TableHelper.fromTextArray(
               headers: ['Route', 'Revenue', 'Type', 'Status', 'Date'],
               data: stats.recentTrips
@@ -695,6 +736,25 @@ class GenisisPrinter {
                       '${m.loadType}',
                       m.status.toUpperCase(),
                       "${GenesisDate.formatNormalDate(m.date)}",
+                    ],
+                  )
+                  .toList(),
+            ),
+            pw.SizedBox(height: 32),
+          ],
+          if (stats.monthlyReports.isNotEmpty) ...[
+            _buildSectionTitle("Monthly Breakdown Reports"),
+            pw.TableHelper.fromTextArray(
+              headers: ['Month', 'Trips', 'Revenue', 'Expenses', 'Gross Profit', 'Active Duration'],
+              data: stats.monthlyReports
+                  .map(
+                    (m) => [
+                      '${GenesisDate.getShortMonthName(m.month)} ${m.year}',
+                      '${m.totalTrips}',
+                      "${NumberUtils.formatCurrency(m.totalRevenue)}",
+                      "${NumberUtils.formatCurrency(m.totalExpenses)}",
+                      "${NumberUtils.formatCurrency(m.grossProfit)}",
+                      m.totalTurnaroundTimeMs > 0 ? _formatDuration(m.totalTurnaroundTimeMs) : '0h 0m',
                     ],
                   )
                   .toList(),
@@ -924,7 +984,7 @@ class GenisisPrinter {
             data: [
               ['Food / Allowances', NumberUtils.formatCurrency(stats.foodExpense)],
               ['Tollgate Fees', NumberUtils.formatCurrency(stats.tolgateExpense)],
-              ['Truck Shop / Parts', NumberUtils.formatCurrency(stats.truckShopExpense)],
+              ['Truck Stop / Parts', NumberUtils.formatCurrency(stats.truckStopExpense)],
               ['Fuel Expenses', NumberUtils.formatCurrency(stats.fuelExpense)],
               ['Fines & Penalties', NumberUtils.formatCurrency(stats.finesExpense)],
               ['Miscellaneous Extras', NumberUtils.formatCurrency(stats.extrasExpense)],
@@ -1215,6 +1275,115 @@ class GenisisPrinter {
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
       name: 'user_payroll_report.pdf',
+    );
+  }
+
+  static Future<void> printYearlyReport(YearlyReportModel model, int year) async {
+    final logo = await _loadLogo();
+    final pdf = pw.Document();
+    
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          _buildHeader(logo, title: "Yearly Performance Report - $year"),
+          pw.SizedBox(height: 24),
+          
+          _buildSectionTitle("Annual Financial Summary"),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey300),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+            ),
+            child: pw.Column(
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildMetric("Total Trips", model.yearlyTrips.toString()),
+                    _buildMetric(
+                      "Revenue",
+                      NumberUtils.formatCurrency(model.yearlyRevenue),
+                      color: PdfColors.green700,
+                    ),
+                    _buildMetric(
+                      "Expenses",
+                      NumberUtils.formatCurrency(model.yearlyExpenses),
+                      color: PdfColors.red700,
+                    ),
+                  ],
+                ),
+                pw.Divider(height: 20, color: PdfColors.grey100),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildMetric(
+                      "Payroll",
+                      NumberUtils.formatCurrency(model.yearlyPayroll),
+                      color: PdfColors.orange700,
+                    ),
+                    _buildMetric(
+                      "Maintenance",
+                      NumberUtils.formatCurrency(model.yearlyMaintenance),
+                      color: PdfColors.blueGrey,
+                    ),
+                    _buildMetric(
+                      "Net Profit",
+                      NumberUtils.formatCurrency(model.yearlyNetProfit),
+                      color: model.yearlyNetProfit >= 0 ? PdfColors.green700 : PdfColors.red700,
+                      isBold: true,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 32),
+          
+          _buildSectionTitle("Monthly Financial Breakdown"),
+          pw.TableHelper.fromTextArray(
+            border: pw.TableBorder(
+              horizontalInside: pw.BorderSide(color: PdfColor.fromHex('#F0F2F5')),
+              bottom: pw.BorderSide(color: PdfColor.fromHex('#E0E4EC')),
+            ),
+            headerAlignment: pw.Alignment.centerLeft,
+            cellAlignment: pw.Alignment.centerLeft,
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 9,
+              color: PdfColors.white,
+            ),
+            headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#2A2D3E')),
+            cellStyle: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#3A3D4E')),
+            cellPadding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            headers: ['Month', 'Trips', 'Revenue', 'Expenses', 'Payroll', 'Maintenance', 'Net Profit'],
+            data: model.monthlyData.map((m) {
+              return [
+                GenesisDate.getShortMonthName(m.month),
+                m.trips.toString(),
+                NumberUtils.formatCurrency(m.revenue),
+                NumberUtils.formatCurrency(m.expenses),
+                NumberUtils.formatCurrency(m.payroll),
+                NumberUtils.formatCurrency(m.maintenance),
+                NumberUtils.formatCurrency(m.netProfit),
+              ];
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+    
+    final output = await getTemporaryDirectory();
+    final file = File(
+      "${output.path}/yearly_report_${year}_${DateTime.now().millisecondsSinceEpoch}.pdf",
+    );
+    await file.writeAsBytes(await pdf.save());
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'yearly_report_$year.pdf',
     );
   }
 }

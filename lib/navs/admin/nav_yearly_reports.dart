@@ -8,6 +8,7 @@ import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/number_utils.dart';
 import 'package:genesis/controllers/stats_controller.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
+import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AdminNavYearlyReports extends StatefulWidget {
@@ -19,6 +20,7 @@ class AdminNavYearlyReports extends StatefulWidget {
 
 class _AdminNavYearlyReportsState extends State<AdminNavYearlyReports> {
   final _c = Get.find<StatsController>();
+  bool _isPrinting = false;
 
   @override
   void initState() {
@@ -99,6 +101,22 @@ class _AdminNavYearlyReportsState extends State<AdminNavYearlyReports> {
       leading: DrawerButton(color: Colors.white,
           onPressed: () => widget.triggerKey?.currentState?.openDrawer())
           .visibleIf(widget.triggerKey != null),
+      actions: [
+        Obx(() => GestureDetector(
+          onTap: () async {
+            if (_isPrinting || _c.yearlyReport.value == null) return;
+            setState(() => _isPrinting = true);
+            await GenisisPrinter.printYearlyReport(_c.yearlyReport.value!, _c.selectedYear.value);
+            setState(() => _isPrinting = false);
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(color: Colors.white.withAlpha(25), borderRadius: BorderRadius.circular(12)),
+            child: _isPrinting.lord(const MaterialLoader(), const Icon(Icons.print_rounded, color: Colors.white, size: 18)),
+          ),
+        ).visibleIf(_c.yearlyReport.value != null)),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(gradient: LinearGradient(
@@ -224,6 +242,7 @@ class _AdminNavYearlyReportsState extends State<AdminNavYearlyReports> {
         _kpiCard('Total Revenue', NumberUtils.formatCurrency(report.yearlyRevenue), Icons.account_balance_wallet_rounded, Colors.green),
         _kpiCard('Total Expenses', NumberUtils.formatCurrency(report.yearlyExpenses), Icons.money_off_rounded, Colors.redAccent),
         _kpiCard('Total Payroll', NumberUtils.formatCurrency(report.yearlyPayroll), Icons.payments_rounded, Colors.orange),
+        _kpiCard('Maintenance', NumberUtils.formatCurrency(report.yearlyMaintenance), Icons.handyman_rounded, Colors.blueGrey),
         _kpiCard('Total Trips', '${report.yearlyTrips}', Icons.route_rounded, Colors.blue),
       ],
     );
@@ -423,6 +442,7 @@ class _AdminNavYearlyReportsState extends State<AdminNavYearlyReports> {
                     _breakdownItem('Revenue', month.revenue, Colors.green),
                     _breakdownItem('Expenses', month.expenses, Colors.redAccent),
                     _breakdownItem('Payroll', month.payroll, Colors.orange),
+                    _breakdownItem('Maintenance', month.maintenance, Colors.blueGrey),
                   ],
                 ),
               )

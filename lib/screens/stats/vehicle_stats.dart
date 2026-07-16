@@ -1,7 +1,6 @@
 import 'package:genesis/screens/stats/vehicle_mantainance_history.dart';
 import 'package:genesis/utils/bool_utils.dart';
 import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
-import 'package:genesis/widgets/layouts/foot_note.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
@@ -16,7 +15,6 @@ import 'package:genesis/screens/vehicles/vehicle_edit.dart';
 import 'package:genesis/widgets/loaders/material_loader.dart';
 import 'package:genesis/controllers/insurance_controller.dart';
 import 'package:genesis/widgets/layouts/insurance_bottom_sheet.dart';
-import 'package:line_icons/line_icons.dart';
 
 // --- CONTROLLER ---
 class VehicleStatsController extends GetxController {
@@ -84,29 +82,13 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
           // Alert banner for due/overdue reminders
           SliverToBoxAdapter(child: _buildDueRemindersAlert(context)),
 
-          SliverToBoxAdapter(
-            child: FootNote(
-              iconData: LineIcons.cog,
-              description:
-                  'Tap on expenses to view all maintenance records for this vehicle',
-            ).padding(const EdgeInsets.symmetric(horizontal: 20, vertical: 8)),
-          ),
-
           SliverToBoxAdapter(child: _buildQuickActions(context)),
+          SliverToBoxAdapter(child: _buildThisMonthSummarySection(context)),
           SliverToBoxAdapter(child: _buildTotalsSection(context)),
           SliverToBoxAdapter(child: _buildDocumentSection(context)),
 
           if (widget.vehicle.serviceReminders.isNotEmpty)
             SliverToBoxAdapter(child: _buildServiceRemindersSection(context)),
-
-          SliverToBoxAdapter(
-            child: FootNote(
-              iconData: LineIcons.moneyBill,
-              iconColor: Colors.purple,
-              description:
-                  'You can tap on insurances to pay insurance for the vehicle or view its history',
-            ).padding(const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-          ),
 
           SliverPersistentHeader(
             pinned: true,
@@ -486,43 +468,72 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
       
       final stats = _statsController.vehicleTripStats.value!;
       final tripExpenses = stats.trips.fold(0.0, (sum, trip) => sum + NumberUtils.getTripExpenseTotal(trip));
-      final totalExpenses = stats.totalMaintenanceCosts + tripExpenses;
-      final profit = stats.totalRevenue - totalExpenses;
+      final grossProfit = stats.totalRevenue - tripExpenses;
+      final netProfit = grossProfit - stats.totalMaintenanceCosts;
 
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _statMiniCard(
-                  "Trips",
-                  stats.totalTrips.toInt().toString(),
-                  Colors.blue,
+                Expanded(
+                  child: _statMiniCard(
+                    "Total Trips",
+                    stats.totalTrips.toInt().toString(),
+                    Colors.blue,
+                    Icons.route_rounded,
+                  ),
                 ),
-                _statMiniCard(
-                  "Revenue",
-                  NumberUtils.formatCurrency(stats.totalRevenue),
-                  Colors.green,
-                ),
-                _statMiniCard(
-                  "Expenses",
-                  NumberUtils.formatCurrency(totalExpenses),
-                  Colors.redAccent,
-                ).onTap(
-                  () => Get.to(
-                    () => MaintenanceHistoryScreen(vehicle: widget.vehicle),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _statMiniCard(
+                    "Total Revenue",
+                    NumberUtils.formatCurrency(stats.totalRevenue),
+                    Colors.green,
+                    Icons.trending_up_rounded,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _statMiniCard(
+                    "Trip Expenses",
+                    NumberUtils.formatCurrency(tripExpenses),
+                    Colors.redAccent,
+                    Icons.local_gas_station_rounded,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _statMiniCard(
+                    "Gross Profit",
+                    NumberUtils.formatCurrency(grossProfit),
+                    Colors.teal,
+                    Icons.monetization_on_rounded,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _statWideCard(
+              "Maintenance Costs",
+              NumberUtils.formatCurrency(stats.totalMaintenanceCosts),
+              Colors.orange,
+              Icons.handyman_rounded,
+              onTap: () => Get.to(
+                () => MaintenanceHistoryScreen(vehicle: widget.vehicle),
+              ),
+            ),
+            const SizedBox(height: 12),
             _statWideCard(
               "Net Profit",
-              NumberUtils.formatCurrency(profit),
-              profit >= 0 ? Colors.teal : Colors.red,
-              Icons.trending_up,
+              NumberUtils.formatCurrency(netProfit),
+              netProfit >= 0 ? Colors.teal : Colors.red,
+              netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
             ),
           ],
         ),
@@ -530,95 +541,191 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
     });
   }
 
-  Widget _statMiniCard(String label, String value, Color color) {
+  Widget _statMiniCard(String label, String value, Color color, IconData icon, {VoidCallback? onTap}) {
     final isDark = GTheme.isDark(context);
-    return Container(
-      width: Get.width * 0.28,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+    Widget card = Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: GTheme.emmense(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isDark.lord(color.withAlpha(40), color.withAlpha(20)),
-          width: 1,
+          color: onTap != null
+              ? color.withAlpha(80)
+              : isDark.lord(color.withAlpha(40), color.withAlpha(20)),
+          width: onTap != null ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(5),
-            blurRadius: 8,
+            color: onTap != null ? color.withAlpha(10) : Colors.black.withAlpha(5),
+            blurRadius: onTap != null ? 10 : 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              if (onTap != null)
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: color,
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
             style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w900,
-              fontSize: 15,
+              fontSize: 14,
               color: color,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              color: Colors.grey.shade500,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: Colors.grey.shade500,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (onTap != null)
+                Text(
+                  "TAP TO VIEW",
+                  style: GoogleFonts.plusJakartaSans(
+                    color: color,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: card,
+      );
+    }
+    return card;
   }
 
-  Widget _statWideCard(String label, String value, Color color, IconData icon) {
-    return Container(
+  Widget _statWideCard(String label, String value, Color color, IconData icon, {VoidCallback? onTap}) {
+    Widget card = Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withAlpha(15),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withAlpha(40)),
+        border: Border.all(
+          color: onTap != null ? color.withAlpha(80) : color.withAlpha(40),
+          width: onTap != null ? 1.5 : 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(30),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: color,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (onTap != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          "TAP TO VIEW RECORDS",
+                          style: GoogleFonts.plusJakartaSans(
+                            color: color,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(30),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
               Text(
-                label,
+                value,
                 style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
                   color: color,
                 ),
               ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: color,
+                ),
+              ],
             ],
-          ),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-              color: color,
-            ),
           ),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: card,
+      );
+    }
+    return card;
   }
 
   // 3.5 VEHICLE PERFORMANCE SECTION
@@ -817,37 +924,70 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
     VoidCallback? ontap,
   }) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withAlpha(15),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withAlpha(30)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withAlpha(20),
-                borderRadius: BorderRadius.circular(8),
+      child: GestureDetector(
+        onTap: ontap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withAlpha(15),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: ontap != null ? color.withAlpha(80) : color.withAlpha(30),
+              width: ontap != null ? 1.5 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: color.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: color, size: 18),
+                  ),
+                  if (ontap != null)
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 12,
+                      color: color,
+                    ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title, 
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: GTheme.reverse(context)),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              expiry,
-              style: GoogleFonts.plusJakartaSans(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                title, 
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: GTheme.reverse(context)),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      expiry,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  if (ontap != null)
+                    Text(
+                      "TAP TO MANAGE",
+                      style: GoogleFonts.plusJakartaSans(
+                        color: color,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ).onTap(() => ontap?.call()),
+      ),
     );
   }
 
@@ -1290,6 +1430,131 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
       },
     );
   }
+
+  Widget _buildThisMonthSummarySection(BuildContext context) {
+    return Obx(() {
+      if (_statsController.fetchingVehicleTripStatus.value ||
+          _statsController.vehicleTripStats.value == null) {
+        return const SizedBox.shrink();
+      }
+
+      final stats = _statsController.vehicleTripStats.value!;
+      final thisMonth = stats.thisMonth;
+      if (thisMonth == null) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: GTheme.emmense(context),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.grey.withAlpha(30)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(5),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    color: GTheme.primary(context),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "This Month's Summary",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: GTheme.reverse(context),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              _buildSummaryRow(context, [
+                _SummaryItem("Revenue", NumberUtils.formatCurrency(thisMonth.revenue), Colors.green),
+                _SummaryItem("Net Profit", NumberUtils.formatCurrency(thisMonth.profit), thisMonth.profit >= 0 ? Colors.teal : Colors.red),
+              ]),
+              const SizedBox(height: 12),
+              _buildSummaryRow(context, [
+                _SummaryItem("Total Trips", thisMonth.trips.toInt().toString(), Colors.blue),
+                _SummaryItem("Distance Run", "${NumberUtils.formatNumber(thisMonth.mileage)} km", Colors.purple),
+              ]),
+              const SizedBox(height: 12),
+              _buildSummaryRow(context, [
+                _SummaryItem("Maintenance Cost", NumberUtils.formatCurrency(thisMonth.maintenanceCosts), Colors.orange),
+                _SummaryItem("Total Maintenances", thisMonth.totalMaintenances.toInt().toString(), Colors.blueGrey),
+              ]),
+              const SizedBox(height: 12),
+              _buildSummaryRow(context, [
+                _SummaryItem("Trip Duration", "${thisMonth.hours.toStringAsFixed(1)} hrs", Colors.indigo),
+                null,
+              ]),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildSummaryRow(BuildContext context, List<_SummaryItem?> items) {
+    return Row(
+      children: items.map((item) {
+        if (item == null) return const Expanded(child: SizedBox());
+        return Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: item.color.withAlpha(10),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: item.color.withAlpha(20)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.value,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: item.color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _SummaryItem {
+  final String label;
+  final String value;
+  final Color color;
+  _SummaryItem(this.label, this.value, this.color);
 }
 
 // Helper for Sticky Tab Switcher

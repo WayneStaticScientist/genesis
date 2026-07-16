@@ -45,12 +45,12 @@ class StatsController extends GetxController {
     final range = DateTimeRange(start: start, end: end);
     
     await Future.wait([
-      fetchStats(range),
+      fetchStats(range, periodOverride: 'Daily'),
       fetchTripStats('Daily', range), // Pass 'Daily' for graph to show daily points in that month
     ]);
   }
 
-  Future<void> fetchStats(DateTimeRange? range) async {
+  Future<void> fetchStats(DateTimeRange? range, {String? periodOverride}) async {
     isLoading.value = true;
     errorState.value = '';
     
@@ -81,13 +81,14 @@ class StatsController extends GetxController {
     isLoading.value = false;
 
     // Fetch the dynamic graph data (for the main chart)
-    await fetchGraphStats(range);
+    await fetchGraphStats(range, periodOverride: periodOverride);
   }
 
-  Future<void> fetchGraphStats(DateTimeRange? range) async {
+  Future<void> fetchGraphStats(DateTimeRange? range, {String? periodOverride}) async {
+    final p = periodOverride ?? selectedPeriod.value;
     isGraphLoading.value = true;
     final response = await Net.get(
-      '/stats/graph?startDate=${range?.start.toIso8601String() ?? ''}&endDate=${range?.end.toIso8601String() ?? ''}&period=${selectedPeriod.value}',
+      '/stats/graph?startDate=${range?.start.toIso8601String() ?? ''}&endDate=${range?.end.toIso8601String() ?? ''}&period=$p',
     );
     isGraphLoading.value = false;
     
@@ -130,12 +131,14 @@ class StatsController extends GetxController {
   RxBool fetchingUserTripStatus = false.obs;
   RxString fetchingUserTripStatsError = ''.obs;
   Rx<UserTripStatsModel?> userTripStats = Rx<UserTripStatsModel?>(null);
-  Future<void> fetchUSerTripStats(String userId, DateTimeRange range) async {
+  Future<void> fetchUSerTripStats(String userId, [DateTimeRange? range]) async {
     fetchingUserTripStatus.value = true;
     fetchingUserTripStatsError.value = '';
-    final response = await Net.get(
-      '/stats/trips/user?startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}&userId=$userId',
-    );
+    String url = '/stats/trips/user?userId=$userId';
+    if (range != null) {
+      url += '&startDate=${range.start.toIso8601String()}&endDate=${range.end.toIso8601String()}';
+    }
+    final response = await Net.get(url);
     fetchingUserTripStatus.value = false;
     if (response.hasError) {
       fetchingUserTripStatsError.value = response.response;

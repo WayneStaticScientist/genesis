@@ -5,10 +5,16 @@ import 'package:genesis/models/response_model.dart';
 
 class Net {
   static Dio? _dio;
-  // static const String domain = "genesiserp.co.zw";
-  static const String domain = "10.99.161.43:5024";
-  static const String baseUrl = "http://$domain/v1";
-  static const String url = "http://$domain";
+  static const String domain = "api.genesiserp.co.zw";
+  // static const String domain = "10.154.129.43:5024";
+
+  // Use https for the live production domain, and http for local IP
+  static final String protocol = domain.contains("api.genesiserp")
+      ? "https"
+      : "http";
+
+  static String baseUrl = "$protocol://$domain/v1";
+  static String url = "$protocol://$domain";
   static Future<ResponseModel> get(
     String url, {
     Map<String, dynamic>? queryParameters,

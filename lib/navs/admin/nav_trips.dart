@@ -47,8 +47,8 @@ class _NavTripsState extends State<NavTrips> {
   }
   // Mock data representing the models provided
 
-  filterResults() {
-    _tripsController.fetchTrips(
+  Future<void> filterResults() async {
+    await _tripsController.fetchTrips(
       search: _searchQuery,
       status: _selectedStatus != "All" ? _selectedStatus : "",
       startTime: _selectedDateRange?.start,
@@ -100,9 +100,11 @@ class _NavTripsState extends State<NavTrips> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: filterResults,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSearchAndFilterHeader(),
@@ -139,6 +141,7 @@ class _NavTripsState extends State<NavTrips> {
             }),
           ],
         ),
+      ),
       ),
     );
   }

@@ -241,8 +241,8 @@ class GVehicleCard extends StatelessWidget {
                       _buildGridItem(
                         context,
                         icon: LineIcons.road,
-                        label: "Odometer",
-                        value: "${vehicle.usage.toStringAsFixed(0)} km",
+                        label: "Mileage",
+                        value: "${vehicle.mileage.toStringAsFixed(0)} km",
                       ),
                     ],
                   ),

@@ -111,9 +111,10 @@ class TripModel {
   final double fuelExpense;
   final double foodExpense;
   final double tolgateExpense;
-  final double truckShopExpense;
+  final double truckStopExpense;
   final double finesExpense;
   final double extrasExpense;
+  double actualFuelUsage;
   final String tripType;
   final String? portOfExit;
   final String? portOfEntry;
@@ -142,9 +143,10 @@ class TripModel {
     required this.fuelExpense,
     required this.foodExpense,
     required this.tolgateExpense,
-    required this.truckShopExpense,
+    required this.truckStopExpense,
     required this.finesExpense,
     required this.extrasExpense,
+    this.actualFuelUsage = 0.0,
     required this.finalizer,
     required this.distance,
     required this.receiver,
@@ -192,9 +194,10 @@ class TripModel {
       fuelExpense: (json['fuelExpense'] as num?)?.toDouble() ?? 0,
       foodExpense: (json['foodExpense'] as num?)?.toDouble() ?? 0,
       tolgateExpense: (json['tolgateExpense'] as num?)?.toDouble() ?? 0,
-      truckShopExpense: (json['truckShopExpense'] as num?)?.toDouble() ?? 0,
+      truckStopExpense: (json['truckStopExpense'] as num?)?.toDouble() ?? 0,
       finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
       extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
+      actualFuelUsage: (json['actualFuelUsage'] as num?)?.toDouble() ?? 0.0,
       initiater: json['initiater'],
       tripType: json['tripType'] ?? 'Local',
       portOfExit: json['portOfExit'],
@@ -249,9 +252,10 @@ class TripModel {
       'estimatedEndTime': estimatedEndTime?.toIso8601String(),
       'otherExpenses': otherExpenses.map((e) => e.toJson()).toList(),
       'tolgateExpense': tolgateExpense,
-      'truckShopExpense': truckShopExpense,
+      'truckStopExpense': truckStopExpense,
       'finesExpense': finesExpense,
       'extrasExpense': extrasExpense,
+      'actualFuelUsage': actualFuelUsage,
       'portOfExit': portOfExit,
       'portOfEntry': portOfEntry,
     };

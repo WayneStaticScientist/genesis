@@ -18,6 +18,7 @@ class _GNavBarState extends State<GNavBar> {
   final _userController = Get.find<UserController>();
   final _messageController = Get.find<MessagingController>();
   final _notificationsController = Get.find<NotificationsController>();
+  String _searchQuery = "";
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +66,11 @@ class _GNavBarState extends State<GNavBar> {
                     ),
                   ),
                   child: TextField(
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val.trim().toLowerCase();
+                      });
+                    },
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white : Colors.black,
@@ -345,6 +351,10 @@ class _GNavBarState extends State<GNavBar> {
     bool visible = true,
   }) {
     if (!visible) return const SizedBox.shrink();
+    if (_searchQuery.isNotEmpty &&
+        !title.toLowerCase().contains(_searchQuery)) {
+      return const SizedBox.shrink();
+    }
 
     final isSelected = widget.selectedIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -41,19 +41,60 @@ class UserTripStatsHistory {
   }
 }
 
+class UserMonthlyReportModel {
+  final int year;
+  final int month;
+  final int totalTrips;
+  final double totalRevenue;
+  final double totalExpenses;
+  final int totalTurnaroundTimeMs;
+
+  double get grossProfit => totalRevenue - totalExpenses;
+
+  UserMonthlyReportModel({
+    required this.year,
+    required this.month,
+    required this.totalTrips,
+    required this.totalRevenue,
+    required this.totalExpenses,
+    required this.totalTurnaroundTimeMs,
+  });
+
+  factory UserMonthlyReportModel.fromJSON(data) {
+    final id = data['_id'] ?? {};
+    return UserMonthlyReportModel(
+      year: id['year'] ?? 0,
+      month: id['month'] ?? 0,
+      totalTrips: data['totalTrips'] ?? 0,
+      totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
+      totalExpenses: (data['totalExpenses'] as num?)?.toDouble() ?? 0.0,
+      totalTurnaroundTimeMs: (data['totalTurnaroundTimeMs'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 class UserTripStatsModel {
   final String firstName;
   final String lastName;
   final int totalTrips;
   final double totalRevenue;
+  final double totalExpenses;
+  final int totalTurnaroundTimeMs;
   final String email;
   final List<UserTripStatsHistory> recentTrips;
+  final List<UserMonthlyReportModel> monthlyReports;
+
+  double get grossProfit => totalRevenue - totalExpenses;
+
   UserTripStatsModel({
     required this.firstName,
     required this.lastName,
     required this.totalTrips,
     required this.totalRevenue,
+    required this.totalExpenses,
+    required this.totalTurnaroundTimeMs,
     required this.recentTrips,
+    required this.monthlyReports,
     required this.email,
   });
   factory UserTripStatsModel.fromJSON(data) {
@@ -63,9 +104,16 @@ class UserTripStatsModel {
       lastName: data['lastName'] ?? '',
       totalTrips: data['totalTrips'] ?? 0,
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0,
+      totalExpenses: (data['totalExpenses'] as num?)?.toDouble() ?? 0,
+      totalTurnaroundTimeMs: (data['totalTurnaroundTimeMs'] as num?)?.toInt() ?? 0,
       recentTrips:
           (data['recentTrips'] as List<dynamic>?)
               ?.map((e) => UserTripStatsHistory.fromJSON(e))
+              .toList() ??
+          [],
+      monthlyReports:
+          (data['monthlyReports'] as List<dynamic>?)
+              ?.map((e) => UserMonthlyReportModel.fromJSON(e))
               .toList() ??
           [],
     );

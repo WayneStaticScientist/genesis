@@ -3,6 +3,7 @@ class MonthlyData {
   final double revenue;
   final double expenses;
   final double payroll;
+  final double maintenance;
   final double netProfit;
   final int trips;
 
@@ -11,6 +12,7 @@ class MonthlyData {
     required this.revenue,
     required this.expenses,
     required this.payroll,
+    required this.maintenance,
     required this.netProfit,
     required this.trips,
   });
@@ -21,6 +23,7 @@ class MonthlyData {
       revenue: (json['revenue'] as num?)?.toDouble() ?? 0.0,
       expenses: (json['expenses'] as num?)?.toDouble() ?? 0.0,
       payroll: (json['payroll'] as num?)?.toDouble() ?? 0.0,
+      maintenance: (json['maintenance'] as num?)?.toDouble() ?? 0.0,
       netProfit: (json['netProfit'] as num?)?.toDouble() ?? 0.0,
       trips: json['trips'] ?? 0,
     );
@@ -31,6 +34,7 @@ class YearlyReportModel {
   final double yearlyRevenue;
   final double yearlyExpenses;
   final double yearlyPayroll;
+  final double yearlyMaintenance;
   final double yearlyNetProfit;
   final int yearlyTrips;
   final List<MonthlyData> monthlyData;
@@ -39,6 +43,7 @@ class YearlyReportModel {
     required this.yearlyRevenue,
     required this.yearlyExpenses,
     required this.yearlyPayroll,
+    required this.yearlyMaintenance,
     required this.yearlyNetProfit,
     required this.yearlyTrips,
     required this.monthlyData,
@@ -52,6 +57,7 @@ class YearlyReportModel {
       yearlyRevenue: (yearly['revenue'] as num?)?.toDouble() ?? 0.0,
       yearlyExpenses: (yearly['expenses'] as num?)?.toDouble() ?? 0.0,
       yearlyPayroll: (yearly['payroll'] as num?)?.toDouble() ?? 0.0,
+      yearlyMaintenance: (yearly['maintenance'] as num?)?.toDouble() ?? 0.0,
       yearlyNetProfit: (yearly['netProfit'] as num?)?.toDouble() ?? 0.0,
       yearlyTrips: yearly['trips'] ?? 0,
       monthlyData: mData.map((e) => MonthlyData.fromJSON(e)).toList(),

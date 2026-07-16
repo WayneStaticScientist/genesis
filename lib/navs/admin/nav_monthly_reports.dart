@@ -308,7 +308,8 @@ class _AdminNavMonthlyReportsState extends State<AdminNavMonthlyReports> {
     final revenue = (stat.summary.totalRevenue as num).toDouble();
     final expenses = main != null ? NumberUtils.getStatsTotalExpenses(main) : 0.0;
     final payroll = (main?.grossPayroll as num?)?.toDouble() ?? 0.0;
-    final net = revenue - expenses - payroll;
+    final maintenance = main != null ? main.totalMaintainanceCost : 0.0;
+    final net = revenue - expenses - payroll - maintenance;
     final pos = net >= 0;
     
     return Container(
@@ -344,6 +345,7 @@ class _AdminNavMonthlyReportsState extends State<AdminNavMonthlyReports> {
     final revenue = (stat.summary.totalRevenue as num).toDouble();
     final expenses = main != null ? NumberUtils.getStatsTotalExpenses(main) : 0.0;
     final payroll = (main?.grossPayroll as num?)?.toDouble() ?? 0.0;
+    final maintenance = main != null ? main.totalMaintainanceCost : 0.0;
     
     final trips = stat.summary.totalTrips;
     final distance = stat.summary.totalDistance ?? 0.0;
@@ -358,9 +360,10 @@ class _AdminNavMonthlyReportsState extends State<AdminNavMonthlyReports> {
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       children: [
-        _kpiCard('Revenue', NumberUtils.formatCurrency(revenue), Icons.account_balance_wallet_rounded, Colors.green),
+        _kpiCard('Total Revenue', NumberUtils.formatCurrency(revenue), Icons.account_balance_wallet_rounded, Colors.green),
         _kpiCard('Total Expenses', NumberUtils.formatCurrency(expenses), Icons.money_off_rounded, Colors.redAccent),
         _kpiCard('Payroll', NumberUtils.formatCurrency(payroll), Icons.payments_rounded, Colors.orange),
+        _kpiCard('Maintenance', NumberUtils.formatCurrency(maintenance), Icons.handyman_rounded, Colors.blueGrey),
         _kpiCard('Total Trips', '$trips', Icons.route_rounded, Colors.blue),
         _kpiCard('Total Distance', '${NumberUtils.formatNumber(distance)} km', Icons.speed_rounded, Colors.purple),
         _kpiCard('Total Load', '${NumberUtils.formatNumber(load)} kgs', Icons.monitor_weight_rounded, Colors.teal),
@@ -416,7 +419,7 @@ class _AdminNavMonthlyReportsState extends State<AdminNavMonthlyReports> {
     final items = [
       _Exp('Fuel', main.fuelExpense as double, const Color(0xFFFF9F43), Icons.local_gas_station_rounded),
       _Exp('Tollgate', main.tolgateExpense as double, const Color(0xFF4CA6EA), Icons.toll_rounded),
-      _Exp('Truck Shop', main.truckShopExpense as double, const Color(0xFFFF6B6B), Icons.handyman_rounded),
+      _Exp('Truck Stop', main.truckStopExpense as double, const Color(0xFFFF6B6B), Icons.handyman_rounded),
       _Exp('Food', main.foodExpense as double, const Color(0xFF33D69F), Icons.restaurant_rounded),
       _Exp('Fines', main.finesExpense as double, const Color(0xFF6C5DD3), Icons.gavel_rounded),
       _Exp('Extras', main.extrasExpense as double, const Color(0xFF78909C), Icons.more_horiz_rounded),

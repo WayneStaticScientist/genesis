@@ -28,7 +28,7 @@ class MainStatsModel {
   double tolgateExpense;
   double finesExpense;
   double extrasExpense;
-  double truckShopExpense;
+  double truckStopExpense;
   double grossPayroll;
   int? payrollCount;
   int? servicesDue;
@@ -36,6 +36,7 @@ class MainStatsModel {
   int? tripsFinalized;
   int? tripsActive;
   int? tripsPending;
+  int totalTurnaroundTimeMs;
   MainStatsModel({
     required this.idleVehicles,
     required this.activeVehicles,
@@ -51,7 +52,7 @@ class MainStatsModel {
     required this.tolgateExpense,
     required this.finesExpense,
     required this.extrasExpense,
-    required this.truckShopExpense,
+    required this.truckStopExpense,
     required this.grossPayroll,
     this.payrollCount,
     this.servicesDue,
@@ -59,6 +60,7 @@ class MainStatsModel {
     this.tripsFinalized,
     this.tripsActive,
     this.tripsPending,
+    this.totalTurnaroundTimeMs = 0,
   });
   factory MainStatsModel.fromJson(Map<String, dynamic> json) {
     return MainStatsModel(
@@ -78,7 +80,7 @@ class MainStatsModel {
       tolgateExpense: (json['tolgateExpense'] as num?)?.toDouble() ?? 0,
       finesExpense: (json['finesExpense'] as num?)?.toDouble() ?? 0,
       extrasExpense: (json['extrasExpense'] as num?)?.toDouble() ?? 0,
-      truckShopExpense: (json['truckShopExpense'] as num?)?.toDouble() ?? 0,
+      truckStopExpense: (json['truckStopExpense'] as num?)?.toDouble() ?? 0,
       grossPayroll: (json['grossPayroll'] as num?)?.toDouble() ?? 0,
       payrollCount: json['payrollCount'] ?? 0,
       servicesDue: json['servicesDue'] ?? 0,
@@ -86,6 +88,7 @@ class MainStatsModel {
       tripsFinalized: json['tripsFinalized'] ?? 0,
       tripsActive: json['tripsActive'] ?? 0,
       tripsPending: json['tripsPending'] ?? 0,
+      totalTurnaroundTimeMs: (json['totalTurnaroundTimeMs'] as num?)?.toInt() ?? 0,
     );
   }
 }

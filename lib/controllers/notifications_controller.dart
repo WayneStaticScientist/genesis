@@ -144,4 +144,17 @@ class NotificationsController extends GetxController {
     await getNotifications();
     Toaster.showSuccess("success delete");
   }
+
+  void deleteMultipleNotifications(List<int> ids) async {
+    final isar = IsarStatic.isar;
+    if (isar == null) return;
+    await isar.write((isar) async {
+      for (var id in ids) {
+        isar.notificationModels.delete(id);
+      }
+    });
+    await initNotifications();
+    await getNotifications();
+    Toaster.showSuccess("success delete");
+  }
 }

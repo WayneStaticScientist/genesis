@@ -1,4 +1,3 @@
-import 'package:genesis/models/notification_model.dart';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +18,8 @@ class NotificationListScreen extends StatefulWidget {
 
 class _NotificationListScreenState extends State<NotificationListScreen> {
   final _controller = Get.find<NotificationsController>();
+  bool _isSelectionMode = false;
+  final Set<int> _selectedIds = {};
 
   @override
   void initState() {
@@ -32,26 +33,87 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: widget.triggerKey != null
-            ? DrawerButton(
-                onPressed: () => widget.triggerKey?.currentState?.openDrawer(),
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = false;
+                    _selectedIds.clear();
+                  });
+                },
               )
-            : null,
+            : (widget.triggerKey != null
+                ? DrawerButton(
+                    onPressed: () =>
+                        widget.triggerKey?.currentState?.openDrawer(),
+                  )
+                : null),
         systemOverlayStyle: GTheme.copyOverlay(context),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        title: Text(
+          _isSelectionMode ? '${_selectedIds.length} Selected' : 'Notifications',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              _controller.markAllAsRead();
-            },
-            icon: const Icon(Icons.done_all, color: Colors.blueAccent),
-            tooltip: 'Mark all as read',
-          ),
-          const SizedBox(width: 8),
-        ],
+        actions: _isSelectionMode
+            ? [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      if (_selectedIds.length ==
+                          _controller.notifications.length) {
+                        _selectedIds.clear();
+                      } else {
+                        _selectedIds.addAll(
+                          _controller.notifications.map((n) => n.id),
+                        );
+                      }
+                    });
+                  },
+                  icon: Icon(
+                    _selectedIds.length == _controller.notifications.length
+                        ? Icons.deselect_rounded
+                        : Icons.select_all_rounded,
+                    color: Colors.blueAccent,
+                  ),
+                  tooltip: 'Select all',
+                ),
+                IconButton(
+                  onPressed: () {
+                    if (_selectedIds.isEmpty) return;
+                    Get.defaultDialog(
+                      title: "Delete Selected",
+                      content: Text(
+                        "Are you sure you want to delete ${_selectedIds.length} selected notifications?",
+                      ),
+                      textCancel: "Cancel",
+                      textConfirm: "Delete",
+                      onConfirm: () {
+                        _controller.deleteMultipleNotifications(
+                          _selectedIds.toList(),
+                        );
+                        setState(() {
+                          _selectedIds.clear();
+                          _isSelectionMode = false;
+                        });
+                        Get.back();
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.delete_rounded, color: Colors.redAccent),
+                  tooltip: 'Delete selected',
+                ),
+                const SizedBox(width: 8),
+              ]
+            : [
+                IconButton(
+                  onPressed: () {
+                    _controller.markAllAsRead();
+                  },
+                  icon: const Icon(Icons.done_all, color: Colors.blueAccent),
+                  tooltip: 'Mark all as read',
+                ),
+                const SizedBox(width: 8),
+              ],
       ),
       body: Obx(
         () => _controller.notifications.isEmpty
@@ -63,33 +125,40 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                 ),
                 itemCount: _controller.notifications.length,
                 itemBuilder: (context, index) {
+                  final notification = _controller.notifications[index];
+                  final isSelected = _selectedIds.contains(notification.id);
+
                   return NotificationCard(
-                    notification: _controller.notifications[index],
-                    onLongPress: () =>
-                        _openDialog(context, _controller.notifications[index]),
+                    notification: notification,
+                    isSelected: isSelected,
+                    isSelectionMode: _isSelectionMode,
+                    onLongPress: () {
+                      if (!_isSelectionMode) {
+                        setState(() {
+                          _isSelectionMode = true;
+                          _selectedIds.add(notification.id);
+                        });
+                      }
+                    },
                   ).onTap(() {
-                    _controller.routeNotification(
-                      _controller.notifications[index],
-                    );
+                    if (_isSelectionMode) {
+                      setState(() {
+                        if (isSelected) {
+                          _selectedIds.remove(notification.id);
+                          if (_selectedIds.isEmpty) {
+                            _isSelectionMode = false;
+                          }
+                        } else {
+                          _selectedIds.add(notification.id);
+                        }
+                      });
+                    } else {
+                      _controller.routeNotification(notification);
+                    }
                   });
                 },
               ),
       ),
-    );
-  }
-
-  _openDialog(BuildContext context, NotificationModel notification) {
-    Get.defaultDialog(
-      title: "Delete Notification",
-      content: Text(
-        "Are you sure you want to delete this notification? ${notification.title}",
-      ),
-      textCancel: "close",
-      textConfirm: "Delete",
-      onConfirm: () {
-        _controller.deleteNotification(notification);
-        Get.back();
-      },
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:genesis/utils/toast.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:genesis/controllers/vehicle_controller.dart'; // Ensure this exists
 import 'package:genesis/controllers/maintainance_controller.dart';
+import 'package:genesis/models/vehicle_model.dart';
 
 class AdminAddMaintenance extends StatefulWidget {
   const AdminAddMaintenance({super.key});
@@ -25,6 +26,8 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
   double _health = 85.0;
   int _daysLeft = 14;
   String? _selectedLicencePlate;
+  VehicleModel? _selectedVehicle;
+  List<String> _selectedReminders = [];
   String _comment = "";
 
   void _submit() async {
@@ -45,6 +48,7 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
         "currentHealth": _health,
         "licencePlate": _selectedLicencePlate,
         "comment": _comment,
+        "serviceReminders": _selectedReminders,
       };
 
       final response = await _mantainanceController.addMantainance(newTask);
@@ -113,6 +117,8 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
 
               // === SEARCHABLE PAGINATED DROPDOWN ===
               _buildVehicleSelector(),
+              if (_selectedVehicle != null && _selectedVehicle!.serviceReminders.isNotEmpty)
+                _buildServiceReminders(),
 
               const SizedBox(height: 32),
               _sectionHeader("Issue Details"),
@@ -336,9 +342,11 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
                             ),
                           ),
                       onTap: () {
-                        setState(
-                          () => _selectedLicencePlate = vehicle.licencePlate,
-                        );
+                        setState(() {
+                          _selectedLicencePlate = vehicle.licencePlate;
+                          _selectedVehicle = vehicle;
+                          _selectedReminders.clear();
+                        });
                         Get.back();
                       },
                     );
@@ -477,6 +485,38 @@ class _AdminAddMaintenanceState extends State<AdminAddMaintenance> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildServiceReminders() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        _sectionHeader("Select Service Reminders"),
+        ..._selectedVehicle!.serviceReminders.map((reminder) {
+          final isSelected = _selectedReminders.contains(reminder.id);
+          return CheckboxListTile(
+            title: reminder.name.text(style: const TextStyle(color: Colors.white)),
+            subtitle: "${reminder.type}: ${reminder.type == 'mileage' ? reminder.mileage.toString() : reminder.date?.toLocal().toString().split(' ')[0]}".text(style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            value: isSelected,
+            onChanged: (val) {
+              if (reminder.id == null) return;
+              setState(() {
+                if (val == true) {
+                  _selectedReminders.add(reminder.id!);
+                } else {
+                  _selectedReminders.remove(reminder.id);
+                }
+              });
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: Colors.blueAccent,
+            checkColor: Colors.white,
+            side: const BorderSide(color: Colors.white54),
+          );
+        }).toList(),
+      ],
     );
   }
 }

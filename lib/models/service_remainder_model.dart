@@ -1,9 +1,11 @@
 class ServiceRemainderModel {
+  final String? id;
   final String name;
   final double mileage;
   final String type; //date or mileage;
   final DateTime? date;
   ServiceRemainderModel({
+    this.id,
     required this.name,
     required this.mileage,
     required this.type,
@@ -11,6 +13,7 @@ class ServiceRemainderModel {
   });
   factory ServiceRemainderModel.fromJSON(data) {
     return ServiceRemainderModel(
+      id: data['_id'],
       name: data['name'] ?? '',
       mileage: (data['mileage'] as num?)?.toDouble() ?? 0,
       type: data['type'],

@@ -6,11 +6,15 @@ import 'package:genesis/utils/theme.dart';
 class NotificationCard extends StatelessWidget {
   final Function() onLongPress;
   final NotificationModel notification;
+  final bool isSelected;
+  final bool isSelectionMode;
 
   const NotificationCard({
     super.key,
     required this.notification,
     required this.onLongPress,
+    this.isSelected = false,
+    this.isSelectionMode = false,
   });
 
   // Helper to determine icon and color based on type
@@ -67,8 +71,19 @@ class NotificationCard extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      if (isSelectionMode) ...[
+                        Icon(
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          color: isSelected ? Colors.green : Colors.grey,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+
                       // Leading Icon Circle
                       Container(
                         padding: const EdgeInsets.all(12),

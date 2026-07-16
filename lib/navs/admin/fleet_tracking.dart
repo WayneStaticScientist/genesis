@@ -48,6 +48,12 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   // Animation Controller for the "Pinging" effect
   late AnimationController _pingController;
 
+  final Rx<LatLng?> _animatedPosition = Rx<LatLng?>(null);
+  final Rx<double?> _animatedRotation = Rx<double?>(null);
+  AnimationController? _vehicleAnimController;
+  Animation<LatLng>? _positionAnimation;
+  Animation<double>? _rotationAnimation;
+
   static const _defaultLocation = LatLng(-17.824858, 31.053028);
   late User? user;
   @override
@@ -65,11 +71,60 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     }
 
     _locationWorker = ever(_socketController.liveTrackModel, (data) async {
-      if (data != null && _automaticTracking) {
-        final controller = await _mapController.future;
-        controller.animateCamera(
-          CameraUpdate.newLatLng(LatLng(data.lat, data.lng)),
-        );
+      if (data != null) {
+        final newPosition = LatLng(data.lat, data.lng);
+        final newRotation = data.rotation;
+
+        if (_animatedPosition.value == null) {
+          _animatedPosition.value = newPosition;
+          _animatedRotation.value = (newRotation as num?)?.toDouble() ?? 0.0;
+        } else {
+          _vehicleAnimController?.dispose();
+          _vehicleAnimController = AnimationController(
+            vsync: this,
+            duration: const Duration(seconds: 9), // Adjust duration to match ping interval
+          );
+
+          _positionAnimation = LatLngTween(
+            begin: _animatedPosition.value!,
+            end: newPosition,
+          ).animate(CurvedAnimation(parent: _vehicleAnimController!, curve: Curves.linear))
+            ..addListener(() {
+              _animatedPosition.value = _positionAnimation!.value;
+            });
+
+          double oldRot = _animatedRotation.value ?? 0.0;
+          double newRotNum = (newRotation as num?)?.toDouble() ?? 0.0;
+          
+          // Shortest path for rotation to prevent spinning backward
+          double diff = newRotNum - oldRot;
+          if (diff > 180) {
+            newRotNum -= 360;
+          } else if (diff < -180) {
+            newRotNum += 360;
+          }
+
+          _rotationAnimation = Tween<double>(
+            begin: oldRot,
+            end: newRotNum,
+          ).animate(CurvedAnimation(parent: _vehicleAnimController!, curve: Curves.linear))
+            ..addListener(() {
+              // Normalize back to 0-360 for consistent reading if needed
+              double currentRot = _rotationAnimation!.value;
+              if (currentRot < 0) currentRot += 360;
+              if (currentRot >= 360) currentRot -= 360;
+              _animatedRotation.value = currentRot;
+            });
+
+          _vehicleAnimController!.forward();
+        }
+
+        if (_automaticTracking) {
+          final controller = await _mapController.future;
+          controller.animateCamera(
+            CameraUpdate.newLatLng(newPosition),
+          );
+        }
       }
     });
 
@@ -91,6 +146,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   BitmapDescriptor? vehicleIcon;
   @override
   void dispose() {
+    _vehicleAnimController?.dispose();
     _pingController.dispose();
     _locationWorker?.dispose();
     _timeController.dispose();
@@ -280,9 +336,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             final destination = trip?.location;
             final origin = trip?.locationOrigin;
             final hasData = liveData != null && liveData.lat != 0 && liveData.lng != 0;
-            final currentPos = hasData
+            final currentPos = _animatedPosition.value ?? (hasData
                 ? LatLng(liveData.lat, liveData.lng)
-                : _defaultLocation;
+                : _defaultLocation);
+            final currentRot = _animatedRotation.value ?? (hasData ? (liveData.rotation as num?)?.toDouble() ?? 0.0 : 0.0);
                 
             return GoogleMap(
               initialCameraPosition: CameraPosition(
@@ -352,8 +409,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                   Marker(
                     markerId: const MarkerId('live_vehicle'),
                     position: currentPos,
-                    rotation:
-                        liveData.rotation, // Bearing from your GPS data (0-360)
+                    rotation: currentRot, // Animated Bearing
                     anchor: const Offset(0.5, 0.5),
                     icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
                   ),
@@ -401,40 +457,39 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                   horizontal: 20,
                   vertical: 10,
                 ),
-                child:
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _automaticTracking = !_automaticTracking;
-                        });
-                      },
-                      style: ButtonStyle(
-                        iconColor: WidgetStateProperty.all(Colors.black87),
-                        backgroundColor: WidgetStateProperty.all(Colors.white),
-                      ),
-                      icon: Icon(
-                        Icons.camera,
-                        color: _automaticTracking ? Colors.green : null,
-                      ),
-                    ).decoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        border: BoxBorder.all(
-                          width: 4,
-                          color: _automaticTracking
-                              ? Colors.green
-                              : Colors.transparent,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(30),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: GTheme.surface(context),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _automaticTracking
+                          ? GTheme.primary(context)
+                          : Colors.grey.withAlpha(50),
+                      width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _automaticTracking = !_automaticTracking;
+                      });
+                    },
+                    icon: Icon(
+                      Icons.videocam_rounded,
+                      color: _automaticTracking
+                          ? GTheme.primary(context)
+                          : GTheme.reverse(context).withAlpha(120),
+                    ),
+                    tooltip: 'Toggle Camera Follow',
+                  ),
+                ),
               ),
             ),
           ),
@@ -1121,5 +1176,20 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
         _handleTripAction(true);
       },
     );
+  }
+}
+
+class LatLngTween extends Tween<LatLng> {
+  LatLngTween({required LatLng begin, required LatLng end})
+      : super(begin: begin, end: end);
+
+  @override
+  LatLng lerp(double t) {
+    final b = begin;
+    final e = end;
+    if (b == null || e == null) return b ?? e ?? const LatLng(0, 0);
+    final lat = b.latitude + (e.latitude - b.latitude) * t;
+    final lng = b.longitude + (e.longitude - b.longitude) * t;
+    return LatLng(lat, lng);
   }
 }

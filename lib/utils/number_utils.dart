@@ -74,7 +74,7 @@ class NumberUtils {
         trip.finesExpense +
         trip.foodExpense +
         trip.fuelExpense +
-        trip.truckShopExpense +
+        trip.truckStopExpense +
         trip.tolgateExpense +
         otherExpensesTotal;
   }
@@ -84,7 +84,7 @@ class NumberUtils {
         model.finesExpense +
         model.foodExpense +
         model.fuelExpense +
-        model.truckShopExpense +
+        model.truckStopExpense +
         model.tolgateExpense;
   }
 }

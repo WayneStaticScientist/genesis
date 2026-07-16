@@ -46,16 +46,20 @@ class _AdminNavMainState extends State<AdminNavMain> {
 
   Widget _buildDashboardContent(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            16.gapHeight,
-            _buildFilters(),
-            _buildMainSection(),
-          ],
+      child: RefreshIndicator(
+        onRefresh: refresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              16.gapHeight,
+              _buildFilters(),
+              _buildMainSection(),
+            ],
+          ),
         ),
       ),
     );
@@ -228,7 +232,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
       ),
       _ExpenseItem(
         "TruckStop",
-        data.truckShopExpense,
+        data.truckStopExpense,
         Icons.handyman_rounded,
         const Color(0xFFFF6B6B),
       ),
@@ -427,7 +431,10 @@ class _AdminNavMainState extends State<AdminNavMain> {
               // Date chip — flex so it shrinks on small screens
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withAlpha(20),
                     borderRadius: BorderRadius.circular(20),
@@ -567,8 +574,20 @@ class _AdminNavMainState extends State<AdminNavMain> {
   // --- Top Grid ---
   Widget _buildQuickStatsGrid(MainStatsModel data) {
     final totalExpenses = NumberUtils.getStatsTotalExpenses(data);
-    final grossProfit =
-        data.totalRevenue - totalExpenses - data.totalMaintainanceCost;
+    final netProfit =
+        data.totalRevenue - totalExpenses - data.grossPayroll - data.totalMaintainanceCost;
+
+    String formatDuration(int ms) {
+      if (ms <= 0) return "0h 0m";
+      final duration = Duration(milliseconds: ms);
+      if (duration.inDays > 0) {
+        return "${duration.inDays}d ${duration.inHours % 24}h ${duration.inMinutes % 60}m";
+      }
+      if (duration.inHours > 0) {
+        return "${duration.inHours}h ${duration.inMinutes % 60}m";
+      }
+      return "${duration.inMinutes}m";
+    }
 
     final kpis = [
       _KpiTile(
@@ -590,10 +609,24 @@ class _AdminNavMainState extends State<AdminNavMain> {
             .toList(),
       ),
       _KpiTile(
-        "Gross Profit",
-        NumberUtils.formatCurrency(grossProfit),
+        "Net Profit",
+        NumberUtils.formatCurrency(netProfit),
         Icons.account_balance_wallet_rounded,
         const Color(0xFF6C5DD3),
+        [],
+      ),
+      _KpiTile(
+        "Turnaround Time",
+        formatDuration(data.totalTurnaroundTimeMs),
+        Icons.timer_rounded,
+        Colors.amber,
+        [],
+      ),
+      _KpiTile(
+        "Maintenance Cost",
+        NumberUtils.formatCurrency(data.totalMaintainanceCost),
+        Icons.handyman_rounded,
+        Colors.blueGrey,
         [],
       ),
       _KpiTile(
@@ -621,7 +654,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
       ),
       _KpiTile(
         "Service Reminders",
-        (data.totalMaintenanceCount ?? 0).toString(),
+        (data.totalMaintenanceCount).toString(),
         Icons.build_rounded,
         const Color(0xFF8395A7),
         [],
@@ -632,7 +665,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Icons.warning_amber_rounded,
         Colors.red,
         [],
-        onTap: () => Get.to(() => const AdminNavMaintenance(initialStatus: "Critical")),
+        onTap: () =>
+            Get.to(() => const AdminNavMaintenance(initialStatus: "Critical")),
       ),
       _KpiTile(
         "Services Almost Due",
@@ -640,7 +674,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
         Icons.notification_important_rounded,
         Colors.orange,
         [],
-        onTap: () => Get.to(() => const AdminNavMaintenance(initialStatus: "Due Soon")),
+        onTap: () =>
+            Get.to(() => const AdminNavMaintenance(initialStatus: "Due Soon")),
       ),
       _KpiTile(
         "Drivers",
@@ -707,78 +742,78 @@ class _AdminNavMainState extends State<AdminNavMain> {
             ),
           ],
         ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: tile.color.withAlpha(25),
-                  borderRadius: BorderRadius.circular(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: tile.color.withAlpha(25),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(tile.icon, color: tile.color, size: 20),
                 ),
-                child: Icon(tile.icon, color: tile.color, size: 20),
-              ),
-              if (tile.chartData.isNotEmpty)
-                SizedBox(
-                  width: 60,
-                  height: 32,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: const FlGridData(show: false),
-                      titlesData: const FlTitlesData(show: false),
-                      borderData: FlBorderData(show: false),
-                      lineTouchData: const LineTouchData(enabled: false),
-                      minX: 0,
-                      maxX: tile.chartData.length <= 1
-                          ? 1
-                          : (tile.chartData.length - 1).toDouble(),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: tile.chartData
-                              .asMap()
-                              .entries
-                              .map((e) => FlSpot(e.key.toDouble(), e.value))
-                              .toList(),
-                          isCurved: true,
-                          color: tile.color,
-                          barWidth: 2,
-                          dotData: const FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: tile.color.withAlpha(35),
+                if (tile.chartData.isNotEmpty)
+                  SizedBox(
+                    width: 60,
+                    height: 32,
+                    child: LineChart(
+                      LineChartData(
+                        gridData: const FlGridData(show: false),
+                        titlesData: const FlTitlesData(show: false),
+                        borderData: FlBorderData(show: false),
+                        lineTouchData: const LineTouchData(enabled: false),
+                        minX: 0,
+                        maxX: tile.chartData.length <= 1
+                            ? 1
+                            : (tile.chartData.length - 1).toDouble(),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: tile.chartData
+                                .asMap()
+                                .entries
+                                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                .toList(),
+                            isCurved: true,
+                            color: tile.color,
+                            barWidth: 2,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: tile.color.withAlpha(35),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            tile.value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            tile.label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[500],
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 16),
+            Text(
+              tile.value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 4),
+            Text(
+              tile.label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -938,215 +973,6 @@ class _AdminNavMainState extends State<AdminNavMain> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildMultiMetricCard({
-    required String title,
-    required List<Map<String, dynamic>> metrics,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: GTheme.cardColor(context),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withAlpha(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: metrics.map((m) {
-              return Expanded(
-                child: Column(
-                  children: [
-                    Icon(m['icon'], color: m['color'], size: 28),
-                    const SizedBox(height: 12),
-                    Text(
-                      m['value'],
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      m['label'],
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
-                    if (m['chartData'] != null &&
-                        (m['chartData'] as List).isNotEmpty)
-                      SizedBox(
-                        height: 35,
-                        width: double.infinity,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: const FlGridData(show: false),
-                            titlesData: const FlTitlesData(show: false),
-                            borderData: FlBorderData(show: false),
-                            lineTouchData: const LineTouchData(enabled: false),
-                            minX: 0,
-                            maxX: (m['chartData'] as List).length <= 1
-                                ? 1
-                                : ((m['chartData'] as List).length - 1)
-                                      .toDouble(),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: (m['chartData'] as List<double>)
-                                    .asMap()
-                                    .entries
-                                    .map(
-                                      (e) => FlSpot(e.key.toDouble(), e.value),
-                                    )
-                                    .toList(),
-                                isCurved: true,
-                                color: m['color'],
-                                barWidth: 2,
-                                dotData: const FlDotData(show: false),
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: (m['color'] as Color).withAlpha(40),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else
-                      const SizedBox(height: 35),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    List<double>? chartData,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: GTheme.cardColor(context),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color.withAlpha(35), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withAlpha(18),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withAlpha(30),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[500],
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          if (chartData != null && chartData.isNotEmpty)
-            SizedBox(
-              width: 70,
-              height: 40,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineTouchData: const LineTouchData(enabled: false),
-                  minX: 0,
-                  maxX: chartData.length <= 1
-                      ? 1
-                      : (chartData.length - 1).toDouble(),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: chartData
-                          .asMap()
-                          .entries
-                          .map((e) => FlSpot(e.key.toDouble(), e.value))
-                          .toList(),
-                      isCurved: true,
-                      color: color,
-                      barWidth: 2.5,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: color.withAlpha(40),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 
@@ -1497,8 +1323,8 @@ class _AdminNavMainState extends State<AdminNavMain> {
     }
   }
 
-  void refresh() {
-    _statsController.fetchStats(selectedDateRange);
+  Future<void> refresh() async {
+    await _statsController.fetchStats(selectedDateRange);
   }
 }
 
@@ -1517,5 +1343,12 @@ class _KpiTile {
   final Color color;
   final List<double> chartData;
   final void Function()? onTap;
-  _KpiTile(this.label, this.value, this.icon, this.color, this.chartData, {this.onTap});
+  _KpiTile(
+    this.label,
+    this.value,
+    this.icon,
+    this.color,
+    this.chartData, {
+    this.onTap,
+  });
 }

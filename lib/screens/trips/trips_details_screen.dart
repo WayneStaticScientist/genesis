@@ -821,29 +821,107 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     Color primaryColor,
   ) {
     final fuelData = _calculateDetailedFuel(trip);
-    final total = fuelData['total'] as double;
+    final estimated = fuelData['total'] as double;
+    final actual = trip.actualFuelUsage;
+    final variance = actual - estimated;
+    final hasActual = trip.status.toLowerCase() == 'finalized' || actual > 0;
 
     return _buildModernEntityCard(
-      title: "Fuel Consumption Est.",
+      title: "Fuel Analytics & Performance",
       content: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Total Estimated Fuel",
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                "Estimated Fuel",
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.grey),
               ),
               Text(
-                "${total.toStringAsFixed(1)} Liters",
+                "${estimated.toStringAsFixed(1)} Liters",
                 style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18,
-                  color: primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: GTheme.reverse(context),
                 ),
               ),
             ],
           ),
+          if (hasActual) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Actual Fuel Used",
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.grey),
+                ),
+                Text(
+                  "${actual.toStringAsFixed(1)} Liters",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Fuel Variance",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: variance <= 0
+                        ? Colors.green.withAlpha(20)
+                        : Colors.red.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: variance <= 0
+                          ? Colors.green.withAlpha(50)
+                          : Colors.red.withAlpha(50),
+                    ),
+                  ),
+                  child: Text(
+                    "${variance >= 0 ? '+' : ''}${variance.toStringAsFixed(1)} Liters",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: variance <= 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withAlpha(20),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withAlpha(50)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.amber, size: 18),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      "Actual fuel usage and variance will be available once the trip is finalized.",
+                      style: TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -914,7 +992,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 trip.tollgates.fold(0.0, (p, e) => p + e.amount),
           ),
           _buildExpenseRow("Fuel", trip.fuelExpense),
-          _buildExpenseRow("Truck Shop", trip.truckShopExpense),
+          _buildExpenseRow("Truck Stop", trip.truckStopExpense),
           _buildExpenseRow("Fines", trip.finesExpense),
           _buildExpenseRow("Food Expense", trip.foodExpense),
           _buildExpenseRow(
@@ -1199,14 +1277,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setInnerState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          content: FinalizeTripDialog(
-            trip: userController.trip.value!,
-            setDialogState: setInnerState,
-          ),
+        builder: (context, setInnerState) => FinalizeTripDialog(
+          trip: userController.trip.value!,
+          setDialogState: setInnerState,
         ),
       ),
     );

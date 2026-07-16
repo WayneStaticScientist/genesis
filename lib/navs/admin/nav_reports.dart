@@ -151,7 +151,8 @@ class _AdminNavReportsState extends State<AdminNavReports> {
     final revenue = (stat.summary.totalRevenue as num).toDouble();
     final expenses = main != null ? NumberUtils.getStatsTotalExpenses(main) : 0.0;
     final payroll = (main?.grossPayroll as num?)?.toDouble() ?? 0.0;
-    final net = revenue - expenses - payroll;
+    final maintenance = main != null ? main.totalMaintainanceCost : 0.0;
+    final net = revenue - expenses - payroll - maintenance;
     final pos = net >= 0;
     return Container(
       width: double.infinity,
@@ -180,6 +181,7 @@ class _AdminNavReportsState extends State<AdminNavReports> {
           Expanded(child: _miniStat('Revenue', NumberUtils.formatCurrency(revenue))),
           Expanded(child: _miniStat('Expenses', NumberUtils.formatCurrency(expenses))),
           Expanded(child: _miniStat('Payroll', NumberUtils.formatCurrency(payroll))),
+          Expanded(child: _miniStat('Maintenance', NumberUtils.formatCurrency(maintenance))),
         ]),
       ]),
     );
@@ -225,7 +227,7 @@ class _AdminNavReportsState extends State<AdminNavReports> {
     final items = [
       _Exp('Fuel', main.fuelExpense as double, const Color(0xFFFF9F43), Icons.local_gas_station_rounded),
       _Exp('Tollgate', main.tolgateExpense as double, const Color(0xFF4CA6EA), Icons.toll_rounded),
-      _Exp('Truck Shop', main.truckShopExpense as double, const Color(0xFFFF6B6B), Icons.handyman_rounded),
+      _Exp('Truck Stop', main.truckStopExpense as double, const Color(0xFFFF6B6B), Icons.handyman_rounded),
       _Exp('Food', main.foodExpense as double, const Color(0xFF33D69F), Icons.restaurant_rounded),
       _Exp('Fines', main.finesExpense as double, const Color(0xFF6C5DD3), Icons.gavel_rounded),
       _Exp('Extras', main.extrasExpense as double, const Color(0xFF78909C), Icons.more_horiz_rounded),
