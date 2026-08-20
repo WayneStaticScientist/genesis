@@ -32,7 +32,7 @@ class FleetTrackingScreen extends StatefulWidget {
 }
 
 class _FleetTrackingScreenState extends State<FleetTrackingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _userController = Get.find<UserController>();
   final _socketController = Get.find<SocketController>();
   final _vehicleController = Get.find<VehicleControler>();
@@ -82,7 +82,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           _vehicleAnimController?.dispose();
           _vehicleAnimController = AnimationController(
             vsync: this,
-            duration: const Duration(seconds: 9), // Adjust duration to match ping interval
+            duration: const Duration(seconds: 3), // Match duration to ping interval
           );
 
           _positionAnimation = LatLngTween(
@@ -558,7 +558,8 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           );
                         }
 
-                        if (user == null) {
+                        final currentVehicle = _socketController.currentVehicle.value;
+                        if (currentVehicle == null && user == null) {
                           return Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
@@ -595,10 +596,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           children: [
                             CircleAvatar(
                               radius: 25,
-                              child: ("Driver".from(
+                              child: (user != null ? ("Driver".from(
                                 user.firstName,
                                 user.lastName,
-                              ))[0].text(),
+                              ))[0] : "T").text(),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -606,10 +607,10 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Driver".from(
+                                    user != null ? "Driver".from(
                                       user.firstName,
                                       user.lastName,
-                                    ),
+                                    ) : (currentVehicle?.carModel ?? "Hardware Tracker"),
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -625,7 +626,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                               .lors("Active", "Offline"),
                                         ),
                                       ),
-                                      "Idle",
+                                      user == null ? "Hardware Tracked" : "Idle",
                                     ),
                                     style: TextStyle(
                                       color: isOnTrip.lorc(
@@ -638,17 +639,16 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                 ],
                               ),
                             ),
-                            IconButton(
-                              onPressed: () =>
-                                  Get.to(() => ChatScreen(user: user)),
-                              icon: Icon(
-                                LineIcons.commentAlt,
-                                color: Theme.of(context).colorScheme.primary,
+                            if (user != null)
+                              IconButton(
+                                onPressed: () =>
+                                    Get.to(() => ChatScreen(user: user)),
+                                icon: Icon(
+                                  LineIcons.commentAlt,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
-                            ),
                           ],
-                        ).visibleIf(
-                          _socketController.liveTrackDriver.value != null,
                         );
                       }),
 
@@ -1159,7 +1159,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     if (res) {
       Toaster.showSuccess("Tracking started");
       _socketController.listenId.value =
-          _userController.user.value?.currentVehicle?.carModel ?? '';
+          _userController.user.value?.currentVehicle?.id ?? '';
     }
   }
 

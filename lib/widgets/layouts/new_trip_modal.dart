@@ -66,6 +66,14 @@ class _AssignTripModalState extends State<AssignTripModal> {
     _tripPaymentController.text = total.toStringAsFixed(2);
   }
 
+  void _calculateTotalDistance() {
+    double total = 0;
+    for (var controller in destinationDistanceControllers) {
+      total += double.tryParse(controller.text) ?? 0;
+    }
+    _distanceInKmController.text = total.toStringAsFixed(2);
+  }
+
   // Tollgate entries
   List<TextEditingController> tollgateNameControllers = [];
   List<TextEditingController> tollgateAmountControllers = [];
@@ -139,7 +147,10 @@ class _AssignTripModalState extends State<AssignTripModal> {
     setState(() {
       destinationNameControllers.add(TextEditingController());
       destinationCoordControllers.add(TextEditingController());
-      destinationDistanceControllers.add(TextEditingController(text: '0'));
+      final distanceController = TextEditingController(text: '0');
+      distanceController.addListener(_calculateTotalDistance);
+      destinationDistanceControllers.add(distanceController);
+      
       destinationOffloadControllers.add(TextEditingController(text: '0'));
       
       final revenueController = TextEditingController(text: '0');
@@ -162,6 +173,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
     setState(() {
       destinationNameControllers[index].dispose();
       destinationCoordControllers[index].dispose();
+      destinationDistanceControllers[index].removeListener(_calculateTotalDistance);
       destinationDistanceControllers[index].dispose();
       destinationOffloadControllers[index].dispose();
       destinationRevenueControllers[index].removeListener(_calculateTotalRevenue);
@@ -176,6 +188,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
       destinationCoordsList.removeAt(index);
 
       _calculateTotalRevenue();
+      _calculateTotalDistance();
     });
   }
 
@@ -380,6 +393,7 @@ class _AssignTripModalState extends State<AssignTripModal> {
                 12.gapHeight,
                 TextFormField(
                   controller: _distanceInKmController,
+                  readOnly: true,
                   decoration: _modernInputDecoration(
                     Icons.edit_road_sharp,
                     "Total Distance in Km",

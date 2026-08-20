@@ -106,7 +106,9 @@ class GVehicleCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -126,7 +128,6 @@ class GVehicleCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
                             if (hasTracker)
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -138,6 +139,7 @@ class GVehicleCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Icon(
                                       Icons.satellite_alt_rounded,

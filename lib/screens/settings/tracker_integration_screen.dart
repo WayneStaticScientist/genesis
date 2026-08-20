@@ -652,11 +652,19 @@ class _TrackerIntegrationScreenState extends State<TrackerIntegrationScreen> {
                       status = await Permission.sms.request();
                     }
 
-                    if (status.isGranted) {
+                    var phoneStatus = await Permission.phone.status;
+                    if (!phoneStatus.isGranted) {
+                      phoneStatus = await Permission.phone.request();
+                    }
+
+                    if (status.isGranted && phoneStatus.isGranted) {
                       try {
                         await SmsSender.sendSms(
                           phoneNumber: phoneController.text,
                           message: commandTemplate,
+                          // Try omitting simSlot or keep it as 0. Often not providing simSlot lets the system use the default SIM.
+                          // But sms_sender might require it. We will leave it as is, or pass null if possible. 
+                          // Actually, let's just leave simSlot: 0 since the issue is lack of READ_PHONE_STATE permission to detect it.
                           simSlot: 0,
                         );
                         if (context.mounted) {
