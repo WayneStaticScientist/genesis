@@ -50,4 +50,16 @@ class Toaster {
       snackPosition: SnackPosition.BOTTOM,
     );
   }
+
+  static void showInfo(String message) {
+    Get.snackbar(
+      'Info',
+      message,
+      icon: const Icon(Icons.info, color: Colors.white),
+      duration: const Duration(seconds: 1),
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
 }

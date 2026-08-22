@@ -14,8 +14,11 @@ import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:genesis/screens/chats/chat_screen.dart';
 import 'package:genesis/models/populated_trip_model.dart';
+import 'package:genesis/models/live_track_model.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart' as Geo;
+import 'package:genesis/services/network_adapter.dart';
 
 // Project specific imports
 import 'package:genesis/utils/toast.dart';
@@ -53,6 +56,15 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   AnimationController? _vehicleAnimController;
   Animation<LatLng>? _positionAnimation;
   Animation<double>? _rotationAnimation;
+
+  // Replay State variables
+  final RxList<LatLng> _replayPath = <LatLng>[].obs;
+  final RxBool _isReplaying = false.obs;
+  final RxBool _isReplayPlaying = false.obs;
+  final RxInt _replayIndex = 0.obs;
+  final RxDouble _replaySpeed = 1.0.obs;
+  final Rx<LatLng?> _replayPosition = Rx<LatLng?>(null);
+  Timer? _replayTimer;
 
   static const _defaultLocation = LatLng(-17.824858, 31.053028);
   late User? user;
@@ -146,6 +158,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   BitmapDescriptor? vehicleIcon;
   @override
   void dispose() {
+    _replayTimer?.cancel();
     _vehicleAnimController?.dispose();
     _pingController.dispose();
     _locationWorker?.dispose();
@@ -286,8 +299,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
             final isOnTrip = trip?.status == "Active" || trip?.status == "Pending";
             
             final hasHardwarePing = liveData != null && 
-                                    liveData.state != 'not-found' && 
-                                    DateTime.now().difference(liveData.timestamp).inMinutes < 15;
+                                    liveData.state != 'not-found';
             
             final shouldShowMap = isOnTrip || hasHardwarePing;
 
@@ -341,9 +353,11 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                 : _defaultLocation);
             final currentRot = _animatedRotation.value ?? (hasData ? (liveData.rotation as num?)?.toDouble() ?? 0.0 : 0.0);
                 
+            // Cache the very first position so initialCameraPosition never changes on rebuilds!
+            // This prevents the map from constantly zooming out and stuttering when panned.
             return GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: currentPos,
+                target: _defaultLocation,
                 zoom: 15,
               ),
               onMapCreated: (GoogleMapController controller) {
@@ -353,67 +367,106 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
               },
               zoomControlsEnabled: false,
               myLocationButtonEnabled: false,
-              markers: {
-                if (destinations.isNotEmpty)
-                  ...destinations
-                      .asMap()
-                      .entries
-                      .map((entry) {
-                        final idx = entry.key;
-                        final dest = entry.value;
-                        if (dest.location == null) return null;
-                        return Marker(
-                          markerId: MarkerId('destination_$idx'),
-                          position: LatLng(
-                            dest.location!.lat,
-                            dest.location!.lng,
-                          ),
-                          infoWindow: InfoWindow(
-                            title: 'Stop ${idx + 1}: ${dest.name}',
-                            snippet: dest.reached ? 'Reached' : 'Pending',
-                          ),
-                          icon: BitmapDescriptor.defaultMarkerWithHue(
-                            dest.reached
-                                ? BitmapDescriptor.hueGreen
-                                : BitmapDescriptor.hueAzure,
-                          ),
-                        );
-                      })
-                      .whereType<Marker>()
-                      .toSet(),
-                if (destinations.isEmpty && destination != null)
-                  Marker(
-                    markerId: const MarkerId('green_marker_1'),
-                    position: LatLng(destination.lat, destination.lng),
-                    infoWindow: InfoWindow(
-                      title: 'destination',
-                      snippet: (trip?.destination).empty("not specified"),
-                    ),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
-                    ),
-                  ),
-                if (origin != null)
-                  Marker(
-                    markerId: const MarkerId('red_marker_1'),
-                    position: LatLng(origin.lat, origin.lng),
-                    infoWindow: InfoWindow(
-                      title: 'origin',
-                      snippet: (trip?.origin).empty("not specified"),
-                    ),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed,
-                    ),
-                  ),
-                if (hasData)
-                  Marker(
-                    markerId: const MarkerId('live_vehicle'),
-                    position: currentPos,
-                    rotation: currentRot, // Animated Bearing
-                    anchor: const Offset(0.5, 0.5),
-                    icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
+              polylines: {
+                if (_isReplaying.value && _replayPath.isNotEmpty)
+                  Polyline(
+                    polylineId: const PolylineId('replay_path_line'),
+                    points: _replayPath,
+                    color: Colors.blueAccent,
+                    width: 5,
+                    jointType: JointType.round,
+                    startCap: Cap.roundCap,
+                    endCap: Cap.roundCap,
                   ),
               },
+              markers: _isReplaying.value
+                  ? {
+                      if (_replayPosition.value != null)
+                        Marker(
+                          markerId: const MarkerId('replay_vehicle'),
+                          position: _replayPosition.value!,
+                          anchor: const Offset(0.5, 0.5),
+                          icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
+                        ),
+                      if (_replayPath.isNotEmpty) ...[
+                        Marker(
+                          markerId: const MarkerId('replay_start'),
+                          position: _replayPath.first,
+                          infoWindow: const InfoWindow(title: 'Start Location'),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                        ),
+                        Marker(
+                          markerId: const MarkerId('replay_end'),
+                          position: _replayPath.last,
+                          infoWindow: const InfoWindow(title: 'End Location'),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                        ),
+                      ]
+                    }
+                  : {
+                      if (destinations.isNotEmpty)
+                        ...destinations
+                            .asMap()
+                            .entries
+                            .map((entry) {
+                              final idx = entry.key;
+                              final dest = entry.value;
+                              if (dest.location == null) return null;
+                              return Marker(
+                                markerId: MarkerId('destination_$idx'),
+                                position: LatLng(
+                                  dest.location!.lat,
+                                  dest.location!.lng,
+                                ),
+                                infoWindow: InfoWindow(
+                                  title: 'Stop ${idx + 1}: ${dest.name}',
+                                  snippet: dest.reached ? 'Reached' : 'Pending',
+                                ),
+                                icon: BitmapDescriptor.defaultMarkerWithHue(
+                                  dest.reached
+                                      ? BitmapDescriptor.hueGreen
+                                      : BitmapDescriptor.hueAzure,
+                                ),
+                              );
+                            })
+                            .whereType<Marker>()
+                            .toSet(),
+                      if (destinations.isEmpty && destination != null)
+                        Marker(
+                          markerId: const MarkerId('green_marker_1'),
+                          position: LatLng(destination.lat, destination.lng),
+                          infoWindow: InfoWindow(
+                            title: 'destination',
+                            snippet: (trip?.destination).empty("not specified"),
+                          ),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueGreen,
+                          ),
+                        ),
+                      if (origin != null)
+                        Marker(
+                          markerId: const MarkerId('red_marker_1'),
+                          position: LatLng(origin.lat, origin.lng),
+                          infoWindow: InfoWindow(
+                            title: 'origin',
+                            snippet: (trip?.origin).empty("not specified"),
+                          ),
+                          icon: BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueRed,
+                          ),
+                        ),
+                      if (hasData)
+                        Marker(
+                          markerId: const MarkerId('live_vehicle'),
+                          position: currentPos,
+                          rotation: currentRot, // Animated Bearing
+                          anchor: const Offset(0.5, 0.5),
+                          icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
+                          onTap: () {
+                            _showVehicleDetailsDialog(liveData);
+                          },
+                        ),
+                    },
             );
           }),
 
@@ -496,12 +549,80 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           // 3. ACTIVE ASSETS CAROUSEL (Simplified)
 
           // 4. DRAGGABLE BOTTOM SHEET
-          DraggableScrollableSheet(
-            initialChildSize: 0.5,
-            minChildSize: 0.2,
-            maxChildSize: 0.95,
-            builder: (context, scrollController) {
-              return Container(
+          Obx(() {
+            if (_isReplaying.value) {
+              return Positioned(
+                bottom: 30,
+                left: 20,
+                right: 20,
+                child: Card(
+                  elevation: 10,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  color: GTheme.surface(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            "Replay Mode".text(style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: _stopReplay,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(_isReplayPlaying.value ? Icons.pause : Icons.play_arrow),
+                              onPressed: () {
+                                if (_isReplayPlaying.value) {
+                                  _pauseReplay();
+                                } else {
+                                  _startReplayAnimation();
+                                }
+                              },
+                            ),
+                            Expanded(
+                              child: Slider(
+                                min: 0,
+                                max: (_replayPath.length - 1).toDouble() > 0 ? (_replayPath.length - 1).toDouble() : 1.0,
+                                value: _replayIndex.value.toDouble(),
+                                onChanged: _replayPath.isNotEmpty ? (val) {
+                                  _replayIndex.value = val.toInt();
+                                  _replayPosition.value = _replayPath[_replayIndex.value];
+                                } : null,
+                              ),
+                            ),
+                            "${_replayIndex.value + 1}/${_replayPath.length}".text(),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildSpeedButton(1.0),
+                            _buildSpeedButton(2.0),
+                            _buildSpeedButton(5.0),
+                            _buildSpeedButton(10.0),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            final hasTrip = _socketController.liveTrackDriver.value?.trip?.status == "Active";
+            return DraggableScrollableSheet(
+              initialChildSize: hasTrip ? 0.5 : 0.23,
+              minChildSize: 0.2,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return Container(
                 decoration: BoxDecoration(
                   color: GTheme.surface(context),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
@@ -720,6 +841,34 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                         ],
                       ),
 
+                      const SizedBox(height: 24),
+                      // Mileage and Today's Distance Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Obx(() {
+                            final liveData = _socketController.liveTrackModel.value;
+                            final currentVehicle = _socketController.currentVehicle.value;
+                            final mileage = liveData?.mileage ?? currentVehicle?.mileage ?? 0.0;
+                            return _buildTelemetryItem(
+                              LineIcons.route,
+                              "${mileage.toStringAsFixed(1)} km",
+                              "Mileage",
+                            );
+                          }),
+                          Obx(() {
+                            final liveData = _socketController.liveTrackModel.value;
+                            final todayDist = liveData?.todayDistance ?? 0.0;
+                            return _buildTelemetryItem(
+                              LineIcons.mapSigns,
+                              "${todayDist.toStringAsFixed(1)} km",
+                              "Today's Dist",
+                            );
+                          }),
+                          // Placeholder for alignment
+                          const SizedBox(width: 80),
+                        ],
+                      ),
                       const SizedBox(height: 40),
 
                       // === ANIMATED TRIP BUTTON ===
@@ -793,35 +942,37 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       }),
                       Obx(() {
                         final user = _socketController.liveTrackDriver.value;
-                        if (user == null) return 0.gapHeight;
+                        if (user == null || user.trip == null) return 0.gapHeight;
+                        
                         final isOnTrip =
-                            (user.trip?.status == 'Active' ||
-                            user.trip?.status == "Completed");
+                            (user.trip!.status == 'Active' ||
+                            user.trip!.status == "Completed");
+                            
+                        if (!isOnTrip) return 0.gapHeight;
+
                         return [
-                              if (user.trip?.destinations.isNotEmpty ??
-                                  false) ...[
+                              if (user.trip!.destinations.isNotEmpty) ...[
                                 _buildTripDestinationsSection(user.trip!),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                               ],
                               ListTile(
                                 title:
                                     (_getCurrentDestination(user.trip!)?.name ??
-                                            user.trip?.destination)
+                                            user.trip!.destination)
                                         .empty("No destination Specified")
                                         .text(),
                                 subtitle: 'Destination'.text(),
-                                leading: Icon(Icons.location_city),
+                                leading: const Icon(Icons.location_city),
                               ),
                               ListTile(
-                                title: (user.trip?.origin)
+                                title: (user.trip!.origin)
                                     .empty("No Origin Specified")
                                     .text(),
                                 subtitle: 'from'.text(),
-                                leading: Icon(Icons.route_outlined),
+                                leading: const Icon(Icons.route_outlined),
                               ),
                             ]
-                            .column(mainAxisSize: MainAxisSize.min)
-                            .visibleIf(isOnTrip);
+                            .column(mainAxisSize: MainAxisSize.min);
                       }),
                       "Under Review "
                           .text(textAlign: TextAlign.center)
@@ -844,8 +995,9 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                   ),
                 ),
               );
-            },
-          ),
+              },
+            );
+          }),
         ],
       ),
     );
@@ -1176,6 +1328,294 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
         _handleTripAction(true);
       },
     );
+  }
+
+  Future<String> _getAddressFromLatLng(double lat, double lng) async {
+    try {
+      List<Geo.Placemark> placemarks = await Geo.placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final Geo.Placemark pos = placemarks.first;
+        final street = pos.street ?? '';
+        final subLocality = pos.subLocality ?? '';
+        final city = pos.locality ?? '';
+        final parts = [if (street.isNotEmpty) street, if (subLocality.isNotEmpty) subLocality, if (city.isNotEmpty) city];
+        return parts.join(", ");
+      }
+    } catch (e) {
+      print("Geocoding error: $e");
+    }
+    return "Unknown Address";
+  }
+
+  void _showVehicleDetailsDialog(LiveTrackModel data) async {
+    final address = RxString("Loading address...");
+    _getAddressFromLatLng(data.lat, data.lng).then((addr) => address.value = addr);
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: GTheme.surface(Get.context!),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    "Vehicle Telemetry".text(
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    "Live Updates".text(style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                  ],
+                ),
+                IconButton(
+                  onPressed: () => Get.back(),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Colors.blueAccent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Obx(() => address.value.text(
+                    style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                  )),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildPopupDetailItem(
+                  icon: Icons.speed,
+                  title: "Speed",
+                  value: "${(data.speed * 3.6).toStringAsFixed(1)} km/h",
+                ),
+                _buildPopupDetailItem(
+                  icon: Icons.power,
+                  title: "ACC Status",
+                  value: data.acc == null ? "N/A" : (data.acc! ? "ON" : "OFF"),
+                  valueColor: data.acc == null
+                      ? Colors.grey
+                      : (data.acc! ? Colors.green : Colors.red),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildPopupDetailItem(
+                  icon: Icons.battery_charging_full,
+                  title: "Voltage",
+                  value: data.voltage != null
+                      ? "${data.voltage!.toStringAsFixed(1)} V"
+                      : (data.battery != null ? "${data.battery!.toInt()}%" : "N/A"),
+                ),
+                _buildPopupDetailItem(
+                  icon: Icons.access_time,
+                  title: "Last Update",
+                  value: "${DateTime.now().difference(data.timestamp).inMinutes} min ago",
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GTheme.primary(Get.context!),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                icon: const Icon(Icons.replay),
+                label: "Replay History".text(),
+                onPressed: () {
+                  Get.back();
+                  _showReplayDatePicker(data.car);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildPopupDetailItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Expanded(
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey, size: 20),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              title.text(style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              value.text(
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: valueColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReplayDatePicker(String vehicleId) {
+    Get.defaultDialog(
+      title: "Replay Route",
+      content: Column(
+        children: [
+          "Select a period to replay".text(),
+          const SizedBox(height: 16),
+          ListTile(
+            title: "Today".text(),
+            leading: const Icon(Icons.today),
+            onTap: () {
+              Get.back();
+              _fetchAndStartReplay(vehicleId, DateTime.now());
+            },
+          ),
+          ListTile(
+            title: "Yesterday".text(),
+            leading: const Icon(Icons.history),
+            onTap: () {
+              Get.back();
+              _fetchAndStartReplay(vehicleId, DateTime.now().subtract(const Duration(days: 1)));
+            },
+          ),
+          ListTile(
+            title: "Pick custom date".text(),
+            leading: const Icon(Icons.calendar_month),
+            onTap: () async {
+              Get.back();
+              final picked = await showDatePicker(
+                context: Get.context!,
+                initialDate: DateTime.now(),
+                firstDate: DateTime.now().subtract(const Duration(days: 90)),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) {
+                _fetchAndStartReplay(vehicleId, picked);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _fetchAndStartReplay(String vehicleId, DateTime date) async {
+    final dateString = date.toIso8601String().split("T")[0];
+    Toaster.showInfo("Fetching history for $dateString...");
+    
+    final response = await Net.get("/vehicle/$vehicleId/history", queryParameters: {"date": dateString});
+    if (response.hasError) {
+      Toaster.showError("Failed to load history: ${response.response}");
+      return;
+    }
+    
+    final pointsList = (response.body['points'] as List?) ?? [];
+    if (pointsList.isEmpty) {
+      Toaster.showError("No movement logs found for this vehicle on $dateString.");
+      return;
+    }
+    
+    final path = pointsList.map((p) => LatLng(
+      (p['lat'] as num).toDouble(),
+      (p['lng'] as num).toDouble(),
+    )).toList();
+    
+    _stopReplay(); // Clean up if already running
+    
+    _replayPath.assignAll(path);
+    _isReplaying.value = true;
+    _replayIndex.value = 0;
+    _replayPosition.value = path.first;
+    
+    // Zoom/Move camera to start of path
+    final controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newLatLngZoom(path.first, 15));
+    
+    _startReplayAnimation();
+  }
+
+  void _startReplayAnimation() {
+    _replayTimer?.cancel();
+    _isReplayPlaying.value = true;
+    
+    // Duration decreases as speed increases
+    final intervalMs = (1500 / _replaySpeed.value).round();
+    
+    _replayTimer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) async {
+      if (_replayIndex.value < _replayPath.length - 1) {
+        _replayIndex.value++;
+        _replayPosition.value = _replayPath[_replayIndex.value];
+        
+        final controller = await _mapController.future;
+        controller.animateCamera(CameraUpdate.newLatLng(_replayPosition.value!));
+      } else {
+        _isReplayPlaying.value = false;
+        _replayTimer?.cancel();
+        Toaster.showSuccess("Replay finished.");
+      }
+    });
+  }
+
+  void _pauseReplay() {
+    _replayTimer?.cancel();
+    _isReplayPlaying.value = false;
+  }
+
+  void _stopReplay() {
+    _replayTimer?.cancel();
+    _isReplaying.value = false;
+    _isReplayPlaying.value = false;
+    _replayPath.clear();
+    _replayPosition.value = null;
+    _replayIndex.value = 0;
+  }
+
+  Widget _buildSpeedButton(double speed) {
+    return Obx(() {
+      final isSelected = _replaySpeed.value == speed;
+      return TextButton(
+        style: TextButton.styleFrom(
+          backgroundColor: isSelected ? GTheme.primary(context) : Colors.transparent,
+          foregroundColor: isSelected ? Colors.white : GTheme.reverse(context),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: () {
+          _replaySpeed.value = speed;
+          if (_isReplayPlaying.value) {
+            _startReplayAnimation(); // restart timer with new interval
+          }
+        },
+        child: "${speed.toInt()}x".text(),
+      );
+    });
   }
 }
 
