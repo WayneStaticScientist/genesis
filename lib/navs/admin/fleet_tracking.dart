@@ -13,6 +13,7 @@ import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:genesis/screens/chats/chat_screen.dart';
+import 'package:genesis/navs/admin/trip_history_screen.dart' as genesis;
 import 'package:genesis/models/populated_trip_model.dart';
 import 'package:genesis/models/live_track_model.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
@@ -865,11 +866,51 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               "Today's Dist",
                             );
                           }),
-                          // Placeholder for alignment
-                          const SizedBox(width: 80),
+                          // Quick actions
+                          Obx(() {
+                            final currentVehicle = _socketController.currentVehicle.value;
+                            if (currentVehicle == null) return const SizedBox.shrink();
+                            return Expanded(
+                              child: Column(
+                                children: [
+                                  IconButton(
+                                    onPressed: () => _fetchAndStartReplay(currentVehicle.id, DateTime.now()),
+                                    icon: Icon(Icons.play_circle_fill, color: Theme.of(context).colorScheme.primary, size: 36),
+                                    tooltip: "Play Today's Trip",
+                                  ),
+                                  const Text("Replay Today", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                ],
+                              ),
+                            );
+                          }),
                         ],
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 24),
+                      Obx(() {
+                        final currentVehicle = _socketController.currentVehicle.value;
+                        if (currentVehicle == null) return const SizedBox.shrink();
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(20),
+                              foregroundColor: Theme.of(context).colorScheme.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(Icons.history_rounded),
+                            label: const Text("View Trip History"),
+                            onPressed: () async {
+                              final result = await Get.to(() => genesis.TripHistoryScreen(vehicleId: currentVehicle.id));
+                              if (result != null && result is DateTime) {
+                                _fetchAndStartReplay(currentVehicle.id, result);
+                              }
+                            },
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 24),
 
                       // === ANIMATED TRIP BUTTON ===
                       Obx(() {
@@ -1565,34 +1606,63 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   void _startReplayAnimation() {
     _replayTimer?.cancel();
     _isReplayPlaying.value = true;
-    
-    // Duration decreases as speed increases
+    _animateToNextPoint();
+  }
+
+  void _animateToNextPoint() async {
+    if (!_isReplayPlaying.value) return;
+    if (_replayIndex.value >= _replayPath.length - 1) {
+      _isReplayPlaying.value = false;
+      Toaster.showSuccess("Replay finished.");
+      return;
+    }
+
+    final startPoint = _replayPath[_replayIndex.value];
+    final endPoint = _replayPath[_replayIndex.value + 1];
+
     final intervalMs = (1500 / _replaySpeed.value).round();
     
-    _replayTimer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) async {
-      if (_replayIndex.value < _replayPath.length - 1) {
-        _replayIndex.value++;
-        _replayPosition.value = _replayPath[_replayIndex.value];
-        
-        final controller = await _mapController.future;
-        controller.animateCamera(CameraUpdate.newLatLng(_replayPosition.value!));
-      } else {
-        _isReplayPlaying.value = false;
-        _replayTimer?.cancel();
-        Toaster.showSuccess("Replay finished.");
-      }
-    });
+    // Dispose previous controller if exists
+    _vehicleAnimController?.dispose();
+    
+    _vehicleAnimController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: intervalMs),
+    );
+
+    _positionAnimation = LatLngTween(begin: startPoint, end: endPoint).animate(_vehicleAnimController!)
+      ..addListener(() {
+        _replayPosition.value = _positionAnimation!.value;
+      })
+      ..addStatusListener((status) async {
+        if (status == AnimationStatus.completed) {
+          _replayIndex.value++;
+          
+          // Pan camera gently every few points to avoid crashing/stuttering
+          if (_replayIndex.value % 5 == 0) {
+            final controller = await _mapController.future;
+            controller.animateCamera(CameraUpdate.newLatLng(_replayPosition.value!));
+          }
+          
+          _animateToNextPoint();
+        }
+      });
+
+    _vehicleAnimController!.forward();
   }
 
   void _pauseReplay() {
-    _replayTimer?.cancel();
     _isReplayPlaying.value = false;
+    _vehicleAnimController?.stop();
+    _replayTimer?.cancel();
   }
 
   void _stopReplay() {
-    _replayTimer?.cancel();
     _isReplaying.value = false;
     _isReplayPlaying.value = false;
+    _vehicleAnimController?.dispose();
+    _vehicleAnimController = null;
+    _replayTimer?.cancel();
     _replayPath.clear();
     _replayPosition.value = null;
     _replayIndex.value = 0;

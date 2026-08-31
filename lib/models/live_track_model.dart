@@ -10,6 +10,7 @@ class LiveTrackModel {
   final double rotation;
   final String state;
   final double todayDistance;
+  final double idleTime;
   final double mileage;
   final bool? acc;
   final double? voltage;
@@ -27,6 +28,7 @@ class LiveTrackModel {
     required this.rotation,
     required this.state,
     this.todayDistance = 0.0,
+    this.idleTime = 0.0,
     this.mileage = 0.0,
     this.acc,
     this.voltage,
@@ -46,6 +48,7 @@ class LiveTrackModel {
       fuelLevel: (data['fuelLevel'] as num?)?.toDouble() ?? 0,
       timestamp: DateTime.tryParse(data['timestamp']) ?? DateTime.now(),
       todayDistance: (data['todayDistance'] as num?)?.toDouble() ?? 0,
+      idleTime: (data['idleTime'] as num?)?.toDouble() ?? 0,
       mileage: (data['mileage'] as num?)?.toDouble() ?? 0,
       acc: data['acc'] as bool?,
       voltage: (data['voltage'] as num?)?.toDouble(),
