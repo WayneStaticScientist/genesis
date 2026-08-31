@@ -446,7 +446,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Distance: ${NumberUtils.formatNumber(trip.distance)} KM",
+                "Distance: ${NumberUtils.formatNumber(trip.distance)} KM" + 
+                (trip.actualDistance != null ? " (Actual: ${NumberUtils.formatNumber(trip.actualDistance!)} KM)" : ""),
                 style: TextStyle(
                   color: Colors.white.withAlpha(200),
                   fontSize: 11,

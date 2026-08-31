@@ -314,7 +314,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                         const SizedBox(width: 12),
                         _infoChip(
                           Icons.speed_rounded,
-                          "${widget.vehicle.usage.toStringAsFixed(0)} km",
+                          "${widget.vehicle.mileage.toStringAsFixed(0)} km",
                           Colors.blue,
                         ),
                       ],

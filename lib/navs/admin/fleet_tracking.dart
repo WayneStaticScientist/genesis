@@ -636,10 +636,12 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                       // Handle
                       Center(
                         child: Container(
-                          width: 40,
-                          height: 4,
+                          width: 44,
+                          height: 5,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
+                            color: GTheme.isDark(context)
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : Colors.grey.shade300,
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -716,14 +718,42 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                         }
                         return Row(
                           children: [
-                            CircleAvatar(
-                              radius: 25,
-                              child: (user != null ? ("Driver".from(
-                                user.firstName,
-                                user.lastName,
-                              ))[0] : "T").text(),
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Theme.of(context).colorScheme.primary,
+                                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.75),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  )
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  (user != null ? ("Driver".from(
+                                    user.firstName,
+                                    user.lastName,
+                                  ))[0] : (currentVehicle?.carModel ?? "T")[0]).toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,29 +763,55 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                       user.firstName,
                                       user.lastName,
                                     ) : (currentVehicle?.carModel ?? "Hardware Tracker"),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
+                                      color: GTheme.reverse(context),
                                     ),
                                   ),
-                                  Text(
-                                    isOnTrip.lors(
-                                      (liveData == null).lors(
-                                        "Searching....",
-                                        (liveData?.state == 'not-found').lors(
-                                          "Idle",
-                                          ((difference?.inMinutes ?? 0) < 2)
-                                              .lors("Active", "Offline"),
-                                        ),
-                                      ),
-                                      user == null ? "Hardware Tracked" : "Idle",
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: isOnTrip
+                                          ? Colors.green.withValues(alpha: 0.15)
+                                          : Colors.grey.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                    style: TextStyle(
-                                      color: isOnTrip.lorc(
-                                        Colors.green,
-                                        Colors.grey,
-                                      ),
-                                      fontSize: 13,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: isOnTrip.lorc(Colors.green, Colors.grey),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          isOnTrip.lors(
+                                            (liveData == null).lors(
+                                              "Searching....",
+                                              (liveData?.state == 'not-found').lors(
+                                                "Idle",
+                                                ((difference?.inMinutes ?? 0) < 2)
+                                                    .lors("Active", "Offline"),
+                                              ),
+                                            ),
+                                            user == null ? "Hardware Tracked" : "Idle",
+                                          ),
+                                          style: TextStyle(
+                                            color: isOnTrip.lorc(
+                                              Colors.green,
+                                              Colors.grey,
+                                            ),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -774,143 +830,155 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                         );
                       }),
 
-                      const SizedBox(height: 24),
-                      // Telemetry Row
+                      const SizedBox(height: 20),
+                      // Telemetry Cards Grid Row 1 (Speed, Fuel, Status)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Obx(() {
-                            final liveData =
-                                _socketController.liveTrackModel.value;
-                            Duration? difference;
-                            if (liveData != null) {
-                              difference = DateTime.now().difference(
-                                liveData.timestamp,
-                              );
-                            }
-                            return _buildTelemetryItem(
-                              LineIcons.lightningBolt,
-                              (difference == null).lors(
+                          Expanded(
+                            child: Obx(() {
+                              final liveData = _socketController.liveTrackModel.value;
+                              Duration? difference;
+                              if (liveData != null) {
+                                difference = DateTime.now().difference(liveData.timestamp);
+                              }
+                              final speedVal = (difference == null).lors(
                                 VehicleUtlis.speedToStandardUnits(0),
                                 ((difference?.inMinutes ?? 0) > 2).lors(
                                   VehicleUtlis.speedToStandardUnits(0),
                                   "${VehicleUtlis.speedToStandardUnits(_socketController.liveTrackModel.value?.speed)}",
                                 ),
-                              ),
-                              "Speed",
-                            );
-                          }),
-                          GestureDetector(
-                            onTap: _showFuelManagementOptions,
+                              );
+                              return _buildTelemetryCard(
+                                icon: LineIcons.lightningBolt,
+                                value: speedVal,
+                                label: "Speed",
+                              );
+                            }),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
                             child: Obx(
-                              () => _buildTelemetryItem(
-                                LineIcons.gasPump,
-                                "${_socketController.currentVehicle.value?.fuelLevel ?? 0}%",
-                                "Fuel (Tap)",
+                              () => _buildTelemetryCard(
+                                icon: LineIcons.gasPump,
+                                value: "${_socketController.currentVehicle.value?.fuelLevel ?? 0}%",
+                                label: "Fuel",
+                                onTap: _showFuelManagementOptions,
                               ),
                             ),
                           ),
-                          Obx(() {
-                            final date = _socketController
-                                .liveTrackModel
-                                .value
-                                ?.timestamp;
-                            bool online = false;
-                            String label = "Offline";
-                            if (date != null) {
-                              final difference =
-                                  DateTime.now().millisecondsSinceEpoch -
-                                  date.millisecondsSinceEpoch;
-                              if (difference < 5000 * 60) {
-                                online = true;
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Obx(() {
+                              final date = _socketController.liveTrackModel.value?.timestamp;
+                              bool online = false;
+                              String label = "Offline";
+                              if (date != null) {
+                                final difference = DateTime.now().millisecondsSinceEpoch - date.millisecondsSinceEpoch;
+                                if (difference < 5000 * 60) {
+                                  online = true;
+                                }
+                                if (difference < 1000 * 60 * 60) {
+                                  label = "${difference ~/ (1000 * 60)}m ago";
+                                } else if (difference < 1000 * 60 * 60 * 24) {
+                                  label = "${difference ~/ (1000 * 60 * 60)}h ago";
+                                } else {
+                                  label = "offTrip";
+                                }
                               }
-                              if (difference < 1000 * 60 * 60) {
-                                label = "${difference ~/ (1000 * 60)} mins ago";
-                              } else if (difference < 1000 * 60 * 60 * 24) {
-                                label =
-                                    "${difference ~/ (1000 * 60 * 60)} hrs ago";
-                              } else {
-                                label = "offTrip";
-                              }
-                            }
-                            return _buildTelemetryItem(
-                              LineIcons.clock,
-                              online ? "online" : label,
-                              "status",
-                            );
-                          }),
+                              return _buildTelemetryCard(
+                                icon: LineIcons.clock,
+                                value: online ? "online" : label,
+                                label: "Status",
+                                iconColor: online ? Colors.green : Colors.grey,
+                              );
+                            }),
+                          ),
                         ],
                       ),
-
-                      const SizedBox(height: 24),
-                      // Mileage and Today's Distance Row
+                      const SizedBox(height: 12),
+                      // Telemetry Cards Grid Row 2 (Mileage, Today's Distance)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Obx(() {
-                            final liveData = _socketController.liveTrackModel.value;
-                            final currentVehicle = _socketController.currentVehicle.value;
-                            final mileage = liveData?.mileage ?? currentVehicle?.mileage ?? 0.0;
-                            return _buildTelemetryItem(
-                              LineIcons.route,
-                              "${mileage.toStringAsFixed(1)} km",
-                              "Mileage",
-                            );
-                          }),
-                          Obx(() {
-                            final liveData = _socketController.liveTrackModel.value;
-                            final todayDist = liveData?.todayDistance ?? 0.0;
-                            return _buildTelemetryItem(
-                              LineIcons.mapSigns,
-                              "${todayDist.toStringAsFixed(1)} km",
-                              "Today's Dist",
-                            );
-                          }),
-                          // Quick actions
-                          Obx(() {
-                            final currentVehicle = _socketController.currentVehicle.value;
-                            if (currentVehicle == null) return const SizedBox.shrink();
-                            return Expanded(
-                              child: Column(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => _fetchAndStartReplay(currentVehicle.id ?? "", DateTime.now()),
-                                    icon: Icon(Icons.play_circle_fill, color: Theme.of(context).colorScheme.primary, size: 36),
-                                    tooltip: "Play Today's Trip",
-                                  ),
-                                  const Text("Replay Today", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                ],
-                              ),
-                            );
-                          }),
+                          Expanded(
+                            child: Obx(() {
+                              final liveData = _socketController.liveTrackModel.value;
+                              final currentVehicle = _socketController.currentVehicle.value;
+                              final mileage = liveData?.mileage ?? currentVehicle?.mileage ?? 0.0;
+                              return _buildTelemetryCard(
+                                icon: LineIcons.route,
+                                value: "${mileage.toStringAsFixed(1)} km",
+                                label: "Mileage",
+                              );
+                            }),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Obx(() {
+                              final liveData = _socketController.liveTrackModel.value;
+                              final todayDist = liveData?.todayDistance ?? 0.0;
+                              return _buildTelemetryCard(
+                                icon: LineIcons.mapSigns,
+                                value: "${todayDist.toStringAsFixed(1)} km",
+                                label: "Today's Dist",
+                              );
+                            }),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
+
+                      // Action Buttons Row (Replay Today & View Trip History)
                       Obx(() {
                         final currentVehicle = _socketController.currentVehicle.value;
                         if (currentVehicle == null) return const SizedBox.shrink();
-                        return SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(20),
-                              foregroundColor: Theme.of(context).colorScheme.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                              elevation: 0,
+                        return Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                icon: Icon(Icons.play_circle_outline, color: Theme.of(context).colorScheme.primary, size: 20),
+                                label: Text(
+                                  "Replay Today",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                onPressed: () => _fetchAndStartReplay(currentVehicle.id ?? "", DateTime.now()),
+                              ),
                             ),
-                            icon: const Icon(Icons.history_rounded),
-                            label: const Text("View Trip History"),
-                            onPressed: () async {
-                              final result = await Get.to(() => genesis.VehicleTripsScreen(
-                                vehicleId: currentVehicle.id ?? "",
-                                carModel: currentVehicle.carModel,
-                              ));
-                              if (result != null && result is DateTime) {
-                                _fetchAndStartReplay(currentVehicle.id ?? "", result);
-                              }
-                            },
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 1,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 2,
+                                ),
+                                icon: const Icon(Icons.history_rounded, size: 20),
+                                label: const Text("Trip History", style: TextStyle(fontWeight: FontWeight.bold)),
+                                onPressed: () async {
+                                  final result = await Get.to(() => genesis.VehicleTripsScreen(
+                                    vehicleId: currentVehicle.id ?? "",
+                                    carModel: currentVehicle.carModel,
+                                  ));
+                                  if (result != null && result is DateTime) {
+                                    _fetchAndStartReplay(currentVehicle.id ?? "", result);
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
                         );
                       }),
                       const SizedBox(height: 24),
@@ -1049,18 +1117,79 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
 
   // --- WIDGET HELPERS ---
 
-  Widget _buildTelemetryItem(IconData icon, String value, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+  Widget _buildTelemetryCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    VoidCallback? onTap,
+    Color? iconColor,
+  }) {
+    final primary = iconColor ?? Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    Widget child = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
         ),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-      ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: primary, size: 14),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7) ?? Colors.grey,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: GTheme.reverse(context),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: child,
+      );
+    }
+    return child;
   }
 
   Widget _buildTripDestinationsSection(PopulatedTripModel trip) {

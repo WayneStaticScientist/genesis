@@ -92,6 +92,7 @@ class TripModel {
   final dynamic clearer;
   final String loadType;
   final double distance;
+  final double? actualDistance;
   final String receiver;
   final dynamic finalizer;
   final dynamic initiater;
@@ -149,6 +150,7 @@ class TripModel {
     this.actualFuelUsage = 0.0,
     required this.finalizer,
     required this.distance,
+    this.actualDistance,
     required this.receiver,
     required this.initiater,
     required this.tripType,
@@ -166,6 +168,7 @@ class TripModel {
       driver: json['driver'],
       notes: json['notes'] ?? '',
       distance: (json['distance'] as num?)?.toDouble() ?? 0,
+      actualDistance: (json['actualDistance'] as num?)?.toDouble(),
       finalizer: (json['finalizer']),
       receiver: (json['receiver']) ?? '',
       id: json['_id'] ?? '',
@@ -235,6 +238,7 @@ class TripModel {
       'loadType': loadType,
       'receiver': receiver,
       'distance': distance,
+      'actualDistance': actualDistance,
       'finalizer': finalizer,
       'initiater': initiater,
       'loadWeight': loadWeight,

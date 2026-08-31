@@ -204,7 +204,9 @@ class _FinalizeTripDialogState extends State<FinalizeTripDialog> {
                       DefaultFormfield(
                         keyboardType: TextInputType.number,
                         controller: _actualFuelUsageController,
-                        label: "Actual Fuel Used (Liters)",
+                        label: widget.trip.actualDistance != null 
+                            ? "Actual Fuel Used (Auto-Calculated from ${widget.trip.actualDistance!.toStringAsFixed(1)} KM)" 
+                            : "Actual Fuel Used (Liters)",
                         hint: "Enter actual fuel usage",
                         icon: Icons.oil_barrel_rounded,
                       ),
