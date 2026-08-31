@@ -368,7 +368,7 @@ class _GNavBarState extends State<GNavBar> {
             ? LinearGradient(
                 colors: [
                   primaryColor,
-                  primaryColor.withBlue((primaryColor.blue + 40).clamp(0, 255)),
+                  primaryColor.withBlue(((primaryColor.b * 255.0).round() + 40).clamp(0, 255)),
                 ],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,

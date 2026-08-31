@@ -27,25 +27,30 @@ class _VehicleTripsScreenState extends State<VehicleTripsScreen> {
   bool _loading = false;
   int _currentPage = 1;
   int _totalPages = 1;
-  int _totalCount = 0;
+
+  final ScrollController _scrollController = ScrollController();
 
   // Filter States
-  String? _selectedMonth; // "All Months", "Jan", etc.
-  String? _selectedYear; // "All Years", "2024", etc.
-
-  final List<String> _months = [
-    "All Months", "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-  
-  final List<String> _years = [
-    "All Years", "2024", "2025", "2026", "2027"
-  ];
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   void initState() {
     super.initState();
     _fetchRouteSummary();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        if (!_loading && _currentPage < _totalPages) {
+          _fetchRouteSummary(page: _currentPage + 1);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchRouteSummary({int page = 1}) async {
@@ -59,15 +64,9 @@ class _VehicleTripsScreenState extends State<VehicleTripsScreen> {
       "limit": 12,
     };
 
-    if (_selectedMonth != null && _selectedMonth != "All Months") {
-      final index = _months.indexOf(_selectedMonth!);
-      if (index > 0) {
-        queryParams["month"] = index.toString();
-      }
-    }
-
-    if (_selectedYear != null && _selectedYear != "All Years") {
-      queryParams["year"] = _selectedYear;
+    if (_startDate != null && _endDate != null) {
+      queryParams["startDate"] = _startDate!.toIso8601String();
+      queryParams["endDate"] = _endDate!.toIso8601String();
     }
 
     final response = await Net.get(
@@ -88,7 +87,6 @@ class _VehicleTripsScreenState extends State<VehicleTripsScreen> {
     setState(() {
       _currentPage = response.body['page'] ?? page;
       _totalPages = response.body['totalPages'] ?? 1;
-      _totalCount = response.body['totalCount'] ?? 0;
       _summaries.addAll(list.map((e) => Map<String, dynamic>.from(e)));
     });
   }
@@ -121,9 +119,16 @@ class _VehicleTripsScreenState extends State<VehicleTripsScreen> {
                     : RefreshIndicator(
                         onRefresh: () => _fetchRouteSummary(page: 1),
                         child: ListView.builder(
+                          controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: _summaries.length,
+                          itemCount: _summaries.length + (_currentPage < _totalPages ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (index >= _summaries.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
                             final summary = _summaries[index];
                             return RouteSummaryCard(
                               summary: summary,
@@ -141,115 +146,98 @@ class _VehicleTripsScreenState extends State<VehicleTripsScreen> {
                         ),
                       ),
           ),
-          // Pagination Footer
-          if (_summaries.isNotEmpty) _buildPaginationFooter(),
+          // Pagination Footer removed for infinite scroll
         ],
       ),
     );
   }
 
   Widget _buildFilterHeader() {
+    String dateText = "All Time";
+    if (_startDate != null && _endDate != null) {
+      dateText = "${GenesisDate.formatNormalDate(_startDate!)} - ${GenesisDate.formatNormalDate(_endDate!)}";
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       color: GTheme.surface(context),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildDropdown(
-                value: _selectedMonth ?? "All Months",
-                items: _months,
-                onChanged: (val) {
-                  setState(() {
-                    _selectedMonth = val;
-                  });
-                  _fetchRouteSummary(page: 1);
-                },
+      child: InkWell(
+        onTap: () async {
+          final DateTimeRange? picked = await showDateRangePicker(
+            context: context,
+            firstDate: DateTime(2020),
+            lastDate: DateTime.now(),
+            initialDateRange: _startDate != null && _endDate != null 
+                ? DateTimeRange(start: _startDate!, end: _endDate!)
+                : null,
+            builder: (context, child) {
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: Theme.of(context).colorScheme.copyWith(
+                    primary: GTheme.primary(context),
+                  ),
+                ),
+                child: child!,
+              );
+            },
+          );
+
+          if (picked != null) {
+            setState(() {
+              _startDate = picked.start;
+              // Set end date to end of day to include all logs for that day
+              _endDate = DateTime(picked.end.year, picked.end.month, picked.end.day, 23, 59, 59);
+            });
+            _fetchRouteSummary(page: 1);
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.calendar_month, color: GTheme.primary(context)),
+                  const SizedBox(width: 12),
+                  Text(
+                    dateText,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildDropdown(
-                value: _selectedYear ?? "All Years",
-                items: _years,
-                onChanged: (val) {
-                  setState(() {
-                    _selectedYear = val;
-                  });
-                  _fetchRouteSummary(page: 1);
-                },
-              ),
-            ),
-          ],
+              if (_startDate != null)
+                IconButton(
+                  icon: const Icon(Icons.clear, size: 20),
+                  onPressed: () {
+                    setState(() {
+                      _startDate = null;
+                      _endDate = null;
+                    });
+                    _fetchRouteSummary(page: 1);
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                )
+              else
+                const Icon(Icons.arrow_drop_down, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDropdown({
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.black.withOpacity(0.02),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          items: items.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
 
-  Widget _buildPaginationFooter() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: GTheme.surface(context),
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-            onPressed: _currentPage > 1 && !_loading
-                ? () => _fetchRouteSummary(page: _currentPage - 1)
-                : null,
-          ),
-          Text(
-            "Page $_currentPage of $_totalPages ($_totalCount days)",
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
-            onPressed: _currentPage < _totalPages && !_loading
-                ? () => _fetchRouteSummary(page: _currentPage + 1)
-                : null,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyState() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.route_outlined, size: 64, color: Colors.grey.withOpacity(0.5)),
+        Icon(Icons.route_outlined, size: 64, color: Colors.grey.withValues(alpha: 0.5)),
         const SizedBox(height: 16),
         "No logs found".text(style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 8),
@@ -354,7 +342,7 @@ class _RouteSummaryCardState extends State<RouteSummaryCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: GTheme.primary(context).withOpacity(0.1),
+                    color: GTheme.primary(context).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: "${totalDist.toStringAsFixed(1)} km".text(
@@ -378,7 +366,7 @@ class _RouteSummaryCardState extends State<RouteSummaryCard> {
                     Container(
                       width: 2,
                       height: 30,
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.grey.withValues(alpha: 0.3),
                     ),
                     const Icon(Icons.location_on, color: Colors.redAccent, size: 18),
                   ],

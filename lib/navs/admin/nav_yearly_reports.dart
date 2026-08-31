@@ -120,7 +120,7 @@ class _AdminNavYearlyReportsState extends State<AdminNavYearlyReports> {
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(gradient: LinearGradient(
-            colors: [primary, primary.withBlue((primary.blue + 55).clamp(0, 255)), const Color(0xFF6C5DD3)],
+            colors: [primary, primary.withBlue(((primary.b * 255.0).round() + 55).clamp(0, 255)), const Color(0xFF6C5DD3)],
             begin: Alignment.topLeft, end: Alignment.bottomRight,
           )),
           child: SafeArea(child: Padding(

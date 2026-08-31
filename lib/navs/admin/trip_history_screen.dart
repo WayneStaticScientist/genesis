@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:genesis/utils/theme.dart';
-import 'package:genesis/utils/genesis_date.dart';
-import 'package:genesis/utils/net.dart';
-import 'package:genesis/widgets/toaster.dart';
+
+import 'package:genesis/services/network_adapter.dart';
+import 'package:genesis/utils/toast.dart';
 import 'package:line_icons/line_icons.dart';
 
 class TripHistoryScreen extends StatefulWidget {
@@ -46,7 +46,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GTheme.background(context),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Trip History"),
         backgroundColor: GTheme.surface(context),

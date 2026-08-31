@@ -390,7 +390,7 @@ class _AdminNavMainState extends State<AdminNavMain> {
         gradient: LinearGradient(
           colors: [
             primaryColor,
-            primaryColor.withBlue((primaryColor.blue + 60).clamp(0, 255)),
+            primaryColor.withBlue(((primaryColor.b * 255.0).round() + 60).clamp(0, 255)),
             const Color(0xFF6C5DD3),
           ],
           begin: Alignment.topLeft,

@@ -13,7 +13,7 @@ import 'package:genesis/utils/string_utils.dart';
 import 'package:genesis/utils/screen_sizes.dart';
 import 'package:genesis/utils/vehicle_utlis.dart';
 import 'package:genesis/screens/chats/chat_screen.dart';
-import 'package:genesis/navs/admin/trip_history_screen.dart' as genesis;
+import 'package:genesis/screens/trips/vehicle_trips_screen.dart' as genesis;
 import 'package:genesis/models/populated_trip_model.dart';
 import 'package:genesis/models/live_track_model.dart';
 import 'package:genesis/widgets/actions/pinging_button.dart';
@@ -874,7 +874,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                               child: Column(
                                 children: [
                                   IconButton(
-                                    onPressed: () => _fetchAndStartReplay(currentVehicle.id, DateTime.now()),
+                                    onPressed: () => _fetchAndStartReplay(currentVehicle.id ?? "", DateTime.now()),
                                     icon: Icon(Icons.play_circle_fill, color: Theme.of(context).colorScheme.primary, size: 36),
                                     tooltip: "Play Today's Trip",
                                   ),
@@ -902,9 +902,12 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                             icon: const Icon(Icons.history_rounded),
                             label: const Text("View Trip History"),
                             onPressed: () async {
-                              final result = await Get.to(() => genesis.TripHistoryScreen(vehicleId: currentVehicle.id));
+                              final result = await Get.to(() => genesis.VehicleTripsScreen(
+                                vehicleId: currentVehicle.id ?? "",
+                                carModel: currentVehicle.carModel,
+                              ));
                               if (result != null && result is DateTime) {
-                                _fetchAndStartReplay(currentVehicle.id, result);
+                                _fetchAndStartReplay(currentVehicle.id ?? "", result);
                               }
                             },
                           ),
