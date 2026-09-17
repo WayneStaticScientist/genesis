@@ -48,8 +48,11 @@ class UserMonthlyReportModel {
   final double totalRevenue;
   final double totalExpenses;
   final int totalTurnaroundTimeMs;
+  final double totalDistance;
 
   double get grossProfit => totalRevenue - totalExpenses;
+  double get costPerKm => totalDistance > 0 ? totalExpenses / totalDistance : 0.0;
+  double get profitPerKm => totalDistance > 0 ? grossProfit / totalDistance : 0.0;
 
   UserMonthlyReportModel({
     required this.year,
@@ -58,6 +61,7 @@ class UserMonthlyReportModel {
     required this.totalRevenue,
     required this.totalExpenses,
     required this.totalTurnaroundTimeMs,
+    required this.totalDistance,
   });
 
   factory UserMonthlyReportModel.fromJSON(data) {
@@ -69,6 +73,7 @@ class UserMonthlyReportModel {
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0.0,
       totalExpenses: (data['totalExpenses'] as num?)?.toDouble() ?? 0.0,
       totalTurnaroundTimeMs: (data['totalTurnaroundTimeMs'] as num?)?.toInt() ?? 0,
+      totalDistance: (data['totalDistance'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -80,11 +85,14 @@ class UserTripStatsModel {
   final double totalRevenue;
   final double totalExpenses;
   final int totalTurnaroundTimeMs;
+  final double totalDistance;
   final String email;
   final List<UserTripStatsHistory> recentTrips;
   final List<UserMonthlyReportModel> monthlyReports;
 
   double get grossProfit => totalRevenue - totalExpenses;
+  double get costPerKm => totalDistance > 0 ? totalExpenses / totalDistance : 0.0;
+  double get profitPerKm => totalDistance > 0 ? grossProfit / totalDistance : 0.0;
 
   UserTripStatsModel({
     required this.firstName,
@@ -96,6 +104,7 @@ class UserTripStatsModel {
     required this.recentTrips,
     required this.monthlyReports,
     required this.email,
+    required this.totalDistance,
   });
   factory UserTripStatsModel.fromJSON(data) {
     return UserTripStatsModel(
@@ -105,6 +114,7 @@ class UserTripStatsModel {
       totalTrips: data['totalTrips'] ?? 0,
       totalRevenue: (data['totalRevenue'] as num?)?.toDouble() ?? 0,
       totalExpenses: (data['totalExpenses'] as num?)?.toDouble() ?? 0,
+      totalDistance: (data['totalDistance'] as num?)?.toDouble() ?? 0,
       totalTurnaroundTimeMs: (data['totalTurnaroundTimeMs'] as num?)?.toInt() ?? 0,
       recentTrips:
           (data['recentTrips'] as List<dynamic>?)

@@ -1,5 +1,6 @@
 import 'package:genesis/screens/stats/vehicle_mantainance_history.dart';
 import 'package:genesis/utils/bool_utils.dart';
+import 'package:genesis/screens/stats/speeding_reports_screen.dart';
 import 'package:genesis/utils/pdf_marker/genesis_printer.dart';
 import 'package:genesis/widgets/loaders/white_loader.dart';
 import 'package:get/get.dart';
@@ -387,7 +388,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
   Widget _buildDueRemindersAlert(BuildContext context) {
     final dueReminders = widget.vehicle.serviceReminders.where((reminder) {
       if (reminder.type == 'mileage') {
-        double remaining = reminder.mileage - widget.vehicle.usage;
+        double remaining = reminder.mileage - widget.vehicle.mileage;
         return remaining <= 0;
       } else {
         if (reminder.date == null) return false;
@@ -427,8 +428,8 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
           ...dueReminders.map((reminder) {
             String dueDetail = "";
             if (reminder.type == 'mileage') {
-              double overdue = widget.vehicle.usage - reminder.mileage;
-              dueDetail = overdue == 0 ? "Due now" : "Overdue by ${NumberUtils.formatNumber(overdue)} km";
+              double overdue = widget.vehicle.mileage - reminder.mileage;
+              dueDetail = overdue <= 0 ? "Due now" : "Overdue by ${NumberUtils.formatNumber(overdue)} km";
             } else {
               int overdueDays = DateTime.now().difference(reminder.date!).inDays;
               dueDetail = overdueDays == 0 ? "Due today" : "Overdue by $overdueDays days";
@@ -527,6 +528,19 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
               Icons.handyman_rounded,
               onTap: () => Get.to(
                 () => MaintenanceHistoryScreen(vehicle: widget.vehicle),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _statWideCard(
+              "Speeding Reports",
+              "View History",
+              Colors.redAccent,
+              Icons.speed,
+              onTap: () => Get.to(
+                () => SpeedingReportsScreen(
+                  vehicleId: widget.vehicle.id!,
+                  vehicleName: widget.vehicle.carModel,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -1027,7 +1041,7 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
             String remainingText;
             Color statusColor;
             if (reminder.type == 'mileage') {
-              double remaining = reminder.mileage - widget.vehicle.usage;
+              double remaining = reminder.mileage - widget.vehicle.mileage;
               if (remaining <= 0) {
                 remainingText =
                     'Overdue by ${NumberUtils.formatNumber(remaining.abs())} km';

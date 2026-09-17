@@ -411,7 +411,20 @@ class _RouteSummaryCardState extends State<RouteSummaryCard> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          "Started from".text(style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          Row(
+                            children: [
+                              "Started from".text(style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                              if (widget.summary['startLocation']?['timestamp'] != null)
+                                Builder(builder: (context) {
+                                  final dtStr = widget.summary['startLocation']['timestamp'];
+                                  final dt = DateTime.tryParse(dtStr.toString())?.toLocal();
+                                  if (dt == null) return const SizedBox.shrink();
+                                  return " (${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')})".text(
+                                    style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)
+                                  );
+                                }),
+                            ],
+                          ),
                           const SizedBox(height: 2),
                           _startAddress.text(
                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -422,7 +435,20 @@ class _RouteSummaryCardState extends State<RouteSummaryCard> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          "Stopped at".text(style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          Row(
+                            children: [
+                              "Stopped at".text(style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                              if (widget.summary['endLocation']?['timestamp'] != null)
+                                Builder(builder: (context) {
+                                  final dtStr = widget.summary['endLocation']['timestamp'];
+                                  final dt = DateTime.tryParse(dtStr.toString())?.toLocal();
+                                  if (dt == null) return const SizedBox.shrink();
+                                  return " (${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')})".text(
+                                    style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)
+                                  );
+                                }),
+                            ],
+                          ),
                           const SizedBox(height: 2),
                           _endAddress.text(
                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),

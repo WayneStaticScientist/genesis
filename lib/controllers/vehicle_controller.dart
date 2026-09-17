@@ -53,8 +53,8 @@ class VehicleControler extends GetxController {
       return;
     }
     currentPage.value = page;
-    totalPages.value = response.body['totalPages'];
-    this.page.value = response.body['page'] as int;
+    totalPages.value = int.tryParse(response.body['totalPages']?.toString() ?? '1') ?? 1;
+    this.page.value = int.tryParse(response.body['page']?.toString() ?? '1') ?? 1;
     log("Total Pages: ${totalPages.value} | Current Page: ${this.page.value}");
 
     vehicles.addAll(

@@ -24,15 +24,15 @@ class TokenModel {
     return TokenModel(accessToken: accessToken, refreshToken: refreshToken);
   }
 
-  void saveToStorage() {
+  Future<void> saveToStorage() async {
     final storage = GetStorage();
-    storage.write('accessToken', accessToken);
-    storage.write('refreshToken', refreshToken);
+    await storage.write('accessToken', accessToken);
+    await storage.write('refreshToken', refreshToken);
   }
 
-  static void clearStorage() {
+  static Future<void> clearStorage() async {
     final storage = GetStorage();
-    storage.remove('accessToken');
-    storage.remove('refreshToken');
+    await storage.remove('accessToken');
+    await storage.remove('refreshToken');
   }
 }

@@ -36,6 +36,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
   double _loadedFuelRatio = 0.0;
   double _fullLoad = 0.0;
   double _mileage = 0.0;
+  double? _speedLimit;
   String _trackerId = "";
   List<Map<String, dynamic>> _serviceReminders = [];
 
@@ -67,6 +68,7 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
         "loadedFuelRatio": _loadedFuelRatio,
         "fullLoad": _fullLoad,
         "mileage": _mileage,
+        "speedLimit": _speedLimit,
         "trackerId": _trackerId.trim(),
         "serviceReminders": _serviceReminders,
       };
@@ -198,6 +200,14 @@ class _AdminAddVehicleState extends State<AdminAddVehicle> {
                 icon: Icons.speed,
                 keyboardType: TextInputType.number,
                 onSaved: (val) => _mileage = double.tryParse(val ?? "0") ?? 0.0,
+              ),
+              _buildField(
+                label: "Speed Limit (km/h) (Optional)",
+                hint: "Enter speed limit",
+                icon: Icons.speed,
+                keyboardType: TextInputType.number,
+                validator: (val) => null,
+                onSaved: (val) => _speedLimit = double.tryParse(val ?? ''),
               ),
               _buildField(
                 label: "Tracker ID / IMEI (Optional)",

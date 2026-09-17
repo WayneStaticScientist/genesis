@@ -24,9 +24,11 @@ class VehicleModel {
   final List<ServiceRemainderModel> serviceReminders;
   final String? trackerId;
   LicenceModel? licence;
+  final double? speedLimit;
 
   VehicleModel({
     this.licence,
+    this.speedLimit,
     required this.id,
     required this.usage,
     required this.driver,
@@ -53,6 +55,7 @@ class VehicleModel {
       "_id": id,
       "usage": usage,
       "status": status,
+      "speedLimit": speedLimit,
       'licence': licence,
       "carModel": carModel,
       "fuelRatio": fuelRatio,
@@ -82,14 +85,14 @@ class VehicleModel {
       driver: data['driver'] != null
           ? PopulatedDriverModel.fromJSON(data['driver'])
           : null,
-      status: data['status'],
+      status: data['status'] ?? 'Active',
       insurances:
           (data['insurances'] as List<dynamic>?)
               ?.map((e) => DeductionItem.fromJSON(e))
               .toList() ??
           [],
-      carModel: data['carModel'],
-      licencePlate: data['licencePlate'],
+      carModel: data['carModel'] ?? '',
+      licencePlate: data['licencePlate'] ?? '',
 
       engineType: data['engineType'] ?? '',
       engineNumber: data['engineNumber'],
@@ -102,6 +105,7 @@ class VehicleModel {
       loadedFuelRatio: (data['loadedFuelRatio'] as num?)?.toDouble() ?? 0.0,
       fullLoad: (data['fullLoad'] as num?)?.toDouble() ?? 0.0,
       mileage: (data['mileage'] as num?)?.toDouble() ?? 0.0,
+      speedLimit: (data['speedLimit'] as num?)?.toDouble(),
       trackerId: data['trackerId'],
     );
   }

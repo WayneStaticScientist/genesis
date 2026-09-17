@@ -357,10 +357,32 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
         ),
         const SizedBox(height: 16),
         _statTileLarge(
-          "Active Turnaround Time",
+          "Trip Duration",
           _formatTurnaroundTime(stats.totalTurnaroundTimeMs),
           Icons.timer_rounded,
           Colors.amber,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _statTile(
+                "Cost / km",
+                NumberUtils.formatCurrency(stats.costPerKm),
+                Icons.speed_rounded,
+                Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _statTile(
+                "Profit / km",
+                NumberUtils.formatCurrency(stats.profitPerKm),
+                Icons.analytics_rounded,
+                Colors.green,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -533,6 +555,28 @@ class _DriverStatsScreenState extends State<DriverStatsScreen> {
                           Text(
                             "Active: ${_formatTurnaroundTime(m.totalTurnaroundTimeMs)}",
                             style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Cost/km: ${NumberUtils.formatCurrency(m.costPerKm)}",
+                            style: TextStyle(
+                              color: Colors.orange.shade800,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "Profit/km: ${NumberUtils.formatCurrency(m.profitPerKm)}",
+                            style: TextStyle(
+                              color: Colors.green.shade700,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),

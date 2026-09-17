@@ -40,6 +40,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
   late double _loadedFuelRatio;
   late double _fullLoad;
   late double _mileage;
+  double? _speedLimit;
   late String _trackerId;
   late DateTime? expiryDate = widget.vehicle.licence?.expiryDate;
   late bool _initialUserInitiliazed = widget.vehicle.driver == null;
@@ -76,6 +77,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
     _loadedFuelRatio = widget.vehicle.loadedFuelRatio;
     _fullLoad = widget.vehicle.fullLoad;
     _mileage = widget.vehicle.mileage;
+    _speedLimit = widget.vehicle.speedLimit;
     _trackerId = widget.vehicle.trackerId ?? '';
     _serviceReminders = widget.vehicle.serviceReminders
         .map((e) => e.toJson())
@@ -121,6 +123,7 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
       "loadedFuelRatio": _loadedFuelRatio,
       "fullLoad": _fullLoad,
       "mileage": _mileage,
+      "speedLimit": _speedLimit,
       "trackerId": _trackerId.trim(),
       "serviceReminders": _serviceReminders,
       // Add driver ID if selected
@@ -448,6 +451,15 @@ class _AdminEditVehicleState extends State<AdminEditVehicle> {
               keyboardType: TextInputType.number,
               onChanged: (val) => _fullLoad = double.tryParse(val) ?? 0.0,
               icon: Icons.monitor_weight_outlined,
+            ),
+            const SizedBox(height: 16),
+            _buildLabel("Speed Limit (km/h) (Optional)"),
+            _buildTextField(
+              label: "Enter speed limit",
+              initialValue: _speedLimit?.toString() ?? '',
+              keyboardType: TextInputType.number,
+              onChanged: (val) => _speedLimit = double.tryParse(val),
+              icon: Icons.speed,
             ),
             const SizedBox(height: 16),
             _buildLabel("Licence Information"),

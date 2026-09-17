@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:get/get.dart';
 import 'package:exui/exui.dart';
 import 'package:exui/material.dart';
@@ -55,16 +57,20 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
   final Rx<LatLng?> _animatedPosition = Rx<LatLng?>(null);
   final Rx<double?> _animatedRotation = Rx<double?>(null);
   AnimationController? _vehicleAnimController;
+  AnimationController? _replayAnimController;
   Animation<LatLng>? _positionAnimation;
   Animation<double>? _rotationAnimation;
 
   // Replay State variables
   final RxList<LatLng> _replayPath = <LatLng>[].obs;
+  final RxList<String> _replayTimestamps = <String>[].obs;
+  final RxList<LatLng> _replayStopPoints = <LatLng>[].obs;
   final RxBool _isReplaying = false.obs;
   final RxBool _isReplayPlaying = false.obs;
   final RxInt _replayIndex = 0.obs;
   final RxDouble _replaySpeed = 1.0.obs;
   final Rx<LatLng?> _replayPosition = Rx<LatLng?>(null);
+  final RxDouble _replayRotation = 0.0.obs;
   Timer? _replayTimer;
 
   static const _defaultLocation = LatLng(-17.824858, 31.053028);
@@ -132,7 +138,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
           _vehicleAnimController!.forward();
         }
 
-        if (_automaticTracking) {
+        if (_automaticTracking && !_isReplaying.value) {
           final controller = await _mapController.future;
           controller.animateCamera(
             CameraUpdate.newLatLng(newPosition),
@@ -149,18 +155,51 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     loadCustomMarker();
   }
 
-  void loadCustomMarker() async {
-    vehicleIcon = await BitmapDescriptor.asset(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/icons/car.png', // Path to your car image
-    );
+  Future<BitmapDescriptor> getDirectionalMarker(Color color) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final Paint paint = Paint()..color = color;
+
+    // Draw an arrow pointing upwards.
+    // The rotation of the marker will point it in the correct bearing.
+    final Path path = Path();
+    path.moveTo(40, 10); // Top tip
+    path.lineTo(70, 70); // Bottom right
+    path.lineTo(40, 55); // Bottom inner center
+    path.lineTo(10, 70); // Bottom left
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    // Add a border
+    final Paint borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    canvas.drawPath(path, borderPaint);
+
+    final ui.Image image = await pictureRecorder.endRecording().toImage(80, 80);
+    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List uint8List = byteData!.buffer.asUint8List();
+
+    return BitmapDescriptor.bytes(uint8List);
   }
 
-  BitmapDescriptor? vehicleIcon;
+  void loadCustomMarker() async {
+    greenArrowIcon = await getDirectionalMarker(Colors.green);
+    orangeArrowIcon = await getDirectionalMarker(Colors.orange);
+    redArrowIcon = await getDirectionalMarker(Colors.red);
+    setState(() {}); // ensure map updates with new icons if it's already built
+  }
+
+  BitmapDescriptor? greenArrowIcon;
+  BitmapDescriptor? orangeArrowIcon;
+  BitmapDescriptor? redArrowIcon;
   @override
   void dispose() {
     _replayTimer?.cancel();
     _vehicleAnimController?.dispose();
+    _replayAnimController?.dispose();
     _pingController.dispose();
     _locationWorker?.dispose();
     _timeController.dispose();
@@ -169,6 +208,23 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     _refuelCostController.dispose();
     _socketController.listenId.value = "";
     super.dispose();
+  }
+
+  BitmapDescriptor _getDynamicVehicleIcon(bool? acc, double speed) {
+    bool isIgnitionOn = acc ?? false;
+    if (isIgnitionOn) {
+      if (speed > 0) return greenArrowIcon ?? BitmapDescriptor.defaultMarker;
+      return orangeArrowIcon ?? BitmapDescriptor.defaultMarker;
+    } else {
+      return redArrowIcon ?? BitmapDescriptor.defaultMarker;
+    }
+  }
+
+  // Used for rendering the replay marker
+  BitmapDescriptor _getReplayVehicleIcon() {
+    // We can just default to green for replay, or look at the current replay segment if available.
+    // For now, default to green.
+    return greenArrowIcon ?? BitmapDescriptor.defaultMarker;
   }
 
   Destinations? _getCurrentDestination(PopulatedTripModel trip) {
@@ -382,27 +438,62 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
               },
               markers: _isReplaying.value
                   ? {
+                      if (destinations.isNotEmpty)
+                        ...destinations
+                            .asMap()
+                            .entries
+                            .map((entry) {
+                              final idx = entry.key;
+                              final dest = entry.value;
+                              if (dest.location == null) return null;
+                              return Marker(
+                                markerId: MarkerId('destination_$idx'),
+                                position: LatLng(
+                                  dest.location!.lat,
+                                  dest.location!.lng,
+                                ),
+                                infoWindow: InfoWindow(
+                                  title: 'Stop ${idx + 1}: ${dest.name}',
+                                  snippet: dest.reached ? 'Reached' : 'Pending',
+                                ),
+                                icon: BitmapDescriptor.defaultMarkerWithHue(
+                                  dest.reached
+                                      ? BitmapDescriptor.hueGreen
+                                      : BitmapDescriptor.hueAzure,
+                                ),
+                              );
+                            })
+                            .whereType<Marker>()
+                            .toSet(),
                       if (_replayPosition.value != null)
                         Marker(
                           markerId: const MarkerId('replay_vehicle'),
                           position: _replayPosition.value!,
+                          rotation: _replayRotation.value,
                           anchor: const Offset(0.5, 0.5),
-                          icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
+                          icon: _getReplayVehicleIcon(),
                         ),
                       if (_replayPath.isNotEmpty) ...[
-                        Marker(
+                          Marker(
                           markerId: const MarkerId('replay_start'),
                           position: _replayPath.first,
-                          infoWindow: const InfoWindow(title: 'Start Location'),
                           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                          infoWindow: const InfoWindow(title: "Start"),
                         ),
                         Marker(
                           markerId: const MarkerId('replay_end'),
                           position: _replayPath.last,
-                          infoWindow: const InfoWindow(title: 'End Location'),
                           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                          infoWindow: const InfoWindow(title: "End"),
                         ),
-                      ]
+                        // Add stop points (Idling)
+                        ..._replayStopPoints.asMap().entries.map((e) => Marker(
+                          markerId: MarkerId('replay_stop_${e.key}'),
+                          position: e.value,
+                          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange), // Orange for idle
+                          infoWindow: const InfoWindow(title: "Idling (ACC ON)"),
+                        )),
+                      ],
                     }
                   : {
                       if (destinations.isNotEmpty)
@@ -462,7 +553,7 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                           position: currentPos,
                           rotation: currentRot, // Animated Bearing
                           anchor: const Offset(0.5, 0.5),
-                          icon: vehicleIcon ?? BitmapDescriptor.defaultMarker,
+                          icon: _getDynamicVehicleIcon(liveData.acc, liveData.speed),
                           onTap: () {
                             _showVehicleDetailsDialog(liveData);
                           },
@@ -599,7 +690,28 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
                                 } : null,
                               ),
                             ),
-                            "${_replayIndex.value + 1}/${_replayPath.length}".text(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                "${_replayIndex.value + 1}/${_replayPath.length}".text(
+                                  style: const TextStyle(fontWeight: FontWeight.bold)
+                                ),
+                                if (_replayTimestamps.isNotEmpty && _replayIndex.value < _replayTimestamps.length)
+                                  Builder(builder: (context) {
+                                    final dtStr = _replayTimestamps[_replayIndex.value];
+                                    if (dtStr.isEmpty) return const SizedBox.shrink();
+                                    final dt = DateTime.tryParse(dtStr)?.toLocal();
+                                    if (dt == null) return const SizedBox.shrink();
+                                    return Text(
+                                      "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}",
+                                      style: TextStyle(
+                                        fontSize: 12, 
+                                        color: GTheme.isDark(context) ? Colors.grey[400] : Colors.grey[600],
+                                      ),
+                                    );
+                                  }),
+                              ],
+                            ),
                           ],
                         ),
                         Row(
@@ -1721,9 +1833,26 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
       (p['lng'] as num).toDouble(),
     )).toList();
     
+    final timestamps = pointsList.map((p) => (p['timestamp'] ?? "").toString()).toList();
+    
+    final stopPoints = <LatLng>[];
+    for (var p in pointsList) {
+      final acc = p['acc'];
+      final speed = (p['speed'] as num?)?.toDouble() ?? 0.0;
+      // Consider speed < 1 km/h as basically zero to account for GPS drift
+      if (acc == true && speed < 1.0) {
+        stopPoints.add(LatLng(
+          (p['lat'] as num).toDouble(),
+          (p['lng'] as num).toDouble(),
+        ));
+      }
+    }
+    
     _stopReplay(); // Clean up if already running
     
     _replayPath.assignAll(path);
+    _replayTimestamps.assignAll(timestamps);
+    _replayStopPoints.assignAll(stopPoints);
     _isReplaying.value = true;
     _replayIndex.value = 0;
     _replayPosition.value = path.first;
@@ -1752,17 +1881,20 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
     final startPoint = _replayPath[_replayIndex.value];
     final endPoint = _replayPath[_replayIndex.value + 1];
 
+    // Calculate rotation bearing
+    _replayRotation.value = VehicleUtlis.calculateBearing(startPoint, endPoint);
+
     final intervalMs = (1500 / _replaySpeed.value).round();
     
     // Dispose previous controller if exists
-    _vehicleAnimController?.dispose();
+    _replayAnimController?.dispose();
     
-    _vehicleAnimController = AnimationController(
+    _replayAnimController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: intervalMs),
     );
 
-    _positionAnimation = LatLngTween(begin: startPoint, end: endPoint).animate(_vehicleAnimController!)
+    _positionAnimation = LatLngTween(begin: startPoint, end: endPoint).animate(_replayAnimController!)
       ..addListener(() {
         _replayPosition.value = _positionAnimation!.value;
       })
@@ -1780,20 +1912,20 @@ class _FleetTrackingScreenState extends State<FleetTrackingScreen>
         }
       });
 
-    _vehicleAnimController!.forward();
+    _replayAnimController!.forward();
   }
 
   void _pauseReplay() {
     _isReplayPlaying.value = false;
-    _vehicleAnimController?.stop();
+    _replayAnimController?.stop();
     _replayTimer?.cancel();
   }
 
   void _stopReplay() {
     _isReplaying.value = false;
     _isReplayPlaying.value = false;
-    _vehicleAnimController?.dispose();
-    _vehicleAnimController = null;
+    _replayAnimController?.dispose();
+    _replayAnimController = null;
     _replayTimer?.cancel();
     _replayPath.clear();
     _replayPosition.value = null;

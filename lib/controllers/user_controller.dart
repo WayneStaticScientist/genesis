@@ -45,8 +45,8 @@ class UserController extends GetxController {
     final tokens = TokenModel.fromJSON(response.body['tokens']);
     user.value = dataUser;
     dataUser.saveUser();
-    tokens.saveToStorage();
-    validateUser();
+    await tokens.saveToStorage();
+    await initializeSession();
     return true;
   }
 
@@ -70,9 +70,23 @@ class UserController extends GetxController {
     final tokens = TokenModel.fromJSON(response.body['tokens']);
     this.user.value = dataUser;
     dataUser.saveUser();
-    tokens.saveToStorage();
-    await validateUser();
+    await tokens.saveToStorage();
+    await initializeSession();
     return true;
+  }
+
+  Future<void> initializeSession() async {
+    final socket = Get.find<SocketController>();
+    socket.listenToUserSocket();
+    final company = Get.find<CompanyController>();
+    company.fetchCompany();
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    String? token = await messaging.getToken();
+    if (token != null) {
+      await Net.put("/user/update-chat-token", data: {"chatToken": token});
+    }
+    final messgaeController = Get.find<MessagingController>();
+    messgaeController.initializeMessaging();
   }
 
   Future<void> validateUser() async {
@@ -83,26 +97,17 @@ class UserController extends GetxController {
     if (response.statusCode == 401) {
       user.value = null;
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        Get.offAll(() => LoginScreen());
+        Get.offAll(() => const LoginScreen());
       });
       Toaster.showError(
         "There was error in authorization please login again to continue",
       );
+      return;
     }
     if (!response.hasError) {
       user.value = User.fromJSON(response.body['user']);
       user.value!.saveUser();
-      final socket = Get.find<SocketController>();
-      socket.listenToUserSocket();
-      final company = Get.find<CompanyController>();
-      company.fetchCompany();
-      FirebaseMessaging messaging = FirebaseMessaging.instance;
-      String? token = await messaging.getToken();
-      if (token != null && token != user.value!.chatToken) {
-        await Net.put("/user/update-chat-token", data: {"chatToken": token});
-      }
-      final messgaeController = Get.find<MessagingController>();
-      messgaeController.initializeMessaging();
+      await initializeSession();
     }
   }
 
