@@ -16,7 +16,8 @@ class GenesisDate {
     return "${getMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 
-  static String getInformalShortDate(DateTime dateTime) {
+  static String getInformalShortDate(DateTime? dateTime) {
+    if (dateTime == null) return "No Expiry Date specified";
     return "${getShortMonthName(dateTime.month)} ${dateTime.day}, ${dateTime.year}";
   }
 
