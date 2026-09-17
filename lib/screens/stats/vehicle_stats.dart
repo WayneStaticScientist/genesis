@@ -304,14 +304,15 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
                       children: [
                         _infoChip(
                           Icons.local_gas_station_rounded,
                           "${widget.vehicle.fuelLevel.toStringAsFixed(0)}% Fuel",
                           Colors.green,
                         ),
-                        const SizedBox(width: 12),
                         _infoChip(
                           Icons.speed_rounded,
                           "${widget.vehicle.mileage.toStringAsFixed(0)} km",
@@ -805,12 +806,27 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              _buildTotalsCard(
-                title: 'Estimated Fuel Use',
-                value: '${NumberUtils.formatNumber(fuelConsumption)} Liters',
-                color: Colors.green,
-                subtitle: ratioText,
-                isWide: true,
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTotalsCard(
+                      title: 'Estimated Fuel Use',
+                      value: '${NumberUtils.formatNumber(fuelConsumption)} Liters',
+                      color: Colors.green,
+                      subtitle: ratioText,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildTotalsCard(
+                      title: 'Total Idle Time',
+                      value: stats.totalIdleTime >= 3600 
+                          ? '${(stats.totalIdleTime / 3600).toStringAsFixed(1)} hrs'
+                          : '${(stats.totalIdleTime / 60).toStringAsFixed(0)} mins',
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1499,7 +1515,9 @@ class _VehicleDetailStatsScreenState extends State<VehicleDetailStatsScreen> {
               const SizedBox(height: 12),
               _buildSummaryRow(context, [
                 _SummaryItem("Trip Duration", "${thisMonth.hours.toStringAsFixed(1)} hrs", Colors.indigo),
-                null,
+                _SummaryItem("Idle Time", thisMonth.idleTime >= 3600
+                    ? "${(thisMonth.idleTime / 3600).toStringAsFixed(1)} hrs"
+                    : "${(thisMonth.idleTime / 60).toStringAsFixed(0)} mins", Colors.orange),
               ]),
             ],
           ),

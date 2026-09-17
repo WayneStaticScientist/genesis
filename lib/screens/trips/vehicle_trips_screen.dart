@@ -316,6 +316,8 @@ class _RouteSummaryCardState extends State<RouteSummaryCard> {
   Widget build(BuildContext context) {
     final dateStr = widget.summary['date'] ?? '';
     final totalDist = (widget.summary['totalDistance'] as num?)?.toDouble() ?? 0.0;
+    final totalIdleTimeSecs = (widget.summary['totalIdleTime'] as num?)?.toInt() ?? 0;
+    final totalIdleMins = totalIdleTimeSecs ~/ 60;
     
     // Format date nicely
     DateTime? dt = DateTime.tryParse(dateStr);
@@ -332,26 +334,56 @@ class _RouteSummaryCardState extends State<RouteSummaryCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header Row: Date & Distance
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 8,
               children: [
                 Text(
                   formattedDate,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: GTheme.primary(context).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: "${totalDist.toStringAsFixed(1)} km".text(
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: GTheme.primary(context),
-                      fontSize: 14,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_rounded, color: Colors.orange, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            totalIdleMins >= 60 ? '${totalIdleMins ~/ 60}h ${totalIdleMins % 60}m' : '$totalIdleMins min',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: GTheme.primary(context).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: "${totalDist.toStringAsFixed(1)} km".text(
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: GTheme.primary(context),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

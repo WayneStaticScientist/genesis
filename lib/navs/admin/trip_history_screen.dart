@@ -137,10 +137,10 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(LineIcons.clock, color: Colors.orange, size: 18),
+                                Icon(Icons.access_time_rounded, color: Colors.orange, size: 18),
                                 const SizedBox(width: 4),
                                 Text(
-                                  "Idled: $idleMins mins",
+                                  "Idled: ${idleMins >= 60 ? '${idleMins ~/ 60}h ${idleMins % 60}m' : '$idleMins mins'}",
                                   style: const TextStyle(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.w600),
                                 ),
                               ],

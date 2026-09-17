@@ -9,6 +9,7 @@ class VehicleMonthSummary {
   final double maintenanceCosts;
   final double totalMaintenances;
   final double profit;
+  final double idleTime;
 
   VehicleMonthSummary({
     required this.trips,
@@ -18,6 +19,7 @@ class VehicleMonthSummary {
     required this.maintenanceCosts,
     required this.totalMaintenances,
     required this.profit,
+    required this.idleTime,
   });
 
   factory VehicleMonthSummary.fromJSON(data) {
@@ -30,6 +32,7 @@ class VehicleMonthSummary {
         maintenanceCosts: 0,
         totalMaintenances: 0,
         profit: 0,
+        idleTime: 0,
       );
     }
     return VehicleMonthSummary(
@@ -40,6 +43,7 @@ class VehicleMonthSummary {
       maintenanceCosts: (data['maintenanceCosts'] as num?)?.toDouble() ?? 0,
       totalMaintenances: (data['totalMaintenances'] as num?)?.toDouble() ?? 0,
       profit: (data['profit'] as num?)?.toDouble() ?? 0,
+      idleTime: (data['idleTime'] as num?)?.toDouble() ?? 0,
     );
   }
 }
@@ -50,6 +54,7 @@ class VehicleStatsModel {
   double totalRevenue;
   double totalMileage;
   double totalMaintenanceCosts;
+  double totalIdleTime;
   List<TripModel> trips;
   List<MaintainanceModel> maintenances;
   VehicleMonthSummary? thisMonth;
@@ -62,6 +67,7 @@ class VehicleStatsModel {
     required this.maintenances,
     required this.totalHours,
     required this.totalMileage,
+    required this.totalIdleTime,
     this.thisMonth,
   });
 
@@ -83,6 +89,7 @@ class VehicleStatsModel {
           [],
       totalHours: (data['totalHours'] as num?)?.toInt() ?? 0,
       totalMileage: (data['totalMileage'] as num?)?.toDouble() ?? 0,
+      totalIdleTime: (data['totalIdleTime'] as num?)?.toDouble() ?? 0,
       thisMonth: data['thisMonth'] != null
           ? VehicleMonthSummary.fromJSON(data['thisMonth'])
           : null,
